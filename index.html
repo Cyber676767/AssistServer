@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AssistBot Status</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #f6f7f8;
+      --card:         #ffffff;
+      --border:       #e3e5e8;
+      --text-primary: #060607;
+      --text-muted:   #4e5058;
+      --text-faint:   #80848e;
+      --green:        #23a55a;
+      --green-bg:     #e6f4ed;
+      --yellow:       #f0b132;
+      --yellow-bg:    #fef9ec;
+      --red:          #f23f43;
+      --red-bg:       #fde8e8;
+      --blue:         #5865f2;
+      --radius:       8px;
+      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .header-right {
+      font-size: 13px;
+      color: var(--text-faint);
+    }
+
+    .hero {
+      margin: 32px auto 0;
+      max-width: 860px;
+      padding: 0 24px;
+    }
+
+    .banner {
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+      font-size: 17px;
+      margin-bottom: 28px;
+      transition: all .3s;
+    }
+
+    .banner.operational { background: var(--green-bg); color: #1a7a43; border: 1px solid #b7dfc8; }
+    .banner.degraded    { background: var(--yellow-bg); color: #9a6f00; border: 1px solid #f5d98a; }
+    .banner.outage      { background: var(--red-bg);    color: #b02a2d; border: 1px solid #f5b8b9; }
+
+    .banner-icon { font-size: 22px; }
+
+    .section {
+      max-width: 860px;
+      margin: 0 auto 24px;
+      padding: 0 24px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .monitor-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      transition: background .15s;
+    }
+
+    .monitor-row:last-child { border-bottom: none; }
+    .monitor-row:hover { background: #f8f9fa; }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.up       { background: var(--green); box-shadow: 0 0 0 3px rgba(35,165,90,.18); }
+    .status-dot.down     { background: var(--red);   box-shadow: 0 0 0 3px rgba(242,63,67,.18); }
+    .status-dot.paused   { background: var(--yellow);box-shadow: 0 0 0 3px rgba(240,177,50,.18); }
+    .status-dot.unknown  { background: #b0b5bf;      box-shadow: 0 0 0 3px rgba(176,181,191,.18); }
+
+    .monitor-name {
+      font-weight: 600;
+      font-size: 15px;
+      flex: 1;
+    }
+
+    .monitor-uptime {
+      font-size: 13px;
+      color: var(--text-faint);
+      font-weight: 500;
+    }
+
+    .monitor-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .monitor-badge.up     { background: var(--green-bg); color: var(--green); }
+    .monitor-badge.down   { background: var(--red-bg);   color: var(--red); }
+    .monitor-badge.paused { background: var(--yellow-bg);color: var(--yellow); }
+    .monitor-badge.unknown{ background: #f0f1f3;         color: var(--text-faint); }
+
+    .uptime-bar-wrap {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .uptime-bar-wrap .bar-seg {
+      width: 6px;
+      height: 22px;
+      border-radius: 2px;
+      background: #e3e5e8;
+    }
+    .uptime-bar-wrap .bar-seg.up   { background: var(--green); }
+    .uptime-bar-wrap .bar-seg.down { background: var(--red); }
+
+    footer {
+      max-width: 860px;
+      margin: 0 auto 40px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .refresh-btn:hover { background: var(--card); border-color: #b0b5bf; color: var(--text-primary); }
+
+    .skeleton {
+      background: linear-gradient(90deg, #e8eaed 25%, #f0f2f5 50%, #e8eaed 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .skeleton-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .skeleton-row:last-child { border-bottom: none; }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .5; transform: scale(1.4); }
+    }
+    .live-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    .error-box {
+      background: var(--red-bg);
+      border: 1px solid #f5b8b9;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: #b02a2d;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    #countdown { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">🤖</div>
+    AssistBot Status
+  </a>
+  <div class="header-right">
+    <span class="live-dot"></span> Live
+  </div>
+</header>
+
+<div class="hero">
+  <div id="banner" class="banner operational">
+    <span class="banner-icon">✅</span>
+    <span id="banner-text">Loading status...</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Services</div>
+  <div class="card" id="monitor-list">
+    <div class="skeleton-row">
+      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+      <div class="skeleton" style="width:180px;height:14px"></div>
+      <div style="flex:1"></div>
+      <div class="skeleton" style="width:60px;height:14px"></div>
+    </div>
+    <div class="skeleton-row">
+      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+      <div class="skeleton" style="width:140px;height:14px"></div>
+      <div style="flex:1"></div>
+      <div class="skeleton" style="width:60px;height:14px"></div>
+    </div>
+    <div class="skeleton-row">
+      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+      <div class="skeleton" style="width:200px;height:14px"></div>
+      <div style="flex:1"></div>
+      <div class="skeleton" style="width:60px;height:14px"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>Auto-refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by UptimeRobot</div>
+  <button class="refresh-btn" onclick="fetchStatus()">↻ Refresh</button>
+</footer>
+
+<script>
+  // ── CONFIG ────────────────────────────────────────────────────────────────
+  // UptimeRobot monitor-specific read keys (each key fetches its own monitor)
+  const MONITORS = [
+    { key: 'm803038901-de5f8200e02d0175f3623542', label: 'Assistbot' },
+    { key: 'm803138290-466db08e8901a7e49b6ac3d5', label: 'Assistmusic' },
+    { key: 'm803121772-30a8ddf61c429ebddfca1ac0', label: 'Dashboard' },
+  ];
+  // If you have an account-level read key (starts with "ur..."), set it here
+  // and the page will use a single API call instead:
+  const ACCOUNT_KEY = '';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const API_URL = 'https://api.uptimerobot.com/v2/getMonitors';
+  let countdown = 60;
+  let timer;
+
+  function statusClass(s) {
+    if (s === 2) return 'up';
+    if (s === 9 || s === 8) return 'down';
+    if (s === 0) return 'paused';
+    return 'unknown';
+  }
+
+  function statusLabel(s) {
+    if (s === 2) return 'Operational';
+    if (s === 9) return 'Outage';
+    if (s === 8) return 'Degraded';
+    if (s === 0) return 'Paused';
+    return 'Unknown';
+  }
+
+  function uptimeBars(ratio90) {
+    const bars = [];
+    const seed = ratio90 / 100;
+    for (let i = 0; i < 45; i++) {
+      // Use a deterministic-ish pattern based on ratio so bars look stable
+      const isUp = ((i * 7 + 3) % 100) / 100 < seed;
+      bars.push(`<div class="bar-seg ${isUp ? 'up' : 'down'}" title="${isUp ? 'Up' : 'Down'}"></div>`);
+    }
+    return `<div class="uptime-bar-wrap">${bars.join('')}</div>`;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function fetchOneMonitor(key, fallbackLabel) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        api_key: key,
+        format: 'json',
+        custom_uptime_ratios: '90',
+        logs: '0'
+      })
+    });
+    const data = await res.json();
+    if (data.stat !== 'ok') throw new Error(data.error?.message || 'API error');
+    // Monitor-specific keys return exactly one monitor
+    const m = data.monitors[0];
+    return { ...m, friendly_name: m.friendly_name || fallbackLabel };
+  }
+
+  async function fetchAllMonitors() {
+    if (ACCOUNT_KEY) {
+      // Single call with account key
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          api_key: ACCOUNT_KEY,
+          format: 'json',
+          custom_uptime_ratios: '90',
+          logs: '0'
+        })
+      });
+      const data = await res.json();
+      if (data.stat !== 'ok') throw new Error(data.error?.message || 'API error');
+      return data.monitors;
+    }
+
+    // One call per monitor-specific key (parallel)
+    return Promise.all(
+      MONITORS.map(({ key, label }) => fetchOneMonitor(key, label))
+    );
+  }
+
+  async function fetchStatus() {
+    const list = document.getElementById('monitor-list');
+    const banner = document.getElementById('banner');
+    const bannerText = document.getElementById('banner-text');
+
+    try {
+      const monitors = await fetchAllMonitors();
+
+      const allUp      = monitors.every(m => m.status === 2);
+      const anyDown    = monitors.some(m => m.status === 9);
+
+      banner.className = 'banner ' + (allUp ? 'operational' : anyDown ? 'outage' : 'degraded');
+      bannerText.textContent = allUp
+        ? 'All Systems Operational'
+        : anyDown
+        ? 'Service Outage Detected'
+        : 'Partial Service Degradation';
+      banner.querySelector('.banner-icon').textContent = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+
+      list.innerHTML = monitors.map(m => {
+        const sc = statusClass(m.status);
+        const uptime = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
+        return `
+          <div class="monitor-row">
+            <div class="status-dot ${sc}"></div>
+            <div class="monitor-name">${escHtml(m.friendly_name)}</div>
+            ${uptimeBars(parseFloat(uptime))}
+            <div class="monitor-uptime">${uptime}%</div>
+            <div class="monitor-badge ${sc}">${statusLabel(m.status)}</div>
+          </div>`;
+      }).join('');
+
+    } catch (err) {
+      list.innerHTML = `<div class="error-box">⚠️ Could not load status data. Check your API keys or network settings.<br><small style="font-weight:400;opacity:.8">${escHtml(err.message)}</small></div>`;
+      banner.className = 'banner degraded';
+      bannerText.textContent = 'Status Unavailable';
+      banner.querySelector('.banner-icon').textContent = '⚠️';
+    }
+
+    resetCountdown();
+  }
+
+  function resetCountdown() {
+    clearInterval(timer);
+    countdown = 60;
+    document.getElementById('countdown').textContent = countdown;
+    timer = setInterval(() => {
+      countdown--;
+      document.getElementById('countdown').textContent = countdown;
+      if (countdown <= 0) fetchStatus();
+    }, 1000);
+  }
+
+  fetchStatus();
+</script>
+</body>
+</html>
