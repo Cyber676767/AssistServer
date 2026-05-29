@@ -53,11 +53,11 @@
     .invite-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--blurple); color: #fff; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.15s; box-shadow: 0 4px 12px rgba(88,101,242,0.15); }
     .invite-btn:hover { background: #4752c4; }
 
-    /* Custom Avatar Profile Layout */
+    /* Profile Footer Design Layout */
     .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); }
     .av-wrapper { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
     .av { width: 100%; height: 100%; border-radius: 50%; background: #000000; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-    .av img { width: 72%; height: 72%; object-fit: contain; display: block; }
+    .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .status-dot { position: absolute; bottom: -1px; right: -1px; width: 13px; height: 13px; background: var(--green); border-radius: 50%; border: 2.5px solid var(--panel-bg); }
     
     .uinfo { display: flex; flex-direction: column; gap: 1px; }
@@ -73,7 +73,7 @@
     .tb-div { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 4px; }
     .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
     
-    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; }
+    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(0,0,0,0.1); }
     
     .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -160,6 +160,13 @@
     .rbtn { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; padding: 8px 20px; font-size: 13px; font-family: inherit; color: var(--text); cursor: pointer; font-weight: 600; transition: background 0.15s; }
     .rbtn:hover { background: #1e1f22; }
 
+    /* Toast Notification System */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast { background: var(--sidebar); border-left: 4px solid var(--blurple); color: var(--text); padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transform: translateX(-120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+
     /* Skeleton Loading Screen Nodes */
     .sk { background: linear-gradient(90deg, #3f4147 25%, #4f5157 50%, #3f4147 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
     @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
@@ -199,7 +206,7 @@
     <div class="sb-footer">
       <div class="av-wrapper">
         <div class="av">
-          <img src="4aa86b62bd23e18d5f9ffd41cfe40c50.png" alt="AssistBot Profile Logo Visual Asset">
+          <img src="4aa86b62bd23e18d5f9ffd41cfe40c50.png" alt="AssistBot Profile Logo">
         </div>
         <div class="status-dot"></div>
       </div>
@@ -292,6 +299,8 @@
   </div>
 </div>
 
+<div class="toast-container" id="toast-container"></div>
+
 <script>
 // ADVANCED CONFIGURATION SETTING: Secure Administration Key
 const ADMIN_PASSWORD_KEY = "Savannah1123!"; 
@@ -304,6 +313,19 @@ let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[],isAdmin=f
 let lastAssistmusicStatus = 2; 
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
 
 function checkAdminAuth(){
   if(localStorage.getItem('assistbot-is-admin') === 'true'){
@@ -321,17 +343,13 @@ function enableAdminUI(){
   document.getElementById('activity-log-card').style.display = 'flex'; 
   document.getElementById('incidents-card').classList.remove('full-width');
   
-  // Update view to instantly enable delete actions on existing nodes
   renderIncidents(currentIncidentFeedCache);
-  
-  // Set up visibility toggle safely on existing view components
-  const deleteButtons = document.querySelectorAll('.del-inc-btn');
-  deleteButtons.forEach(btn => btn.style.display = 'inline-block');
-  
   addLog('check', "<strong>Admin Panel Session Connected</strong>");
+  showToast("Logged into Admin Mode successfully!", "success");
 }
 
 function disableAdminUI(logEvent = true){
+  const wasAdmin = isAdmin;
   isAdmin=false;
   localStorage.removeItem('assistbot-is-admin');
   document.getElementById('admin-panel').style.display = 'none';
@@ -339,15 +357,15 @@ function disableAdminUI(logEvent = true){
   document.getElementById('activity-log-card').style.display = 'none'; 
   document.getElementById('incidents-card').classList.add('full-width');
   
-  const deleteButtons = document.querySelectorAll('.del-inc-btn');
-  deleteButtons.forEach(btn => btn.style.display = 'none');
+  renderIncidents(currentIncidentFeedCache);
   
   if(logEvent) {
     addLog('check', "Admin Session Disconnected.");
+    if(wasAdmin) showToast("Logged out of Admin Mode.", "info");
   }
 }
 
-// HOTKEYS ONLY MATCHING LOGIC (Footer click bindings completely purged)
+// HOTKEYS LOGIC 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { 
     triggerAuthPrompt(); 
@@ -360,7 +378,7 @@ function triggerAuthPrompt(){
   if(entry === ADMIN_PASSWORD_KEY){
     enableAdminUI();
   } else if(entry !== null) {
-    alert("Access Denied.");
+    showToast("Access Denied: Invalid Key", "error");
   }
 }
 
@@ -411,8 +429,6 @@ async function fetchDiscordStatus(){
     if(savedComps) {
       discordComponentsCache = JSON.parse(savedComps);
       renderDiscord(discordComponentsCache, currentIncidentFeedCache);
-    } else {
-      document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Discord statuses updated via fallback framework.</div>`;
     }
   }
 }
@@ -488,6 +504,7 @@ function postUpdate(){
   document.getElementById('update-text').value='';
   renderIncidents(currentIncidentFeedCache);
   addLog('update',`<strong>Incident saved</strong> for ${esc(service)}`);
+  showToast("Update posted to public grid.", "success");
 }
 
 function deleteCustomUpdate(id){
@@ -496,12 +513,12 @@ function deleteCustomUpdate(id){
   saveUpdates();
   renderIncidents(currentIncidentFeedCache);
   addLog('update', `Admin dropped item entry allocation instance log node.`);
+  showToast("Update deleted.", "info");
 }
 
 async function fetchStatus(force=false){
   const now=Date.now();
   
-  // FAST-PATH UI CACHE HIT (Fixes background row deletion & layout breaking errors on multi-clicks)
   if(!force && cache && (now-lastFetch)<8000){
     render(cache);
     if(discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
@@ -511,10 +528,11 @@ async function fetchStatus(force=false){
   }
   
   try{
+    // CRITICAL API PATCH: Converted headers into a properly formatted object wrapper
     const monitors = await Promise.all([
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
     ]);
     const m=[monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]].map((x,i)=>({...x,friendly_name:['Assistbot','Assistmusic','Dashboard'][i]}));
     
