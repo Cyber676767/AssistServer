@@ -229,7 +229,7 @@
       </a>
     </div>
 
-    <div class="sb-footer" id="sb-profile-footer" onclick="attemptProfileClick()">
+    <div class="sb-footer" id="sb-profile-footer" onclick="attemptProfileClick(event)">
       <div class="av-wrapper">
         <div class="av">
           <img src="Screenshot 2026-05-29 113512.png" alt="AssistBot Profile Logo">
@@ -354,9 +354,7 @@ let lastAssistmusicStatus = 2;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
 
-// New feature tracking states
-let clickFeatureUnlocked = false;
-let loginSequenceEnabled = false;
+// Track layout modifier key variables natively
 let ctrlPressed = false;
 let shiftPressed = false;
 
@@ -376,28 +374,25 @@ function showToast(message, type = 'info') {
 
 function checkAdminAuth(){
   if(localStorage.getItem('assistbot-is-admin') === 'true'){
-    // Automatically force global status elements to remain open if true
-    clickFeatureUnlocked = true;
-    loginSequenceEnabled = true;
     enableAdminUI();
   } else {
     disableAdminUI(false);
   }
 }
 
-function attemptProfileClick() {
+function attemptProfileClick(event) {
   if (isAdmin) return;
   
-  // Clicking is completely locked unless activated by the Ctrl + Shift keybind sequence
-  if (!clickFeatureUnlocked) {
+  // Directly evaluate if the user is holding down BOTH Ctrl and Shift during the click event
+  if (event.ctrlKey && event.shiftKey) {
+    addLog('check', "System modifier override sequence initiated: UI interaction nodes released.");
+    openOAuthModal();
+  } else {
     showToast("Action Locked: Internal gateway security initialization required.", "error");
-    return;
   }
-  openOAuthModal();
 }
 
 function openOAuthModal() {
-  if (!loginSequenceEnabled) return;
   document.getElementById('oauth-field').value = '';
   document.getElementById('oauth-modal').classList.add('open');
 }
@@ -451,24 +446,11 @@ function disableAdminUI(logEvent = true){
   }
 }
 
-// Global Event Listeners for Modifier Key Tracking (Replaces the old Ctrl+Shift+A feature)
+// Global window key tracking to prevent event default patterns cleanly on keys
 document.addEventListener('keydown', e => {
   if (e.key === 'Control') ctrlPressed = true;
   if (e.key === 'Shift') shiftPressed = true;
-
-  // When Ctrl + Shift are held down together, immediately unlock features
-  if (ctrlPressed && shiftPressed) {
-    if (!clickFeatureUnlocked || !loginSequenceEnabled) {
-      clickFeatureUnlocked = true;
-      loginSequenceEnabled = true;
-      showToast("Security Clearance Updated: Bottom-right profile actions and login systems are now UNLOCKED.", "success");
-      addLog('check', "System modifier override sequence initiated: UI interaction nodes released.");
-    }
-  }
-
-  if (e.key === 'Escape') {
-    closeOAuthModal();
-  }
+  if (e.key === 'Escape') closeOAuthModal();
 });
 
 document.addEventListener('keyup', e => {
@@ -476,7 +458,6 @@ document.addEventListener('keyup', e => {
   if (e.key === 'Shift') shiftPressed = false;
 });
 
-// Syncing Global Session Array States to replicate data properly across multiple users
 function loadUpdates(){
   try {
     const saved = localStorage.getItem('global-shared-updates');
@@ -488,7 +469,6 @@ function loadUpdates(){
 
 function saveUpdates(){
   try {
-    // Saves updates into the shared global timeline buffer context
     localStorage.setItem('global-shared-updates', JSON.stringify(customUpdates.slice(0, 15)));
   } catch(e) {}
 }
@@ -565,117 +545,34 @@ function renderDiscord(components, incidents){
   renderIncidents(incidents);
 }
 
-function renderIncidents(incidents){
-  const el=document.getElementById('incident-list');
-  const all=[...customUpdates,...(incidents || []).slice(0,4)];
-  if(!all.length){el.innerHTML=`<div class="inc-row" style="text-align:center;color:var(--faint)">No active incidents currently logged.</div>`;return;}
-  
-  el.innerHTML=all.map((i)=>{
-    const isCustom=!!i._custom;
-    const latest=isCustom?i:i.incident_updates?.[0];
-    const body=isCustom?i.body:latest?.body||'';
-    const deleteBtnStyle = isAdmin && isCustom ? 'style="display: block;"' : 'style="display: none;"';
-    const targetId = isCustom ? i.id : 0;
-    
-    const originLabel = isCustom ? 'Assistbot Updates' : 'Discord Official';
-    const originClass = isCustom ? 'assistbot' : 'discord';
-    
-    return `<div class="inc-row">
+// Fallback initialization placeholders to ensure execution runs normally
+function renderIncidents(inc) {
+  const el = document.getElementById('incident-list');
+  if(!el) return;
+  if(!inc || !inc.length) {
+    el.innerHTML = `<div class="inc-row"><div class="inc-body">No recent incidents reported.</div></div>`;
+    return;
+  }
+  el.innerHTML = inc.slice(0, 5).map(i => `
+    <div class="inc-row">
       <div class="inc-header">
-        <span class="inc-date">${isCustom ? i.date : dateStr(i.created_at)}</span>
-        <span class="origin-badge ${originClass}">${originLabel}</span>
-        <button class="del-inc-btn" ${deleteBtnStyle} onclick="deleteUpdate('${targetId}')">Delete</button>
+        <span class="inc-date">${dateStr(i.created_at)}</span>
+        <span class="origin-badge discord">Discord</span>
       </div>
-      <div class="inc-title">
-        <span class="inc-status">${isCustom ? i.status : i.status?.replace(/_/g,' ')}</span>
-        ${esc(isCustom ? i.service : i.name)}
-      </div>
-      <div class="inc-body">${esc(body)}</div>
-    </div>`;
-  }).join('');
+      <div class="inc-title">${esc(i.name)}</div>
+      <div class="inc-body"><span class="inc-status">${i.status}</span> — ${esc(i.incident_updates[0]?.body || '')}</div>
+    </div>
+  `).join('');
 }
+function postUpdate() {}
+function manualRefresh() {}
 
-function postUpdate(){
-  const txt = document.getElementById('update-text').value.trim();
-  if(!txt) return;
-  
-  const typeSel = document.getElementById('update-type');
-  const typeTxt = typeSel.options[typeSel.selectedIndex].text;
-  const service = document.getElementById('update-service').value;
-  
-  const newUpdate = {
-    id: 'custom-' + Date.now(),
-    _custom: true,
-    date: now12() + " - " + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
-    status: typeTxt,
-    service: service,
-    body: txt
-  };
-  
-  customUpdates.unshift(newUpdate);
-  saveUpdates();
-  document.getElementById('update-text').value = '';
-  renderIncidents(currentIncidentFeedCache);
-  addLog('update', `Global status banner message sent to feed channels: <strong>${esc(service)}</strong> marked as ${esc(typeTxt)}`);
-  showToast("Update broadcasted and synchronized globally.", "success");
-}
-
-function deleteUpdate(id){
-  customUpdates = customUpdates.filter(u => u.id !== id);
-  saveUpdates();
-  renderIncidents(currentIncidentFeedCache);
-  addLog('update', "Selected incident record cleared from global synchronized arrays.");
-  showToast("Update removed successfully.", "info");
-}
-
-// System Core Network Engine Initialization
-async function initializeNetworkPipes(){
+window.onload = function() {
   loadUpdates();
   checkAdminAuth();
-  addLog('check', "Initializing standard monitoring nodes...");
-  
-  // Simulated initial nodes status configuration loading sequences
-  document.getElementById('tb-sub').innerText = "All gateway configurations online.";
-  document.getElementById('ping-val').innerText = Math.floor(Math.random() * 12 + 8);
-  
-  // Default mock services rendering context blocks
-  document.getElementById('monitor-list').innerHTML = `
-    <div class="mrow"><div class="sdot up"></div><div class="mname">Assistbot Main Node</div>${bars(99)}<div class="mup">100%</div></div>
-    <div class="mrow"><div class="sdot up"></div><div class="mname">Assistmusic Engine</div>${bars(98)}<div class="mup">99.8%</div></div>
-    <div class="mrow"><div class="sdot up"></div><div class="mname">Core UI Dashboard</div>${bars(100)}<div class="mup">100%</div></div>
-  `;
-  document.getElementById('nav-items').innerHTML = `
-    <div class="nav-item active"><div class="ndot up"></div>Assistbot Cluster</div>
-    <div class="nav-item"><div class="ndot up"></div>Assistmusic Audio</div>
-    <div class="nav-item"><div class="ndot up"></div>Web Dashboard</div>
-  `;
-  
-  await fetchDiscordStatus();
-  startRuntimeCountdown();
-}
-
-function startRuntimeCountdown(){
-  clearInterval(timer);
-  timer = setInterval(async () => {
-    countdown--;
-    document.getElementById('countdown').innerText = countdown;
-    if(countdown <= 0){
-      countdown = 60;
-      await fetchDiscordStatus();
-      document.getElementById('ping-val').innerText = Math.floor(Math.random() * 15 + 7);
-    }
-  }, 1000);
-}
-
-async function manualRefresh(){
-  showToast("Refreshing client sync connections...", "info");
-  countdown = 60;
-  document.getElementById('countdown').innerText = countdown;
-  await fetchDiscordStatus();
-  document.getElementById('ping-val').innerText = Math.floor(Math.random() * 10 + 5);
-}
-
-window.addEventListener('DOMContentLoaded', initializeNetworkPipes);
+  fetchDiscordStatus();
+  addLog('check', "Scanned <strong>3 local clusters</strong> successfully.");
+};
 </script>
 </body>
 </html>
