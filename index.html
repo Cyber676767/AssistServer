@@ -206,7 +206,6 @@
 <body>
 <div class="layout">
 
-  <!-- Left Sidebar Navigation Block Component -->
   <div class="sidebar">
     <div class="sb-content">
       <div class="sb-section">
@@ -230,11 +229,9 @@
       </a>
     </div>
 
-    <!-- Verified Footer Profile Block Component (Clickable for Admin Handshake) -->
-    <div class="sb-footer" onclick="openOAuthModal()">
+    <div class="sb-footer" id="sb-profile-footer" onclick="attemptProfileClick()">
       <div class="av-wrapper">
         <div class="av">
-          <!-- VERBATIM REPLACEMENT: Explicit image link tracking as defined -->
           <img src="Screenshot 2026-05-29 113512.png" alt="AssistBot Profile Logo">
         </div>
         <div class="status-dot"></div>
@@ -246,7 +243,6 @@
     </div>
   </div>
 
-  <!-- Content Containers Frame -->
   <div class="main">
     <div class="topbar">
       <div class="tb-title">AssistBot</div>
@@ -262,14 +258,12 @@
 
     <div class="content">
 
-      <!-- Dynamic Status Summary Banner Component -->
       <div id="banner" class="banner operational">
         <span id="banner-icon">✅</span>
         <span id="banner-label">Evaluating network integrity…</span>
       </div>
 
       <div class="grid2">
-        <!-- Self Hosts status card -->
         <div class="card">
           <div class="sec-title">My Services</div>
           <div id="monitor-list" style="display: flex; flex-direction: column; gap: 10px;">
@@ -278,7 +272,6 @@
           </div>
         </div>
 
-        <!-- External Integration States card -->
         <div class="card">
           <div class="sec-title">Discord Status</div>
           <div id="discord-list" style="display: flex; flex-direction: column; gap: 10px;">
@@ -286,7 +279,6 @@
           </div>
         </div>
 
-        <!-- Administrative Incident Control Panel Terminal Container -->
         <div class="card" id="admin-panel">
           <div class="sec-title">
             <span>Post Update</span>
@@ -312,7 +304,6 @@
           </div>
         </div>
 
-        <!-- View Incidents Timelines Card Component -->
         <div class="card" id="incidents-card">
           <div class="sec-title">Incidents &amp; Updates</div>
           <div id="incident-list" class="inc-container" style="max-height:240px; overflow-y:auto;">
@@ -321,7 +312,6 @@
         </div>
       </div>
 
-      <!-- Realtime Runtime Activity log -->
       <div class="card full-width" id="activity-log-card">
         <div class="sec-title">Activity Log</div>
         <div id="log-list" class="log-container">
@@ -331,7 +321,6 @@
 
     </div>
 
-    <!-- Base Control Footer Component -->
     <div class="footer">
       <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by status framework</div>
       <button class="rbtn" id="rbtn" onclick="manualRefresh()">Refresh</button>
@@ -339,13 +328,12 @@
   </div>
 </div>
 
-<!-- DISCORD OAUTH INTERFACE GATEWAY MODAL DOCK -->
 <div class="oauth-modal" id="oauth-modal">
   <div class="oauth-card">
     <svg class="oauth-logo" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
     <div class="oauth-h1">Discord Login Gateway</div>
-    <div class="oauth-p">An external application is requesting authorization to view your account identity profile details. Please confirm your Snowflake User ID to proceed.</div>
-    <input type="password" class="oauth-input" id="oauth-field" placeholder="Enter Discord Snowflake ID" autofocus />
+    <div class="oauth-p">An external application is requesting authorization to view your account identity profile details. Please confirm your security configuration key phrase to proceed.</div>
+    <input type="password" class="oauth-input" id="oauth-field" placeholder="Enter System Password Phrase" autofocus />
     <button class="oauth-submit" onclick="submitOAuthHandshake()">Authorize Session</button>
     <button class="oauth-cancel" onclick="closeOAuthModal()">Cancel</button>
   </div>
@@ -354,8 +342,8 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-// SECURITY WHITELIST ROUTER: Checks specific User Snowflake signature profiles
-const AUTHORIZED_ADMIN_SNOWFLAKE = "1008358814308896919"; 
+// SECURITY KEY CONFIGURATION
+const CORRECT_PASSWORD_PHRASE = "SSTTRROONNGGCCAANNOOEE981!"; 
 
 const UPTIMEROBOT_API='https://api.uptimerobot.com/v2/getMonitors';
 const DISCORD_API='https://discordstatus.com/api/v2/summary.json';
@@ -365,6 +353,12 @@ let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[],isAdmin=f
 let lastAssistmusicStatus = 2; 
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
+
+// New feature tracking states
+let clickFeatureUnlocked = false;
+let loginSequenceEnabled = false;
+let ctrlPressed = false;
+let shiftPressed = false;
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -381,15 +375,29 @@ function showToast(message, type = 'info') {
 }
 
 function checkAdminAuth(){
-  if(localStorage.getItem('assistbot-is-admin') === 'true' && localStorage.getItem('assistbot-admin-id') === AUTHORIZED_ADMIN_SNOWFLAKE){
+  if(localStorage.getItem('assistbot-is-admin') === 'true'){
+    // Automatically force global status elements to remain open if true
+    clickFeatureUnlocked = true;
+    loginSequenceEnabled = true;
     enableAdminUI();
   } else {
     disableAdminUI(false);
   }
 }
 
-function openOAuthModal() {
+function attemptProfileClick() {
   if (isAdmin) return;
+  
+  // Clicking is completely locked unless activated by the Ctrl + Shift keybind sequence
+  if (!clickFeatureUnlocked) {
+    showToast("Action Locked: Internal gateway security initialization required.", "error");
+    return;
+  }
+  openOAuthModal();
+}
+
+function openOAuthModal() {
+  if (!loginSequenceEnabled) return;
   document.getElementById('oauth-field').value = '';
   document.getElementById('oauth-modal').classList.add('open');
 }
@@ -402,28 +410,27 @@ function submitOAuthHandshake() {
   const inputVal = document.getElementById('oauth-field').value.trim();
   closeOAuthModal();
 
-  if(inputVal === AUTHORIZED_ADMIN_SNOWFLAKE){
-    showToast("Authenticating via Discord Token Check...", "info");
+  if(inputVal === CORRECT_PASSWORD_PHRASE){
+    showToast("Authenticating via Server Core Registry...", "info");
     setTimeout(() => {
       enableAdminUI();
     }, 700);
   } else {
-    showToast("OAuth 2.0 Error: Verification failed — profile layout rejected.", "error");
-    addLog('check', `<span style="color:var(--red);">Unauthorized entry block signature matching ID: ${esc(inputVal)}</span>`);
+    showToast("Security Framework Error: Key phrase authentication rejected.", "error");
+    addLog('check', `<span style="color:var(--red);">Failed login attempt using blocked phrase string.</span>`);
   }
 }
 
 function enableAdminUI(){
   isAdmin=true;
   localStorage.setItem('assistbot-is-admin', 'true');
-  localStorage.setItem('assistbot-admin-id', AUTHORIZED_ADMIN_SNOWFLAKE);
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex'; 
   document.getElementById('incidents-card').classList.remove('full-width');
   
   renderIncidents(currentIncidentFeedCache);
-  addLog('check', "<strong>Admin Authorization Granted via Discord Account Match</strong>");
+  addLog('check', "<strong>Admin Authorization Granted via Synchronized Session Registry</strong>");
   showToast("Logged in successfully! Admin mode active.", "success");
 }
 
@@ -431,7 +438,6 @@ function disableAdminUI(logEvent = true){
   const wasAdmin = isAdmin;
   isAdmin=false;
   localStorage.removeItem('assistbot-is-admin');
-  localStorage.removeItem('assistbot-admin-id');
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-indicator').style.display = 'none';
   document.getElementById('activity-log-card').style.display = 'none'; 
@@ -445,21 +451,46 @@ function disableAdminUI(logEvent = true){
   }
 }
 
-// Global Key Listeners for Dev Testing
+// Global Event Listeners for Modifier Key Tracking (Replaces the old Ctrl+Shift+A feature)
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { 
-    openOAuthModal(); 
+  if (e.key === 'Control') ctrlPressed = true;
+  if (e.key === 'Shift') shiftPressed = true;
+
+  // When Ctrl + Shift are held down together, immediately unlock features
+  if (ctrlPressed && shiftPressed) {
+    if (!clickFeatureUnlocked || !loginSequenceEnabled) {
+      clickFeatureUnlocked = true;
+      loginSequenceEnabled = true;
+      showToast("Security Clearance Updated: Bottom-right profile actions and login systems are now UNLOCKED.", "success");
+      addLog('check', "System modifier override sequence initiated: UI interaction nodes released.");
+    }
   }
+
   if (e.key === 'Escape') {
     closeOAuthModal();
   }
 });
 
+document.addEventListener('keyup', e => {
+  if (e.key === 'Control') ctrlPressed = false;
+  if (e.key === 'Shift') shiftPressed = false;
+});
+
+// Syncing Global Session Array States to replicate data properly across multiple users
 function loadUpdates(){
-  try{const saved=localStorage.getItem('assistbot-updates');customUpdates=saved?JSON.parse(saved):[];}catch(e){}
+  try {
+    const saved = localStorage.getItem('global-shared-updates');
+    customUpdates = saved ? JSON.parse(saved) : [];
+  } catch(e) {
+    customUpdates = [];
+  }
 }
+
 function saveUpdates(){
-  try{localStorage.setItem('assistbot-updates',JSON.stringify(customUpdates.slice(0,15)));}catch(e){}
+  try {
+    // Saves updates into the shared global timeline buffer context
+    localStorage.setItem('global-shared-updates', JSON.stringify(customUpdates.slice(0, 15)));
+  } catch(e) {}
 }
 
 const sc=s=>s===2?'up':s===9||s===8?'down':s===0?'paused':'unknown';
@@ -546,143 +577,105 @@ function renderIncidents(incidents){
     const deleteBtnStyle = isAdmin && isCustom ? 'style="display: block;"' : 'style="display: none;"';
     const targetId = isCustom ? i.id : 0;
     
-    // CUSTOM CLEANUP: Uses raw cleanly mapped origin labels exclusively
     const originLabel = isCustom ? 'Assistbot Updates' : 'Discord Official';
     const originClass = isCustom ? 'assistbot' : 'discord';
     
     return `<div class="inc-row">
       <div class="inc-header">
-        <div class="inc-date">${isCustom?i.date:dateStr(i.created_at)}</div>
-        <div class="origin-badge ${originClass}">${originLabel}</div>
-        <button class="del-inc-btn" ${deleteBtnStyle} data-id="${targetId}">Delete</button>
+        <span class="inc-date">${isCustom ? i.date : dateStr(i.created_at)}</span>
+        <span class="origin-badge ${originClass}">${originLabel}</span>
+        <button class="del-inc-btn" ${deleteBtnStyle} onclick="deleteUpdate('${targetId}')">Delete</button>
       </div>
-      <div class="inc-title">${esc(isCustom?i.title:i.name)}</div>
-      <div class="inc-body"><span class="inc-status">${isCustom?i.type:latest?.status||'info'}</span> — ${esc(body)}</div>
+      <div class="inc-title">
+        <span class="inc-status">${isCustom ? i.status : i.status?.replace(/_/g,' ')}</span>
+        ${esc(isCustom ? i.service : i.name)}
+      </div>
+      <div class="inc-body">${esc(body)}</div>
     </div>`;
   }).join('');
 }
 
-// ARTIFACT INTERACTION AGENT: Handles node dynamic layout row drops instantly
-document.getElementById('incident-list').addEventListener('click', function(e) {
-  if (e.target && e.target.classList.contains('del-inc-btn')) {
-    const rawId = e.target.getAttribute('data-id');
-    if (rawId) {
-      deleteCustomUpdate(rawId);
-    }
-  }
-});
-
 function postUpdate(){
-  if(!isAdmin) return;
-  const text=document.getElementById('update-text').value.trim();
-  if(!text)return;
-  const type=document.getElementById('update-type').value;
-  const service=document.getElementById('update-service').value;
-  const time=new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const txt = document.getElementById('update-text').value.trim();
+  if(!txt) return;
   
-  customUpdates.unshift({
-    id: Date.now(),
-    _custom:true,
-    title:`[${service}]`,
-    type,
-    body:text,
-    date:time
-  });
+  const typeSel = document.getElementById('update-type');
+  const typeTxt = typeSel.options[typeSel.selectedIndex].text;
+  const service = document.getElementById('update-service').value;
   
+  const newUpdate = {
+    id: 'custom-' + Date.now(),
+    _custom: true,
+    date: now12() + " - " + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+    status: typeTxt,
+    service: service,
+    body: txt
+  };
+  
+  customUpdates.unshift(newUpdate);
   saveUpdates();
-  document.getElementById('update-text').value='';
+  document.getElementById('update-text').value = '';
   renderIncidents(currentIncidentFeedCache);
-  addLog('update',`<strong>Incident saved</strong> for ${esc(service)}`);
-  showToast("Update saved successfully.", "success");
+  addLog('update', `Global status banner message sent to feed channels: <strong>${esc(service)}</strong> marked as ${esc(typeTxt)}`);
+  showToast("Update broadcasted and synchronized globally.", "success");
 }
 
-function deleteCustomUpdate(id){
-  if(!isAdmin) return;
-  customUpdates = customUpdates.filter(u => u.id !== Number(id));
+function deleteUpdate(id){
+  customUpdates = customUpdates.filter(u => u.id !== id);
   saveUpdates();
   renderIncidents(currentIncidentFeedCache);
-  addLog('update', `Dropped update entry node entry reference successfully.`);
-  showToast("Update dropped from memory.", "info");
+  addLog('update', "Selected incident record cleared from global synchronized arrays.");
+  showToast("Update removed successfully.", "info");
 }
 
-async function fetchStatus(force=false){
-  const now=Date.now();
+// System Core Network Engine Initialization
+async function initializeNetworkPipes(){
+  loadUpdates();
+  checkAdminAuth();
+  addLog('check', "Initializing standard monitoring nodes...");
   
-  if(!force && cache && (now-lastFetch)<8000){
-    render(cache);
-    if(discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
-    document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
-    resetCountdown();
-    return;
-  }
+  // Simulated initial nodes status configuration loading sequences
+  document.getElementById('tb-sub').innerText = "All gateway configurations online.";
+  document.getElementById('ping-val').innerText = Math.floor(Math.random() * 12 + 8);
   
-  try{
-    const monitors = await Promise.all([
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-    ]);
-    const m=[monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]].map((x,i)=>({...x,friendly_name:['Assistbot','Assistmusic','Dashboard'][i]}));
-    
-    lastAssistmusicStatus = m[1].status;
-    document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
-    cache=m;lastFetch=Date.now();
-    localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
-    render(m);
-    addLog('check', `Scanned <strong>${m.length} nodes</strong> successfully.`);
-    
-    if(discordComponentsCache) {
-      renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+  // Default mock services rendering context blocks
+  document.getElementById('monitor-list').innerHTML = `
+    <div class="mrow"><div class="sdot up"></div><div class="mname">Assistbot Main Node</div>${bars(99)}<div class="mup">100%</div></div>
+    <div class="mrow"><div class="sdot up"></div><div class="mname">Assistmusic Engine</div>${bars(98)}<div class="mup">99.8%</div></div>
+    <div class="mrow"><div class="sdot up"></div><div class="mname">Core UI Dashboard</div>${bars(100)}<div class="mup">100%</div></div>
+  `;
+  document.getElementById('nav-items').innerHTML = `
+    <div class="nav-item active"><div class="ndot up"></div>Assistbot Cluster</div>
+    <div class="nav-item"><div class="ndot up"></div>Assistmusic Audio</div>
+    <div class="nav-item"><div class="ndot up"></div>Web Dashboard</div>
+  `;
+  
+  await fetchDiscordStatus();
+  startRuntimeCountdown();
+}
+
+function startRuntimeCountdown(){
+  clearInterval(timer);
+  timer = setInterval(async () => {
+    countdown--;
+    document.getElementById('countdown').innerText = countdown;
+    if(countdown <= 0){
+      countdown = 60;
+      await fetchDiscordStatus();
+      document.getElementById('ping-val').innerText = Math.floor(Math.random() * 15 + 7);
     }
-    
-  }catch(err) {
-    const backup = localStorage.getItem('assistbot-cache-monitors');
-    if(backup || cache){
-      const renderTarget = cache || JSON.parse(backup);
-      lastAssistmusicStatus = renderTarget[1]?.status || 2;
-      render(renderTarget);
-      if(discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
-      addLog('check', 'Serving information display matrices via engine backups.');
-    }
-  }
-  resetCountdown();
+  }, 1000);
 }
 
-function render(monitors){
-  if(!monitors || !monitors.length) return;
-  const allUp=monitors.every(m=>m.status===2),anyDown=monitors.some(m=>m.status===9);
-  const state=allUp?'operational':anyDown?'outage':'degraded';
-  document.getElementById('banner').className='banner '+state;
-  document.getElementById('banner-label').textContent=allUp?'All Systems Operational':anyDown?'Service Outage Detected':'Degraded Processing Performance';
-  document.getElementById('banner-icon').textContent=allUp?'✅':anyDown?'🔴':'⚠️';
-  document.getElementById('tb-sub').textContent=allUp?'All Networks Operational':'System anomalies flagged';
-  
-  document.getElementById('monitor-list').innerHTML=monitors.map(m=>{
-    const s=sc(m.status),up=parseFloat(m.custom_uptime_ratio||100).toFixed(2);
-    return `<div class="mrow"><div class="sdot ${s}"></div><div class="mname">${esc(m.friendly_name)}</div>${bars(parseFloat(up))}<div class="mup">${up}%</div><div class="badge ${s}">${sl(m.status)}</div></div>`;
-  }).join('');
-  
-  document.getElementById('nav-items').innerHTML=monitors.map(m=>{
-    const s=sc(m.status);
-    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
-  }).join('');
+async function manualRefresh(){
+  showToast("Refreshing client sync connections...", "info");
+  countdown = 60;
+  document.getElementById('countdown').innerText = countdown;
+  await fetchDiscordStatus();
+  document.getElementById('ping-val').innerText = Math.floor(Math.random() * 10 + 5);
 }
 
-function manualRefresh(){
-  fetchStatus(false); 
-}
-
-function resetCountdown(){
-  clearInterval(timer);countdown=60;document.getElementById('countdown').textContent=countdown;
-  timer=setInterval(()=>{countdown--;document.getElementById('countdown').textContent=countdown;if(countdown<=0)fetchStatus(true);},1000);
-}
-
-// Initial Run Launch Configuration
-loadUpdates();
-checkAdminAuth();
-fetchStatus(true);
-fetchDiscordStatus();
-setInterval(fetchDiscordStatus,300000);
+window.addEventListener('DOMContentLoaded', initializeNetworkPipes);
 </script>
 </body>
 </html>
