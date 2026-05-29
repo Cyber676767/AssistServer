@@ -332,8 +332,6 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const ADMIN_PASSWORD  = "SSTTRROONNGGCCAANNOOEE981!";
-
 const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
 const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
 const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
@@ -433,7 +431,7 @@ function showToast(message, type = 'info') {
 
 // ── ADMIN AUTH ───────────────────────────────────────────────────────────────
 function checkAdminAuth() {
-  if (sessionStorage.getItem('assistbot-is-admin') === 'true') {
+  if (sessionStorage.getItem('assistbot-admin-token')) {
     enableAdminUI(false);
   } else {
     disableAdminUI(false);
@@ -451,22 +449,45 @@ function closeOAuthModal() {
   document.getElementById('oauth-modal').classList.remove('open');
 }
 
-function submitOAuthHandshake() {
+async function submitOAuthHandshake() {
   const inputVal = document.getElementById('oauth-field').value;
-  closeOAuthModal();
+  if (!inputVal) return;
 
-  if (inputVal === ADMIN_PASSWORD) {
-    showToast("Verifying credentials…", "info");
-    setTimeout(() => enableAdminUI(true), 700);
-  } else {
-    showToast("Incorrect password — access denied.", "error");
-    addLog('check', `<span style="color:var(--red);">Failed login attempt.</span>`);
+  // Disable button while checking
+  const btn = document.querySelector('.oauth-submit');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  showToast("Verifying credentials…", "info");
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: inputVal })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      // Store token in sessionStorage — not the password
+      sessionStorage.setItem('assistbot-admin-token', data.token);
+      closeOAuthModal();
+      enableAdminUI(true);
+    } else {
+      showToast("Incorrect password — access denied.", "error");
+      addLog('check', `<span style="color:var(--red);">Failed login attempt.</span>`);
+      document.getElementById('oauth-field').value = '';
+    }
+  } catch(e) {
+    showToast("Could not reach auth server.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Authorize Session';
   }
 }
 
 function enableAdminUI(notify = true) {
   isAdmin = true;
-  sessionStorage.setItem('assistbot-is-admin', 'true');
+  // token already set in sessionStorage by submitOAuthHandshake
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
@@ -481,7 +502,7 @@ function enableAdminUI(notify = true) {
 function disableAdminUI(logEvent = true) {
   const wasAdmin = isAdmin;
   isAdmin = false;
-  sessionStorage.removeItem('assistbot-is-admin');
+  sessionStorage.removeItem('assistbot-admin-token');
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-indicator').style.display = 'none';
   document.getElementById('activity-log-card').style.display = 'none';
