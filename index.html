@@ -170,8 +170,6 @@
     .ltime { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
     .footer { padding: 18px 24px; border-top: 1px solid rgba(0,0,0,0.15); background: var(--card); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; }
-    .rbtn { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; padding: 8px 20px; font-size: 13px; font-family: inherit; color: var(--text); cursor: pointer; font-weight: 600; transition: background 0.15s; }
-    .rbtn:hover { background: #1e1f22; }
 
     .toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
     .toast { background: var(--sidebar); border-left: 4px solid var(--blurple); color: var(--text); padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transform: translateX(-120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -214,7 +212,7 @@
       </a>
     </div>
 
-    <div class="sb-footer" onclick="openOAuthModal()">
+    <div class="sb-footer" id="sb-footer">
       <div class="av-wrapper">
         <div class="av">
           <img src="data:image/png;base64,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" alt="AssistBot">
@@ -308,7 +306,6 @@
 
     <div class="footer">
       <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistAI</div>
-      <button class="rbtn" id="rbtn" onclick="manualRefresh()">Refresh</button>
     </div>
   </div>
 </div>
@@ -492,6 +489,11 @@ function disableAdminUI(logEvent = true) {
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') openOAuthModal();
   if (e.key === 'Escape') closeOAuthModal();
+});
+
+// Ctrl+Shift+Click on the footer avatar to open admin login
+document.getElementById('sb-footer').addEventListener('click', e => {
+  if (e.ctrlKey && e.shiftKey) openOAuthModal();
 });
 
 // Allow pressing Enter in the password field
