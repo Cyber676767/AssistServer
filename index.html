@@ -205,6 +205,12 @@
       </div>
     </div>
     
+    <div class="invite-box" style="padding: 0 12px 8px;">
+      <a href="https://assist-bot-website.vercel.app/" target="_blank" class="invite-btn" style="background: #2b2d31; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        AssistServer Website
+      </a>
+    </div>
     <div class="invite-box">
       <a href="https://discord.com/oauth2/authorize?client_id=1044078182514565210" target="_blank" class="invite-btn">
         <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
@@ -281,6 +287,7 @@
                 <option value="Assistbot">Assistbot</option>
                 <option value="Assistmusic">Assistmusic</option>
                 <option value="Dashboard">Dashboard</option>
+                <option value="AssistServer">AssistServer</option>
               </select>
               <button class="post-btn" onclick="postUpdate()">Save Update</button>
             </div>
@@ -487,7 +494,6 @@ function disableAdminUI(logEvent = true) {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') openOAuthModal();
   if (e.key === 'Escape') closeOAuthModal();
 });
 
@@ -665,9 +671,10 @@ async function fetchStatus(force = false) {
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803183133-1f3331868c8b0d7b5937f984',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
     ]);
-    const m = [monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]]
-      .map((x,i) => ({...x, friendly_name: ['Assistbot','Assistmusic','Dashboard'][i]}));
+    const m = [monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0],monitors[3].monitors[0]]
+      .map((x,i) => ({...x, friendly_name: ['Assistbot','Assistmusic','Dashboard','AssistServer'][i]}));
     
     lastAssistmusicStatus = m[1].status;
     document.getElementById('ping-val').textContent = Math.round(Math.random()*25+15);
