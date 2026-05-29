@@ -23,7 +23,7 @@
     /* Sidebar */
     .sidebar{width:232px;min-width:232px;background:var(--sidebar);display:flex;flex-direction:column;border-right:1px solid var(--border)}
     .sb-logo{padding:14px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-    .sb-logo img{height:22px;filter:brightness(0) invert(1)}
+    .sb-logo img{height:18px}
     .sb-section{padding:8px 0}
     .sb-label{padding:8px 16px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
     .nav-item{display:flex;align-items:center;gap:8px;padding:7px 12px;margin:1px 8px;border-radius:var(--r);font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .1s;text-decoration:none}
@@ -31,14 +31,17 @@
     .nav-item.active{background:rgba(88,101,242,.25);color:#c5c9f8;font-weight:600}
     .ndot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .ndot.up{background:var(--green)}.ndot.down{background:var(--red)}.ndot.unknown{background:var(--faint)}.ndot.paused{background:var(--yellow)}
-    .sb-footer{margin-top:auto;background:#111214;border-top:1px solid var(--border);padding:8px;display:flex;align-items:center;gap:8px}
-    .av{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative}
-    .av img{width:100%;height:100%;object-fit:cover}
-    .av::after{content:'';position:absolute;bottom:0;right:0;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid #111214}
+    
+    /* Discord Styled Footer Profile */
+    .sb-footer{margin-top:auto;background:#232428;border-top:1px solid var(--border);padding:10px 8px;display:flex;align-items:center;gap:8px}
+    .av{width:32px;height:32px;border-radius:50%;background:#111214;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;border:1px solid var(--border)}
+    .av img{width:20px;height:20px;object-fit:contain}
+    .av::after{content:'';position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid #232428}
+    .uinfo{display:flex;flex-direction:column;line-height:1.3}
     .uname{font-size:13px;font-weight:700;color:var(--text)}
-    .ustatus{font-size:11px;color:var(--green);font-weight:500}
+    .ustatus{font-size:11px;color:var(--muted);font-weight:400}
 
-    /* Main */
+    /* Main Content */
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
     .topbar{height:48px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
     .tb-title{font-size:15px;font-weight:700}
@@ -57,11 +60,11 @@
     .banner.degraded{background:var(--ydim);border-color:rgba(240,177,50,.3);color:var(--yellow)}
     .banner.outage{background:var(--rdim);border-color:rgba(242,63,67,.3);color:var(--red)}
 
-    /* Section */
+    /* Section Components */
     .sec-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;padding:0 2px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
 
-    /* Monitor rows */
+    /* Monitor Rows */
     .mrow{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;transition:background .1s}
     .mrow:last-child{border-bottom:none}
     .mrow:hover{background:var(--hover)}
@@ -85,10 +88,10 @@
     .bar{width:4px;height:18px;border-radius:2px;background:var(--border)}
     .bar.up{background:var(--green)}.bar.down{background:var(--red)}
 
-    /* Two column grid */
+    /* Layout Grids */
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-    /* Incident/update rows */
+    /* Incidents Rows */
     .inc-row{padding:12px 14px;border-bottom:1px solid var(--border)}
     .inc-row:last-child{border-bottom:none}
     .inc-date{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
@@ -100,7 +103,7 @@
     .inc-status.investigating{background:var(--bdim);color:#8891f2}
     .inc-status.monitoring{background:var(--bdim);color:#8891f2}
 
-    /* Update form */
+    /* Custom Admin Inputs Form */
     .update-form{padding:14px}
     .update-form textarea{width:100%;background:var(--input);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;resize:vertical;min-height:70px;outline:none;transition:border .15s}
     .update-form textarea:focus{border-color:var(--blurple)}
@@ -111,7 +114,7 @@
     .post-btn{background:var(--blurple);border:none;border-radius:var(--r);color:white;font-family:inherit;font-size:13px;font-weight:700;padding:7px 18px;cursor:pointer;transition:filter .15s;margin-left:auto}
     .post-btn:hover{filter:brightness(1.15)}
 
-    /* Log */
+    /* Realtime Activity Logging UI Components */
     .lrow{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px;font-size:12px;transition:background .1s}
     .lrow:last-child{border-bottom:none}
     .lrow:hover{background:var(--hover)}
@@ -122,12 +125,12 @@
     .lmsg{flex:1;color:var(--muted)}.lmsg strong{color:var(--text);font-weight:600}
     .ltime{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
 
-    /* Footer */
+    /* Bottom Control Bar Area */
     .footer{padding:9px 16px;border-top:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--faint);flex-shrink:0}
     .rbtn{background:var(--input);border:1px solid var(--border);border-radius:var(--r);padding:5px 14px;font-size:12px;font-family:inherit;color:var(--muted);cursor:pointer;font-weight:700;transition:all .15s}
     .rbtn:hover{background:var(--card);color:var(--text)}.rbtn:disabled{opacity:.4;cursor:not-allowed}
 
-    /* Skeleton */
+    /* Content Pending Skeleton Placeholders */
     .sk{background:linear-gradient(90deg,var(--border) 25%,#3f4146 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     .sk-row{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border)}
@@ -140,11 +143,10 @@
 <body>
 <div class="layout">
 
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sb-logo">
-      <div style="width:24px;height:24px;background:#5865f2;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px">🤖</div>
-      <span style="font-size:13px;font-weight:700;color:var(--text)">AssistBot Status</span>
+      <img src="https://i.imgur.com/E0X7G70.png" alt="Discord Logo" style="height: 16px; width: auto; filter: brightness(0) invert(1);">
+      <span style="font-size:13px;font-weight:700;color:var(--text);margin-left:2px">AssistBot Status</span>
     </div>
     <div class="sb-section">
       <div class="sb-label">My Services</div>
@@ -158,22 +160,22 @@
         <div class="nav-item"><div class="ndot unknown"></div>Fetching…</div>
       </div>
     </div>
+    
     <div class="sb-footer">
       <div class="av">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Crect fill='%235865f2' width='60' height='60'/%3E%3Ctext x='30' y='40' font-size='35' font-weight='bold' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="AssistBot"/>
+        <img src="https://i.imgur.com/E0X7G70.png" alt="AssistBot Profile Badge"/>
       </div>
-      <div>
-        <div class="uname">AssistBot<span style="color:var(--faint);font-weight:400">#8085</span></div>
-        <div class="ustatus">● Online</div>
+      <div class="uinfo">
+        <div class="uname">AssistBot<span style="color:var(--faint);font-weight:400;font-size:11px">#8085</span></div>
+        <div class="ustatus">Online</div>
       </div>
     </div>
   </div>
 
-  <!-- Main -->
   <div class="main">
     <div class="topbar">
-      <div style="width:24px;height:24px;background:#5865f2;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700">🤖</div>
-      <div class="tb-title">AssistBot</div>
+      <img src="https://i.imgur.com/E0X7G70.png" alt="Discord Status Header Badge" style="height:15px; width:auto; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5));">
+      <div class="tb-title" style="margin-left: 2px;">AssistBot</div>
       <div class="tb-div"></div>
       <div class="tb-sub" id="tb-sub">Loading…</div>
       <div class="ping-pill">Ping: <span id="ping-val">—</span> ms</div>
@@ -182,14 +184,12 @@
 
     <div class="content">
 
-      <!-- Banner -->
       <div id="banner" class="banner operational">
         <span id="banner-icon">✅</span>
         <span id="banner-label">Checking status…</span>
       </div>
 
       <div class="grid2">
-        <!-- My Services -->
         <div>
           <div class="sec-title">My Services</div>
           <div class="card" id="monitor-list">
@@ -199,7 +199,6 @@
           </div>
         </div>
 
-        <!-- Discord Status -->
         <div>
           <div class="sec-title">Discord Status</div>
           <div class="card" id="discord-list">
@@ -213,7 +212,6 @@
       </div>
 
       <div class="grid2">
-        <!-- Post Update -->
         <div>
           <div class="sec-title">Post Update</div>
           <div class="card">
@@ -238,7 +236,6 @@
           </div>
         </div>
 
-        <!-- Incident History -->
         <div>
           <div class="sec-title">Incidents &amp; Updates</div>
           <div class="card" id="incident-list" style="max-height:260px;overflow-y:auto">
@@ -248,7 +245,6 @@
         </div>
       </div>
 
-      <!-- Activity Log -->
       <div>
         <div class="sec-title">Activity Log</div>
         <div class="card" id="log-list">
@@ -273,12 +269,10 @@ const INCIDENT_API='https://discordstatus.com/api/v2/incidents.json';
 
 let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[];
 
-// Load persistent updates from localStorage
 function loadUpdates(){
   try{const saved=localStorage.getItem('assistbot-updates');customUpdates=saved?JSON.parse(saved):[];}catch(e){customUpdates=[];}
 }
 
-// Save updates to localStorage
 function saveUpdates(){
   try{localStorage.setItem('assistbot-updates',JSON.stringify(customUpdates.slice(0,15)));}catch(e){}
 }
@@ -366,7 +360,7 @@ async function fetchStatus(force=false){
   const now=Date.now();
   if(!force && cache && (now-lastFetch)<5000){render(cache);return;}
   try{
-    const monitors=await Promise.all([
+    const monitors = await Promise.all([
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90',logs:'0'})}).then(r=>r.json()),
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90',logs:'0'})}).then(r=>r.json()),
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90',logs:'0'})}).then(r=>r.json()),
@@ -409,7 +403,6 @@ function resetCountdown(){
   timer=setInterval(()=>{countdown--;document.getElementById('countdown').textContent=countdown;if(countdown<=0)fetchStatus();},1000);
 }
 
-// Boot
 loadUpdates();
 fetchStatus(true);
 fetchDiscordStatus();
