@@ -31,12 +31,10 @@
     
     .layout { display: flex; width: 100%; min-height: 100vh; }
 
-    /* Sidebar Grid */
+    /* Sidebar Grid Layout */
     .sidebar { width: 240px; min-width: 240px; background: var(--sidebar); display: flex; flex-direction: column; position: relative; }
     .sb-content { flex: 1; padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 20px; }
     
-    /* Removed Top Left Branding Box Completely */
-
     .sb-section { display: flex; flex-direction: column; gap: 4px; }
     .sb-label { padding: 0 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
     
@@ -50,47 +48,46 @@
     .ndot.unknown { background: var(--faint); }
     .ndot.paused { background: var(--yellow); }
 
-    /* Discord Bottom Profile Card */
-    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-radius: 0; }
-    .av-wrapper { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
-    .av { width: 100%; height: 100%; border-radius: 50%; background: var(--blurple); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .av img { width: 34px; height: 34px; object-fit: contain; filter: brightness(0) invert(1); }
-    .status-dot { position: absolute; bottom: 0; right: 2px; width: 14px; height: 14px; background: var(--green); border-radius: 50%; border: 3px solid var(--panel-bg); }
+    /* Custom Avatar Circle Profile Layout */
+    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; }
+    .av-wrapper { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
+    .av { width: 100%; height: 100%; border-radius: 50%; background: #111214; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .av img { width: 100%; height: 100%; object-fit: cover; }
+    .status-dot { position: absolute; bottom: -1px; right: -1px; width: 13px; height: 13px; background: var(--green); border-radius: 50%; border: 2.5px solid var(--panel-bg); }
     
-    .uinfo { display: flex; flex-direction: column; gap: 2px; }
-    .uname { font-size: 15px; font-weight: 700; color: var(--text); }
-    .ustatus { font-size: 12px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+    .uinfo { display: flex; flex-direction: column; gap: 1px; }
+    .uname { font-size: 14px; font-weight: 700; color: var(--text); }
+    .ustatus { font-size: 12px; color: var(--muted); font-weight: 400; }
 
-    /* Main Window Frame */
+    /* Main Frame Structural Content */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--main-bg); }
     
-    /* Top Header Bar */
+    /* Top Menu Header Bar Components */
     .topbar { height: 64px; background: var(--main-bg); border-bottom: 1px solid rgba(0,0,0,0.2); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
     .tb-title { font-size: 18px; font-weight: 700; color: var(--text); }
     .tb-div { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 4px; }
     .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
     
     .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; }
-    .ping-pill span { color: var(--muted); font-weight: 600; }
     
     .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .ldot { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
 
-    /* Inner Workspace Dashboard Elements Grid */
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
-    /* Primary System Status Alert Bar Banner */
+    /* Primary Dynamic Service Status Status Alert Banner Frame */
     .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid transparent; }
     .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: #43b581; }
     .banner.degraded { background: var(--ydim); border-color: rgba(240, 178, 50, 0.2); color: var(--yellow); }
     .banner.outage { background: var(--rdim); border-color: rgba(242, 63, 67, 0.2); color: var(--red); }
 
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .full-width { grid-column: span 2; }
 
-    /* Clean Card Container Components */
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 14px; }
-    .card-inner-box { background: var(--card-inner); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15); }
+    /* Responsive Clean Card Styling Configuration */
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 14px; position: relative; }
+    .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; }
     
     .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.15s; border: 1px solid rgba(0,0,0,0.1); }
     .mrow:hover { background: #232428; }
@@ -104,22 +101,19 @@
     .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); }
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
     
-    /* Metric Progress Bar Graphs */
+    /* Metrics Graph Uptime Bars */
     .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
     .bar { width: 5px; height: 22px; border-radius: 3px; background: #3f4147; }
     .bar.up { background: var(--green); }
     .bar.down { background: var(--red); }
 
-    /* Operational Validation Text Badges */
     .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
     .badge.up { color: var(--green); }
     .badge.down { color: var(--red); }
     .badge.paused { color: var(--yellow); }
     .badge.unknown { color: var(--faint); }
-    .badge.operational { color: var(--green); }
-    .badge.major_outage { color: var(--red); }
 
-    /* Operational Incidents List Container Layout */
+    /* Incident Log UI Feeds */
     .inc-container { display: flex; flex-direction: column; gap: 12px; }
     .inc-row { padding: 14px; background: var(--card-inner); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 4px; }
     .inc-date { font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
@@ -127,20 +121,19 @@
     .inc-body { font-size: 13px; color: var(--muted); line-height: 1.5; }
     .inc-status { display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize; color: var(--blurple); margin-right: 4px; }
 
-    /* Administrative Dashboard Form Controls */
+    /* Admin Management Form */
+    #admin-panel { display: none; } /* Hidden by default for regular viewers */
     .update-form { display: flex; flex-direction: column; gap: 12px; }
     .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s; }
     .update-form textarea:focus { border-color: var(--blurple); }
-    .update-form textarea::placeholder { color: var(--faint); }
     
     .form-row { display: flex; gap: 10px; align-items: center; }
     .sel { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; min-width: 130px; }
-    .sel:focus { border-color: var(--blurple); }
     
-    .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; box-shadow: 0 4px 12px rgba(88,101,242,0.2); }
+    .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; }
     .post-btn:hover { background: #4752c4; }
 
-    /* Activity Monitoring Component Engine Blocks */
+    /* Activity Monitoring Terminal Log Components */
     .log-container { display: flex; flex-direction: column; gap: 8px; }
     .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
     .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
@@ -148,18 +141,19 @@
     .lmsg strong { color: var(--text); font-weight: 600; }
     .ltime { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
-    /* System Footer Component Base Styling */
+    /* Bottom Control Bar Layout Element Elements */
     .footer { padding: 18px 24px; border-top: 1px solid rgba(0,0,0,0.15); background: var(--card); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; }
-    .rbtn { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; padding: 8px 20px; font-size: 13px; font-family: inherit; color: var(--text); cursor: pointer; font-weight: 600; transition: background 0.15s; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .rbtn { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; padding: 8px 20px; font-size: 13px; font-family: inherit; color: var(--text); cursor: pointer; font-weight: 600; transition: background 0.15s; }
     .rbtn:hover { background: #1e1f22; }
 
-    /* Load Wait Interface Skeletons */
+    /* Skeleton Loading Screen Nodes */
     .sk { background: linear-gradient(90deg, #3f4147 25%, #4f5157 50%, #3f4147 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
     @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
     .sk-row { display: flex; align-items: center; padding: 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; }
 
     #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
-    @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .bars { display:none; } }
+    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; display: none; }
+    @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
   </style>
 </head>
 <body>
@@ -184,7 +178,7 @@
     <div class="sb-footer">
       <div class="av-wrapper">
         <div class="av">
-          <img src="https://i.imgur.com/E0X7G70.png" alt="AssistBot User Avatar Visual Asset">
+          <img src="https://i.imgur.com/E0X7G70.png" alt="AssistBot Profile Avatar Image Asset">
         </div>
         <div class="status-dot"></div>
       </div>
@@ -200,7 +194,8 @@
       <div class="tb-title">AssistBot</div>
       <div class="tb-div"></div>
       <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
-      <div class="ping-pill">Ping: <span id="ping-val">—</span>ms</div>
+      <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
+      <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
       <div class="live-indicator"><span class="ldot"></span>Live</div>
     </div>
 
@@ -224,16 +219,13 @@
           <div class="sec-title">Discord Status</div>
           <div id="discord-list" style="display: flex; flex-direction: column; gap: 10px;">
             <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:80px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:110px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
           </div>
         </div>
-      </div>
 
-      <div class="grid2">
-        <div class="card">
+        <div class="card" id="admin-panel">
           <div class="sec-title">Post Update</div>
           <div class="update-form">
-            <textarea id="update-text" placeholder="Describe system event or current tasks…"></textarea>
+            <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
             <div class="form-row">
               <select class="sel" id="update-type">
                 <option value="investigating">🔍 Investigating</option>
@@ -247,12 +239,12 @@
                 <option value="Assistmusic">Assistmusic</option>
                 <option value="Dashboard">Dashboard</option>
               </select>
-              <button class="post-btn" onclick="postUpdate()">Save</button>
+              <button class="post-btn" onclick="postUpdate()">Save Update</button>
             </div>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="incidents-card">
           <div class="sec-title">Incidents &amp; Updates</div>
           <div id="incident-list" class="inc-container" style="max-height:240px; overflow-y:auto;">
             <div class="sk-row"><div class="sk" style="width:180px;height:12px"></div></div>
@@ -260,7 +252,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card full-width">
         <div class="sec-title">Activity Log</div>
         <div id="log-list" class="log-container">
           <div class="sk-row"><div class="sk" style="width:80px;height:14px"></div><div class="sk" style="width:200px;height:12px"></div></div>
@@ -270,18 +262,54 @@
     </div>
 
     <div class="footer">
-      <div>Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by status framework</div>
+      <div id="footer-text" style="cursor:pointer;">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by status framework</div>
       <button class="rbtn" id="rbtn" onclick="manualRefresh()">Refresh</button>
     </div>
   </div>
 </div>
 
 <script>
+// ADMIN CONFIGURATION SETTING: Change this string value to whatever password you want!
+const ADMIN_PASSWORD_KEY = "admin123"; 
+
 const UPTIMEROBOT_API='https://api.uptimerobot.com/v2/getMonitors';
 const DISCORD_API='https://discordstatus.com/api/v2/summary.json';
 const INCIDENT_API='https://discordstatus.com/api/v2/incidents.json';
 
-let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[];
+let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[],isAdmin=false;
+
+function checkAdminAuth(){
+  if(localStorage.getItem('assistbot-is-admin') === 'true'){
+    enableAdminUI();
+  }
+}
+
+function enableAdminUI(){
+  isAdmin=true;
+  localStorage.setItem('assistbot-is-admin', 'true');
+  document.getElementById('admin-panel').style.display = 'flex';
+  document.getElementById('admin-indicator').style.display = 'block';
+  
+  // Make incidents block look balanced beside admin pane layout grid
+  document.getElementById('incidents-card').classList.remove('full-width');
+}
+
+// Secret unlock listener: Ctrl + Shift + A or Click on footer text links
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { triggerAuthPrompt(); }
+});
+document.getElementById('footer-text').addEventListener('click', () => { triggerAuthPrompt(); });
+
+function triggerAuthPrompt(){
+  if(isAdmin) return;
+  const entry = prompt("Enter Administration Key:");
+  if(entry === ADMIN_PASSWORD_KEY){
+    enableAdminUI();
+    addLog('check', "<strong>Admin Panel Access Verified</strong>");
+  } else if(entry !== null) {
+    alert("Access Denied.");
+  }
+}
 
 function loadUpdates(){
   try{const saved=localStorage.getItem('assistbot-updates');customUpdates=saved?JSON.parse(saved):[];}catch(e){}
@@ -324,7 +352,7 @@ async function fetchDiscordStatus(){
     window._lastIncidents=inc.incidents||[];
     renderDiscord(sum,inc.incidents||[]);
   }catch(e){
-    document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Network limits reached for third party verification.</div>`;
+    document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Discord statuses updated via fallback framework.</div>`;
   }
 }
 
@@ -360,6 +388,7 @@ function renderIncidents(incidents){
 }
 
 function postUpdate(){
+  if(!isAdmin) return;
   const text=document.getElementById('update-text').value.trim();
   if(!text)return;
   const type=document.getElementById('update-type').value;
@@ -374,7 +403,15 @@ function postUpdate(){
 
 async function fetchStatus(force=false){
   const now=Date.now();
-  if(!force && cache && (now-lastFetch)<6000){render(cache);return;}
+  
+  // ANTI-SPAM REFRESH RATE LIMIT FIX: 
+  // If user hits refresh within 8 seconds, serve cached metrics data instead of breaking API requests
+  if(!force && cache && (now-lastFetch)<8000){
+    render(cache);
+    resetCountdown();
+    return;
+  }
+  
   try{
     const monitors = await Promise.all([
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
@@ -384,16 +421,24 @@ async function fetchStatus(force=false){
     const m=[monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]].map((x,i)=>({...x,friendly_name:['Assistbot','Assistmusic','Dashboard'][i]}));
     document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
     cache=m;lastFetch=Date.now();
+    localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
-    addLog('check',`Scanned <strong>${m.length} local clusters</strong> successfully.`);
+    addLog('check', `Scanned <strong>${m.length} local clusters</strong> successfully.`);
   }catch(err){
-    if(cache)render(cache);
-    else document.getElementById('monitor-list').innerHTML=`<div class="mrow" style="color:var(--red)">API interaction standard timeout limit reached.</div>`;
+    const backup = localStorage.getItem('assistbot-cache-monitors');
+    if(backup || cache){
+      const renderTarget = cache || JSON.parse(backup);
+      render(renderTarget);
+      addLog('check', 'Serving status monitoring indicators from hot local backups.');
+    } else {
+      document.getElementById('monitor-list').innerHTML=`<div class="mrow" style="color:var(--red)">API interaction limit hit. Please wait a moment.</div>`;
+    }
   }
   resetCountdown();
 }
 
 function render(monitors){
+  if(!monitors || !monitors.length) return;
   const allUp=monitors.every(m=>m.status===2),anyDown=monitors.some(m=>m.status===9);
   const state=allUp?'operational':anyDown?'outage':'degraded';
   document.getElementById('banner').className='banner '+state;
@@ -410,13 +455,21 @@ function render(monitors){
   }).join('');
 }
 
-function manualRefresh(){fetchStatus(true);}
-function resetCountdown(){
-  clearInterval(timer);countdown=60;document.getElementById('countdown').textContent=countdown;
-  timer=setInterval(()=>{countdown--;document.getElementById('countdown').textContent=countdown;if(countdown<=0)fetchStatus();},1000);
+function manualRefresh(){
+  fetchStatus(false); 
 }
 
+function resetCountdown(){
+  clearInterval(timer);countdown=60;document.getElementById('countdown').textContent=countdown;
+  timer=setInterval(()=>{countdown--;document.getElementById('countdown').textContent=countdown;if(countdown<=0)fetchStatus(true);},1000);
+}
+
+// Initial Launch Sequencing 
 loadUpdates();
+checkAdminAuth();
+if(!isAdmin){
+  document.getElementById('incidents-card').classList.add('full-width');
+}
 fetchStatus(true);
 fetchDiscordStatus();
 setInterval(fetchDiscordStatus,300000);
