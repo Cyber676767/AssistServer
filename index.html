@@ -330,8 +330,10 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const ADMIN_PASSWORD = "SSTTRROONNGGCCAANNOOEE981!";
 
-// Shared storage key — all visitors read/write from the same place
-const SHARED_UPDATES_KEY = "assistbot-shared-updates";
+const GITHUB_TOKEN = "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";
+const GITHUB_REPO  = "Cyber676767/assist-server";
+const GITHUB_FILE  = "updates.json";
+const GITHUB_API   = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
 
 const UPTIMEROBOT_API = 'https://api.uptimerobot.com/v2/getMonitors';
 const DISCORD_API     = 'https://discordstatus.com/api/v2/summary.json';
@@ -343,39 +345,61 @@ let isAdmin = false;
 let lastAssistmusicStatus = 2;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
+let githubFileSha = null; // needed by GitHub API to update existing files
 
-// ── SHARED STORAGE HELPERS ──────────────────────────────────────────────────
-// Uses window.storage (persistent shared storage) so all visitors see the same updates.
-// Falls back to localStorage if window.storage isn't available.
-
-async function sharedGet(key) {
-  try {
-    if (window.storage) {
-      const result = await window.storage.get(key, true); // shared=true
-      return result ? JSON.parse(result.value) : null;
-    }
-  } catch(e) {}
-  // localStorage fallback
-  try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
-}
-
-async function sharedSet(key, value) {
-  try {
-    if (window.storage) {
-      await window.storage.set(key, JSON.stringify(value), true); // shared=true
-      return;
-    }
-  } catch(e) {}
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
-}
+// ── GITHUB STORAGE HELPERS ───────────────────────────────────────────────────
 
 async function loadUpdates() {
-  const saved = await sharedGet(SHARED_UPDATES_KEY);
-  customUpdates = saved || [];
+  try {
+    const res = await fetch(GITHUB_API, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (res.status === 404) {
+      // File doesn't exist yet — start empty
+      customUpdates = [];
+      githubFileSha = null;
+      return;
+    }
+    const data = await res.json();
+    githubFileSha = data.sha;
+    const decoded = JSON.parse(atob(data.content.replace(/\n/g, '')));
+    customUpdates = decoded || [];
+  } catch(e) {
+    console.warn('Could not load updates from GitHub:', e);
+    customUpdates = [];
+  }
 }
 
 async function saveUpdates() {
-  await sharedSet(SHARED_UPDATES_KEY, customUpdates.slice(0, 15));
+  try {
+    const content = btoa(unescape(encodeURIComponent(
+      JSON.stringify(customUpdates.slice(0, 15), null, 2)
+    )));
+    const body = {
+      message: 'Update status page entries',
+      content: content,
+    };
+    if (githubFileSha) body.sha = githubFileSha; // required for updates, omit for creates
+
+    const res = await fetch(GITHUB_API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    // Update SHA so next save works
+    githubFileSha = data.content?.sha || githubFileSha;
+  } catch(e) {
+    console.error('Could not save updates to GitHub:', e);
+    showToast("Failed to save update to GitHub.", "error");
+  }
 }
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
@@ -586,20 +610,22 @@ async function postUpdate() {
     date: time
   });
   
-  await saveUpdates(); // ← saves to shared storage so ALL visitors see it
+  showToast("Saving to GitHub…", "info");
+  await saveUpdates(); // ← writes updates.json to GitHub repo so ALL visitors see it
   document.getElementById('update-text').value = '';
   renderIncidents(currentIncidentFeedCache);
   addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
-  showToast("Update saved and visible to all users.", "success");
+  showToast("Update saved — visible to all visitors!", "success");
 }
 
 async function deleteCustomUpdate(id) {
   if (!isAdmin) return;
   customUpdates = customUpdates.filter(u => u.id !== Number(id));
+  showToast("Removing from GitHub…", "info");
   await saveUpdates();
   renderIncidents(currentIncidentFeedCache);
   addLog('update', 'Update entry removed.');
-  showToast("Update removed for all users.", "info");
+  showToast("Update removed for all visitors.", "info");
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
@@ -681,11 +707,11 @@ async function init() {
   fetchStatus(true);
   fetchDiscordStatus();
   setInterval(fetchDiscordStatus, 300000);
-  // Periodically refresh custom updates from shared storage (every 30s)
+  // Periodically refresh updates from GitHub every 60s so visitors see new posts
   setInterval(async () => {
     await loadUpdates();
     renderIncidents(currentIncidentFeedCache);
-  }, 30000);
+  }, 60000);
 }
 
 init();
