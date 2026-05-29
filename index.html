@@ -1,419 +1,437 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AssistBot Status</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg:        #1a1b1e;
-      --card:      #2b2d31;
-      --card2:     #232428;
-      --border:    #3a3c40;
-      --text:      #dbdee1;
-      --muted:     #949ba4;
-      --faint:     #6d6f78;
-      --green:     #23a55a;
-      --green-bg:  rgba(35,165,90,.15);
-      --yellow:    #f0b132;
-      --yellow-bg: rgba(240,177,50,.15);
-      --red:       #f23f43;
-      --red-bg:    rgba(242,63,67,.15);
-      --blue:      #5865f2;
-      --radius:    8px;
+    :root{
+      --bg:#111214;--sidebar:#1e1f22;--card:#2b2d31;--card2:#232428;
+      --hover:#2e3035;--input:#1e1f22;--border:#3a3c40;
+      --text:#dbdee1;--muted:#949ba4;--faint:#6d6f78;
+      --green:#23a55a;--gdim:rgba(35,165,90,.15);
+      --yellow:#f0b132;--ydim:rgba(240,177,50,.15);
+      --red:#f23f43;--rdim:rgba(242,63,67,.15);
+      --blurple:#5865f2;--bdim:rgba(88,101,242,.2);
+      --r:6px;--rl:8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+    .layout{display:flex;min-height:100vh}
 
-    /* ── Header ── */
-    header {
-      background: var(--card2);
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .bot-info { display: flex; align-items: center; gap: 10px; }
-    .bot-avatar {
-      width: 38px; height: 38px;
-      background: var(--blue);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-      position: relative;
-    }
-    .bot-avatar::after {
-      content: '';
-      position: absolute;
-      bottom: 1px; right: 1px;
-      width: 10px; height: 10px;
-      background: var(--green);
-      border-radius: 50%;
-      border: 2px solid var(--card2);
-    }
-    .bot-name { font-weight: 800; font-size: 16px; }
-    .bot-tag  { font-size: 12px; color: var(--muted); font-weight: 600; }
-    .header-stats { display: flex; gap: 20px; align-items: center; }
-    .stat-pill {
-      font-size: 12px; font-weight: 700;
-      color: var(--muted);
-      display: flex; align-items: center; gap: 5px;
-    }
-    .stat-pill span { color: var(--text); }
+    /* Sidebar */
+    .sidebar{width:232px;min-width:232px;background:var(--sidebar);display:flex;flex-direction:column;border-right:1px solid var(--border)}
+    .sb-logo{padding:14px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .sb-logo img{height:22px;filter:brightness(0) invert(1)}
+    .sb-section{padding:8px 0}
+    .sb-label{padding:8px 16px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:7px 12px;margin:1px 8px;border-radius:var(--r);font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .1s;text-decoration:none}
+    .nav-item:hover{background:rgba(255,255,255,.06);color:var(--text)}
+    .nav-item.active{background:rgba(88,101,242,.25);color:#c5c9f8;font-weight:600}
+    .ndot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .ndot.up{background:var(--green)}.ndot.down{background:var(--red)}.ndot.unknown{background:var(--faint)}.ndot.paused{background:var(--yellow)}
+    .sb-footer{margin-top:auto;background:#111214;border-top:1px solid var(--border);padding:8px;display:flex;align-items:center;gap:8px}
+    .av{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative}
+    .av img{width:100%;height:100%;object-fit:cover}
+    .av::after{content:'';position:absolute;bottom:0;right:0;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid #111214}
+    .uname{font-size:13px;font-weight:700;color:var(--text)}
+    .ustatus{font-size:11px;color:var(--green);font-weight:500}
 
-    /* ── Banner ── */
-    .hero { max-width: 860px; margin: 24px auto 0; padding: 0 16px; }
-    .banner {
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      display: flex; align-items: center; gap: 12px;
-      font-weight: 700; font-size: 15px;
-      margin-bottom: 20px;
-      border: 1px solid transparent;
-      transition: all .3s;
-    }
-    .banner.operational { background: var(--green-bg);  border-color: rgba(35,165,90,.3);  color: #3fba7a; }
-    .banner.degraded    { background: var(--yellow-bg); border-color: rgba(240,177,50,.3); color: #f0b132; }
-    .banner.outage      { background: var(--red-bg);    border-color: rgba(242,63,67,.3);  color: #f23f43; }
-    .banner-icon { font-size: 20px; }
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+    .topbar{height:48px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+    .tb-title{font-size:15px;font-weight:700}
+    .tb-div{width:1px;height:18px;background:var(--border)}
+    .tb-sub{font-size:13px;color:var(--muted);flex:1}
+    .ping-pill{font-size:11px;font-weight:600;color:var(--muted);background:var(--input);border:1px solid var(--border);padding:3px 9px;border-radius:20px}
+    .ping-pill span{color:var(--green)}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+    .ldot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:4px;animation:pulse 2s infinite;vertical-align:middle}
 
-    /* ── Section ── */
-    .section { max-width: 860px; margin: 0 auto 20px; padding: 0 16px; }
-    .section-title {
-      font-size: 11px; font-weight: 700;
-      letter-spacing: .08em; text-transform: uppercase;
-      color: var(--faint); margin-bottom: 8px;
-    }
+    .content{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
 
-    /* ── Card ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+    /* Banner */
+    .banner{border-radius:var(--rl);padding:13px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;border:1px solid transparent;transition:all .3s}
+    .banner.operational{background:var(--gdim);border-color:rgba(35,165,90,.3);color:#3fba7a}
+    .banner.degraded{background:var(--ydim);border-color:rgba(240,177,50,.3);color:#f0b132}
+    .banner.outage{background:var(--rdim);border-color:rgba(242,63,67,.3);color:#f23f43}
 
-    /* ── Monitor Row ── */
-    .monitor-row {
-      display: flex; align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 10px;
-      transition: background .15s;
-    }
-    .monitor-row:last-child { border-bottom: none; }
-    .monitor-row:hover { background: rgba(255,255,255,.03); }
+    /* Section */
+    .sec-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;padding:0 2px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
 
-    .status-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%; flex-shrink: 0;
-    }
-    .status-dot.up     { background: var(--green);  box-shadow: 0 0 0 3px rgba(35,165,90,.2); }
-    .status-dot.down   { background: var(--red);    box-shadow: 0 0 0 3px rgba(242,63,67,.2); }
-    .status-dot.paused { background: var(--yellow); box-shadow: 0 0 0 3px rgba(240,177,50,.2); }
-    .status-dot.unknown{ background: #4e5058;       box-shadow: 0 0 0 3px rgba(78,80,88,.2); }
+    /* Monitor rows */
+    .mrow{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;transition:background .1s}
+    .mrow:last-child{border-bottom:none}
+    .mrow:hover{background:var(--hover)}
+    .sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .sdot.up{background:var(--green);box-shadow:0 0 0 3px rgba(35,165,90,.2)}
+    .sdot.down{background:var(--red);box-shadow:0 0 0 3px rgba(242,63,67,.2)}
+    .sdot.paused{background:var(--yellow);box-shadow:0 0 0 3px rgba(240,177,50,.2)}
+    .sdot.unknown{background:var(--faint)}
+    .mname{font-weight:600;font-size:14px;flex:1;color:var(--text)}
+    .mup{font-size:12px;color:var(--muted);font-weight:500;min-width:44px;text-align:right}
+    .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+    .badge.up{background:var(--gdim);color:var(--green)}
+    .badge.down{background:var(--rdim);color:var(--red)}
+    .badge.paused{background:var(--ydim);color:var(--yellow)}
+    .badge.unknown{background:rgba(109,111,120,.2);color:var(--faint)}
+    .badge.operational{background:var(--gdim);color:var(--green)}
+    .badge.degraded_performance{background:var(--ydim);color:var(--yellow)}
+    .badge.partial_outage{background:var(--ydim);color:var(--yellow)}
+    .badge.major_outage{background:var(--rdim);color:var(--red)}
+    .bars{display:flex;gap:2px;align-items:center}
+    .bar{width:4px;height:18px;border-radius:2px;background:var(--border)}
+    .bar.up{background:var(--green)}.bar.down{background:var(--red)}
 
-    .monitor-name { font-weight: 700; font-size: 14px; flex: 1; color: var(--text); }
-    .monitor-uptime { font-size: 12px; color: var(--muted); font-weight: 600; }
+    /* Two column grid */
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-    .monitor-badge {
-      font-size: 11px; font-weight: 800;
-      padding: 3px 10px; border-radius: 20px;
-      text-transform: uppercase; letter-spacing: .04em;
-    }
-    .monitor-badge.up     { background: var(--green-bg);  color: var(--green); }
-    .monitor-badge.down   { background: var(--red-bg);    color: var(--red); }
-    .monitor-badge.paused { background: var(--yellow-bg); color: var(--yellow); }
-    .monitor-badge.unknown{ background: rgba(78,80,88,.2);color: var(--muted); }
+    /* Incident/update rows */
+    .inc-row{padding:12px 14px;border-bottom:1px solid var(--border)}
+    .inc-row:last-child{border-bottom:none}
+    .inc-date{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .inc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .inc-body{font-size:12px;color:var(--muted);line-height:1.5}
+    .inc-status{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+    .inc-status.resolved{background:var(--gdim);color:var(--green)}
+    .inc-status.identified{background:var(--ydim);color:var(--yellow)}
+    .inc-status.investigating{background:var(--bdim);color:#8891f2}
+    .inc-status.monitoring{background:var(--bdim);color:#8891f2}
 
-    /* ── Uptime bars ── */
-    .uptime-bar-wrap { display: flex; gap: 2px; align-items: center; }
-    .bar-seg { width: 5px; height: 20px; border-radius: 2px; background: var(--border); }
-    .bar-seg.up   { background: var(--green); }
-    .bar-seg.down { background: var(--red); }
+    /* Update form */
+    .update-form{padding:14px}
+    .update-form textarea{width:100%;background:var(--input);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;resize:vertical;min-height:70px;outline:none;transition:border .15s}
+    .update-form textarea:focus{border-color:var(--blurple)}
+    .update-form textarea::placeholder{color:var(--faint)}
+    .form-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+    .sel{background:var(--input);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:12px;padding:6px 10px;outline:none;cursor:pointer}
+    .sel:focus{border-color:var(--blurple)}
+    .post-btn{background:var(--blurple);border:none;border-radius:var(--r);color:white;font-family:inherit;font-size:13px;font-weight:700;padding:7px 18px;cursor:pointer;transition:filter .15s;margin-left:auto}
+    .post-btn:hover{filter:brightness(1.15)}
 
-    /* ── Log rows ── */
-    .log-row {
-      display: flex; align-items: center;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 10px; font-size: 13px;
-      transition: background .15s;
-    }
-    .log-row:last-child { border-bottom: none; }
-    .log-row:hover { background: rgba(255,255,255,.03); }
-    .log-badge {
-      font-size: 10px; font-weight: 800;
-      padding: 2px 7px; border-radius: 4px;
-      text-transform: uppercase; letter-spacing: .05em;
-      flex-shrink: 0; min-width: 90px; text-align: center;
-    }
-    .log-badge.check  { background: rgba(88,101,242,.2); color: #8891f2; }
-    .log-badge.up     { background: var(--green-bg);     color: var(--green); }
-    .log-badge.down   { background: var(--red-bg);       color: var(--red); }
-    .log-text { flex: 1; color: var(--muted); }
-    .log-text strong { color: var(--text); font-weight: 700; }
-    .log-time { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+    /* Log */
+    .lrow{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px;font-size:12px;transition:background .1s}
+    .lrow:last-child{border-bottom:none}
+    .lrow:hover{background:var(--hover)}
+    .ltype{font-size:10px;font-weight:800;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;min-width:80px;text-align:center}
+    .ltype.check{background:var(--bdim);color:#8891f2}
+    .ltype.up{background:var(--gdim);color:var(--green)}
+    .ltype.down{background:var(--rdim);color:var(--red)}
+    .lmsg{flex:1;color:var(--muted)}.lmsg strong{color:var(--text);font-weight:600}
+    .ltime{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
 
-    /* ── Footer ── */
-    footer {
-      max-width: 860px; margin: 0 auto 32px;
-      padding: 0 16px;
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 12px; color: var(--faint);
-    }
-    .refresh-btn {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 6px; padding: 5px 14px;
-      font-size: 12px; font-family: inherit;
-      color: var(--muted); cursor: pointer; font-weight: 700;
-      transition: all .15s;
-    }
-    .refresh-btn:hover { background: var(--card2); color: var(--text); }
-    .refresh-btn:disabled { opacity: .4; cursor: not-allowed; }
+    /* Footer */
+    .footer{padding:9px 16px;border-top:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--faint);flex-shrink:0}
+    .rbtn{background:var(--input);border:1px solid var(--border);border-radius:var(--r);padding:5px 14px;font-size:12px;font-family:inherit;color:var(--muted);cursor:pointer;font-weight:700;transition:all .15s}
+    .rbtn:hover{background:var(--card);color:var(--text)}.rbtn:disabled{opacity:.4;cursor:not-allowed}
 
-    /* ── Skeleton ── */
-    .skeleton {
-      background: linear-gradient(90deg, var(--border) 25%, #3f4146 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 4px;
-    }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .skeleton-row {
-      display: flex; align-items: center;
-      padding: 12px 16px; gap: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    .skeleton-row:last-child { border-bottom: none; }
+    /* Skeleton */
+    .sk{background:linear-gradient(90deg,var(--border) 25%,#3f4146 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .sk-row{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border)}
+    .sk-row:last-child{border-bottom:none}
 
-    @keyframes pulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:.4; transform:scale(1.5); }
-    }
-    .live-dot {
-      display: inline-block; width: 7px; height: 7px;
-      background: var(--green); border-radius: 50%;
-      margin-right: 4px; animation: pulse 2s infinite;
-    }
-    #countdown { font-variant-numeric: tabular-nums; }
+    #countdown{font-variant-numeric:tabular-nums}
+    @media(max-width:640px){.sidebar{display:none}.grid2{grid-template-columns:1fr}.bars{display:none}}
   </style>
 </head>
 <body>
+<div class="layout">
 
-<header>
-  <div class="bot-info">
-    <div class="bot-avatar">🤖</div>
-    <div>
-      <div class="bot-name">AssistBot<span style="color:var(--faint);font-weight:600">#8085</span></div>
-      <div class="bot-tag" style="color:var(--green)">● Online</div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <img src="data:image/png;base64,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" alt="Discord" style="height:20px"/>
+      <span style="font-size:13px;font-weight:700;color:var(--muted)">Status</span>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">My Services</div>
+      <div id="nav-items">
+        <div class="nav-item"><div class="ndot unknown"></div>Loading…</div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Discord</div>
+      <div id="discord-nav">
+        <div class="nav-item"><div class="ndot unknown"></div>Fetching…</div>
+      </div>
+    </div>
+    <div class="sb-footer">
+      <div class="av">
+        <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAErASsDASIAAhEBAxEB/8QAHQABAAEEAwEAAAAAAAAAAAAAAAYCBQcIAQMECf/EAEgQAAEDAwEEBQcKBAMHBQAAAAEAAgMEBREGBxIhMQgTQVGxIjI0YXFzkRQVFkJSVoGUodIJI8HRJJLwFzNicnWis0ZTgoTx/8QAGwEBAQADAQEBAAAAAAAAAAAAAAECAwUEBgf/xAAuEQEAAQQABAUCBQUAAAAAAAAAAQIDBBEFEjFBBhMUIVEiUxYzYZGhNHGx4fD/2gAMAwEAAhEDEQA/ANZURFmCIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICKXxG3vrhVx27rMW2aUmoomwxzOaDuvaxri3uHDHJdNhniqYXumpqWKpnqWsZNJbWyQP8kDqsNHkHty0Z4roRgxzRTzdf++dd/wDfTfKniU8s1cnTX+Z7a32+N/p11FkXfXQvp62eB7WNfHI5jgw5aCDjh6l0LwTExOpdSmqKoiY7iIiiiIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiD0zV9dPO+easqJZnsLHyPlcXOaeBBJOSPUlFX11EHijrammD+DxFK5m97cHivMiz8yvfNudtc2bc08vLGvjTk8TkrhEWDYIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiIPLdak0tIZG43yd1ue9RiSR8ji6R7nOPaSr9qT0FnvR4FR9YyCIigIiICIiAiKrzQMcygpRc7zvtH4pvO+0fig4RVB2eDuIQDic9iClFVvO7Dj2Ljed9o/FBwuQSDkHBTed9o/FcniM/FBfLDWSTB0Eri4tGWuPPCuqj+m/Tn+6PiFIFlAIiKgiIgIiICIiAiIgIiICIiAiIgIiILZqT0FnvR4FR9SDUnoLPejwKj6xkERFAREQEREBcu5/gPBcLl3P8AAeCC/bP9H6g13qqk01pqhdWV9U7gOTI2DzpHu+qwdp8SQFtJq/Yls22c7IbrYdoe7S3vqZKy06opw8iqnDMimDPquBG71buD2kvaQ4O6vr6HG0fZHsx2UXS56jvNPTajq615niZA+Spkia0CKNoa3zSQ488ZdxI7MGdIHbDqDa5qo19eXUdnpXObbba1+WQMP1nfakPa78BgBBjNVnzn/wCu1UKs+c//AF2oPTY3QtvVC6opYKyEVMZkp53vZHK3eGWOcwhwaRwJaQQDwIK+gFo2NSWCw3HTNJpPZPBS14/xTJ5q6SciX+U3EsjjKwOI3W7rh5Wd3iSvno0lrg5pIIOQR2L6O6ih0lrnVtr13Q7RNMQ0skNklbDJWMDz8jrpKp4OXeSSJN3B4gg5QaUdI/S8Gi9qlbpmC0Wi1iigh3orZUVM0Ti9gk3i6oe5+9h4GMgYA4cyccjzD7QsodK/UNs1R0gdU3mz10Nfb5JoYoKiB4fHIIoI4yWuBILd5hwRwPPtWLx5h9oQXLTfpz/dHxCkCj+m/Tn+6PiFIFlAIiKgiIgIiICIiAiIgIiICIiAiIgIiILZqT0FnvR4FR9SDUnoLPejwKj6xkERFAXfQ0dXXVDaejppaiZ5w1kbS4k+wKbbDtm1y2m60gsdETFADvVM+OEbO0revSGzXR2y6ijpdK6Uffb9ujeneBwd3ue7yWD2cVU2080L0bdp2qGsndaW2ukdg9dWP3OHfjnyUnvXR50lpejMmrNqlro6oZ3qenj60t+HH9Ator7orXGqYJanWut22G0taXSUFo8hrWDnvyu4n4YWGn2XSF1vEth2TaHOp6yM7lRe7pI59PGe8ZOCfWrA1K1RR22gvM1Naa2StpG+ZM+PcLvwVt84DHPuW+Vn6KtBdZGVuur18omHEU1viEUTPVnHH4K91vRL2WTsLY47lAcc2TD+oUNvnjuu+yfgr3pXTk9/mfDDUQwvbyEjsZW4Go+hfYpWvdYdT1dO76jKmMOH4kf2UJrNg+qNn4kkummm6is8RJ+VWyYsqo2587hxOPYkQbYYbsg17M18tBYqi4QxjedJTtLmges8lDrta7laax9Lc6KellBw5sjccf6rerZQ/VMlt+ctmmt26gooj/iLLehuzxf8OeYPr5KaXC26K2jwus2t9Jmy3pw3d2eMDePfHIODk0bfNXdd2DPsXG677J+C2G2/9Gq9aGinveny+5WdhLn4HlxN9Y7lrworndd9k/BcngMfFUoguem/Tn+6PiFIFH9N+nP90fEKQLKAREVBERAREQEREBERAREQEREBERAREQWzUnoLPejwKj6kGpPQWe9HgVH1jILkAk4HMrhTDY3pSo1ptIs2n4GuInqWmUgZ3WA5cfgoN3ehHs/ZpXZmy+1dOGXG7/zS4jiI/qhZ+cWRtc87rQBlx5LptlHBb7dT0NMwMhp42xsaOwAYCxj0mdUVtm0TFYrM53zzf5xQ0oafKAdwc4fgf1VYofqGvvG3LW9Rpax1U1Foi1S7lyrIjg1kgPGNp7R/+9yzjpbT1n0xZobTZKGKjpIW4axjcZ9ZPafWrXsr0fRaH0TQWCja3eijDp5AOMsp4ucfxUpSQREUBCARggEHsREGEtruzWutNzO0bZv/AIG+0n82ro4hiOtYOLgWj63ipps21VYtqGi4Lr8mjMrT1dVTPHl08w5jvHeFOTxGCsA1MQ2VdIWlkpf5OndYEsljHBkVT3juycfEq9RnOeggqLXJbpwZYJIzG4P45aRhfLfbto6TQ20272EtPUxzF0LiMZY7iMfgV9U1p3/EN0aHMtGs6aLiAaapcO76p/VRWnMsUkW51jC3fbvNz2jvVCylR6Vk1TsZ+kFHFvVFoqTTy4+zugj9Fi1FXPTfpz/dHxCkCj+m/Tn+6PiFIFlAIiKgiIgIiICIiAiIgIiICIiAiIgIiILZqT0FnvR4FR9SDUnoLPejwKj6xkFtf/Dz0o2r1PdtVzxkiii6mEkcN539cZWqC34/h8mD/ZRXhjQJhXHrT2n7P6KJLZVYM1ePpF0rdOWmTy6eyW51YWnkJDnB8FnNYMtQ6npi3QS8DNY2GLPaBzVhGa7lW0tuoZq6unjp6aBhfJI84a1o5kla/ag6Vml6O6vprXY66400bt01G+Iw/wBbQeOParl02LrWUOy2moqZ72R19a2OdzTzaATun2kD4LSlWIH0c2WbRtO7RLM6vsk7hLEQ2oppeEkRPeO71qYrRfod3CtpNs9JTUzn9TWU0sdQwHgWhu8CfYR+q3oUmARYq6RO1ePZpYIW0cUdRea7Ipo3+awDm93qHDh2rVOLbxtTZdvnA6nmf5e91Do29UR3buOSRA+gKw50u7f12yo3mLyau0VkNVC8c24cAVf9gu0qDaVpE3B8LKa40z+qrIGnIDscHD1FebpQysi2H6iMmOMLWj2lwwncTvS1eLppq2XIHIqqWOb/ADNB/qoF0odOjUuxe+UgBMkMXXsHrapRsnjfFsy00yTzhbIM/wCQK86hpo6yxV9LMAY5ad7HA9xaVBpN0F6aG802s9I1jC5lVTiRoPIObwJx38QsG7ZNJzaR1vW258RZH1hLeGAOK2D6CkQZti1YIwOrbHLjHIfzBw/13K69PHRLHRRajgaGfWcQOZAOQqrUbTfpz/dHxCkCj+m/Tn+6PiFIFYUREVBERAREQEREBERAREQEREBERAREQWzUnoLPejwKj6kGpPQWe9HgVH1jILdP+HReWOtOobG4/wAxsjZxx7OXL8StLFsB0abs7ZptwtEdY/dt96hbG17jgbsmN0+viQiS+hqwXtfd9Fdv+idZSeRR1rHWypf2DJ8nP+ZZ0BBGRyKx5ts07Qa70hcNLxzxx3iFgqaMOOHCRvFpHqPJIRctr+iKXaDoarsE0gikfiWmmxnq5B5p9nZ+K0qvGw/adbro6g+jFTV4dhs9Ph0bh357PxW2GwLaVTal0/HYb5UMpNUWz/C1lLM7de8s4b4HblZWTehgjow7GarQhn1FqPqjeamPqo4WHeFOw8Tx+0eHwWd0RQac9OeirY9eWevkDjSS0RjiPYHB2SPbxC14X0n2kaHsOvtOvst+py+PO/FKw4khf2OaexYMouiXaY7oJKvVlXNQh2epbTta9w7i7P8ARZRI6OgfbKyOh1Fdntc2kmkjhjJ5Oc0EnHxUy6WdY+u0/Y9D0Z3q2/3GKMNHMRtcCSso2O1af0NpRtFQRRW+1UMRc4k8ABxLnHtPrWINlbKjahtcrdplZG8WO1b1HZGPGA88nSD9T+PqUGc7XSsobbS0UQwyCFsbR6mgBWvaDcmWfRF5ucjwwU9HI/eJ4A7px+qvo48lgPpvawZp/ZPJZoZQK27v6ljA7DtztPgoIJ/D9opa2t1jqh8W6yprOrYSOOSd8j/uCun8QXVNJR6HoNNxvBraucSOA5tjAPjjCkPR9batkfR3prxenMp5axhq3MccOeSOA/12FaWba9e1u0LXNZe6mR5iLt2FhdkNaOWAqqNab9Of7o+IUgUf036c/wB0fEKQKwoiIqCIiAiIgIiICIiAiIgIiICIiAiIgtmpPQWe9HgVH1INSegs96PAqPrGQWxeptIz6k6OOm9eWhpfcrA7qqjq/O6oHLT7RkLXRbq9Ae6U150VfdIXHdmhOSY3drTwP6EJCSzJ0ZdpVNtG2dUtQ+RvzpRNEFZHnjkDAd7CpXtC0bS6roGblVPbbnT5dSV9O7dkid/Ud4K0+1Hb9QdGjbMy+UEdRJpWvmAeGeUHx9rSOHlDJx7Ft3o7aVozVVqp6+2X2kxOwOEckga9vqIKDTnpD6M2pWO9x6gloJH10Rw+8Ww7nXtHJ0gH1uWe/C69mnSz1rp1sVv1RTRXqnj8lz5AWTAesj+y2m2+bUrHojSM8jpqaqqp4yIo8h49pXzW1LdH3q+VVzfEyIzyF26wYA/BB9CdF9KTZhf2NZWVs9onPNtQzLc+oj+yydQa/wBFVzY3U2p7U/rAHMHyloJB5cCV8l12RTTRf7qWRn/K4hQ0+vDr7ZmxmR10owwcd4zDCsd12laDtkEs1Zqq1tbEMvDZw4j8AvlSbjcCMGvqiO7rnf3XEFRmrhfWGSeFsjS9hcfKbniPghptztZ252/aPfjpi11FbFpaGRvyl1Ixxnr/APgA4YGf9FZp2Y0ur79bKGnFoGi9JUrQ2CiYc1dS0faP1Ae3tK8XRfpdm1z0nS3LTtit9PcYow2V+4HSZ7wSs3EhrckgAK7R1TywUVG+aZ7YoIWZc5xwGtAXz025bRLftG20murJ+r07ZjuxNJ4yBp48M9p7gsndMzbvF1E+gNJVgeXDduFVGcjnxjafErTYkkkk5J5orJW2faxdtfVbKVpNNaKZgjp6Zpw0NHAcOxY0RFFXPTfpz/dHxCkCj+m/Tn+6PiFIFlAIiKgiIgIiICIiAiIgIiICIiAiIgIiILZqT0FnvR4FR9SDUnoLPejwKj6xkFmzod62ptH7VKcXCpENJW/yXFxw3J4DxHwWE1VE98UjZI3Fr2EOaRzBCg+s2v8ASFg2gaUnst4hZUUtQzLJG4JYexzSvn7tt2Pay2TXySagfWVFmc4ugq4M4aO5wHIhXfZR0l9V6UihoLi41lGwbuXEkgexZ4oOkts/1XaXW3UNBDNFO3EkMgyCPYVUaO3W/Xm6wthuNwnqWMPktkOcK2LPW2LRmzW5ufdNBXMUUrjvOo5uDP8A4kclgqqgfTVD4JMb7Dg4OQkq6kRFAREQTTZvtN1Zs/lkk05WthMnMPbvAfgpBqHpBbVb5Sy0tVqWWOGVpa9sLQzII9SxWiCuaR80rpZXl73klzieJKoREBERBc9N+nP90fEKQKP6b9Of7o+IUgWUAiIqCIiAiIgIiICIiAiIgIiICIiAiIgtmpPQWe9HgVH1KbrTGqpDG3G+DvNz3qMSRvjcWyMc1w7CFjIpREUBERBzvO7z8VwiICIiAiIgIiICIiAiLkAk4AyUFy036c/3R8QpArVYaOSEOnlaWlww1p54V1WUAiIqCIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiArlRWG+10AqKKy3GphPKSGle9vxAwpBsdsFJqHWcdPXMEtNTQuqZIzyfuloAPqy4ZHbhbIyMa2DcY0Na1uGgDAAwvVZx/MjmmXC4nxn0dyLVNO57tQW087qr5I2GQ1G9u9UGnfz3Y55V0GlNUEZGm7zjv8AkMn7V6Lv5G1J+Du/4wnh7VtBSuc6jiJxxYPBZ0YsVTPu05vG7mPFMxTE7hqv9FdT/du8fkZP2rj6K6n+7l4/IyftW1TgRwVD3bvZlbPRU/Lnfii99uP5as/RXVH3bvH5GT9q8Vztdztm785W6sot7zflEDo8+zeAW2rTnjlYh6R1NO+moahsbnRN4F3YCpVh0xG9vVh+Ibl+7FE0RG2KrZaLtc2udbbXW1rW+caeB0gHt3QV6/opqn7t3n8jJ+1Tzo4VrIaq4wOccuwQMrNu+XcuSxoxKao3tlm8fuY1zkiiJarfRTVP3avP5GX9qfRTVP3avP5GX9q2plkjgidLM9rGNGS5xwAAui2XSguDCaOpjlaO1ruSz9FT8vNHia9Pv5cfy1QuNrudtx8426ro88uvhdHn4gLz08E9R6PDJN/yNLvBSTbVd5rjrOeEyHqYHbobntWZ9ltltdHpKhlp4WPfNEHveW8SStXpomdRLqXOL1WrFN2un3lr5813Pd3vm6s3cZz1DsY+C8sLHzVDaeFrpJnHdbG0ZcT3Ac8rbSqp4TTuaWtDd054di1eiEdv2kx44sZWjl/zBSrGiO5icZnJiqYp1p2fRXVGM/Ru8fkZP2rzXCyXq3QdfcLRcKSHOOsnpnsb8SFtbTSdbTRvaTuloKhe3GBkuhal27vbhB71snDjW9vBZ8RXLl6Lc0R1YBtltuN03/my31dbued8nhdJu+3dBwvd9FdT/du8fkZP2qd9GcjeuYyM5HDPqWbVLeJTVG9tmdx+7jXptxREtRrlRVtslEVxpKiikPEMqIzGfg7C9Fvst5uMJmt9pr6uIfXgpnvb8QFOekdQy/OVNX7vkY3Spb0dnsdpectdxEmCO7gpGLE1a29FzjNdOLF+KY3LEJ0rqcc9OXgf/Sk/auDpfUo/9O3f8lJ/ZbUVPFwXnd53f3rb6Kn5cufFF37cfvLWD6Lan+7l4/JSf2XluVnu1tibLcbXXUUbjgOqKd0YJ9rgFthGct59qxz0gqeKTSEUzid5k3D4LGrDiI3t6MTxFcvXYomiI2wpbLTdLnG6S222trWNOHOp4HSAH17oK9f0V1P93Lx+Sk/asgdG2qeIa+iwN0uD8/0WVL5qC3WVjTXydWHngsacWmY3Mt2Vxy9ZvTbotxLV+5Wy5WwNNyt9XRb3m/KIXR59m8Aqbdb6+5Fwt1DU1hb5wgidJj4ArMu1sUuqNE/L7a0TdQ7eDscQoBsJvLLXqZ9PUPDGVADcu4AELCcaIq1t6rPFa7mPNzl+qOyz/RbU33du/wCSk/sn0W1P93Lx+Sk/stqG8WgjiO8KocuIK3eip+XInxRd+3H7y09REXOfZiIiAiIgyLsAq6aj1nVSVU7IWuoHsaXnAJ6yM4/QrYBj45og9jg5jhwI7lrFs009NqW/TUMNT8ndHTOm3u8BzRj/ALlsXp+3z2y1Q0kkvWOY3G9zyuliTPJp8R4hoo9Rzb99R7Ncdf00ls2oPkl4NdUh4J5YythKq9UtBpQ3N8zCyKAO58zjgPirbrzQls1SyOZ7erqmcng81C5tl1/qYhQy3pzaHI3mAkrZEVUz7NVy9j5VuiK6taXDZdrS7anv9RDUbnyaMEgAYx3LJkg8khRnQmjLfpOF/wAnldLPJwdIeHD2KTO4jgVuo6e7l5826ru7fRTEN1vHKtWsLKy/2CotzhxcMt9vYrvkDgq2uLeSymNvNauTbqiqGsFB87bPtWj5TA9jCd12Rwc31LOlr13pmagjnN0j3y3i13Agq7aj09Z7/AIbpRxzAHIJHEH2qBT7F7K+oL4q6oiYScNzy/FaYpqp6OzdycbLiJuzMVfotu1TaFTV9vNos0hmfL5JcwFSvZBY6y0aZjdWbwlmw8td7FTpbZbYbNXCse6Sqe3i3fPAFTx+MBgG60cgArFNUzuWnIyLFNnybPTvLXrbNoqto7pNeqcmanldvPGPNP8AZXnZRtHttvs8dmvDnQuj4RykcCO5ZkqqWmq4HQ1ULJY3Di1w4KGXjZdpmvmbNDA6lfklwYeBWM25idw32uI2rtqLV/t3WrU+1S0R0ksNqDqydwwwMHb61guSWqjv7a+sjIl64Suae3jlbMac2e6bsx6xlI2eXmXSccL31+kdOVdU6omtkD5HDi7dUm3VVO26zn4uNExRG0d2fbQLfqCqitVPTyxzMjyd4ZBwrBtb11QCkrrC2B8srhu5LeCyFZNMWe01TqqjpGRTYwHAdiVGlrLU1zq2ejifO7m4t5rLlq1p46cnFovc8ROmuuzTVTtIXGaokp3yMnZgtH6LP1h1Qy62CW6tppWMiYXbhHE4CuM2ldP1EjJJ7ZTvczzTuBXL5LTx05gjhYyLGNwDhhSm3VDPNzrGRMVRT7tcdqeq7hqjcgbbupponZ3g05K42S6ruGl5nwihlmp6hw3uBwPWtgpbNbJIzG+igLSc43AuxlttscDYRRU4YBjG4AkWp22zxSz5Xlcns9MbhPTRTcfLaHfFdBYetPHgvQ57QwNZjDRgAdi6c+VnPavRDg1637KomkAq0a00/HqKwy2+Q4dgmMn7Su4kDQu2ORruXFSY2tu5NuqKo6w110xUXnZzfaptVQPma8Y3QOfcV6L2/VGvq2OT5ufBTNdhuAcN4rP09JRzu3pqaOR3e4ZXEdPDF/uYWMHcBgLVFp154tEzz8n1fKwaWsLrZZIbbIwOYGBsgLfOPaoHrjZXKysddLBlrg7f6ocMH1LMDC7PlH2LsEgxxHNZzRDx2s67brmuJ6sI0WqtoVvpBSvtkk255Ic5nHgqX6w2gucXG1ygk8gxZtcyIk/y28fUnUxf+2P8qnJPy3eut735UNPkRFxH6SIiICIiDJHR5ONaVn/Tn/8AkjWeTIcceKwJ0feGs6v/AKc//wAkazoOX4rq4n5T8/8AEX9bP9odwcOeU3s8MrpJOEbzXqcN2v4NVGeGOHFV81Q8DHJIJckjnwQPxwXX2oER2CUF2F2g5IXRGB3LtbyHsRduziFQ45KLhEUOzvHj+C53v0XLuRVLmjBOEFTX884XDhvHPFUM81x7lz2obVxjs7VyuG8srkoKS/AyFw6TA7yh80LiQAIgZD3LrJJce3KqdzVIA5+pVXB84cVzw9q5TtChtS5gcePcqo2Y5ZTtXbH5oRdqAT9oqhz8HBcq3geUe5dEgyUTq74XgnHYu0kAZK87OAGFUXE8yibdgeMrs3z3heUL0Dkiv//Z" alt="AssistBot"/>
+      </div>
+      <div>
+        <div class="uname">AssistBot<span style="color:var(--faint);font-weight:400">#8085</span></div>
+        <div class="ustatus">● Online</div>
+      </div>
     </div>
   </div>
-  <div class="header-stats">
-    <div class="stat-pill">Ping: <span id="ping-val">—</span>ms</div>
-    <div class="stat-pill"><span class="live-dot"></span> Live</div>
-  </div>
-</header>
 
-<div class="hero">
-  <div id="banner" class="banner operational">
-    <span class="banner-icon">✅</span>
-    <span id="banner-text">Loading status...</span>
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="av" style="width:24px;height:24px">
+        <img src="data:image/png;base64,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" alt=""/>
+      </div>
+      <div class="tb-title">AssistBot</div>
+      <div class="tb-div"></div>
+      <div class="tb-sub" id="tb-sub">Loading…</div>
+      <div class="ping-pill">Ping: <span id="ping-val">—</span> ms</div>
+      <div style="font-size:12px;color:var(--faint)"><span class="ldot"></span>Live</div>
+    </div>
+
+    <div class="content">
+
+      <!-- Banner -->
+      <div id="banner" class="banner operational">
+        <span id="banner-icon">✅</span>
+        <span id="banner-label">Checking status…</span>
+      </div>
+
+      <div class="grid2">
+        <!-- My Services -->
+        <div>
+          <div class="sec-title">My Services</div>
+          <div class="card" id="monitor-list">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:120px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:100px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:140px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
+          </div>
+        </div>
+
+        <!-- Discord Status -->
+        <div>
+          <div class="sec-title">Discord Status</div>
+          <div class="card" id="discord-list">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:80px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:100px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:70px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:90px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:60px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- Post Update -->
+        <div>
+          <div class="sec-title">Post Update</div>
+          <div class="card">
+            <div class="update-form">
+              <textarea id="update-text" placeholder="Describe what's happening… e.g. 'Investigating elevated latency on Assistbot'"></textarea>
+              <div class="form-row">
+                <select class="sel" id="update-type">
+                  <option value="investigating">🔍 Investigating</option>
+                  <option value="identified">⚠️ Identified</option>
+                  <option value="monitoring">👁 Monitoring</option>
+                  <option value="resolved" selected>✅ Resolved</option>
+                </select>
+                <select class="sel" id="update-service">
+                  <option value="All Services">All Services</option>
+                  <option value="Assistbot">Assistbot</option>
+                  <option value="Assistmusic">Assistmusic</option>
+                  <option value="Dashboard">Dashboard</option>
+                </select>
+                <button class="post-btn" onclick="postUpdate()">Post</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Incident History -->
+        <div>
+          <div class="sec-title">Incidents &amp; Updates</div>
+          <div class="card" id="incident-list" style="max-height:260px;overflow-y:auto">
+            <div class="sk-row"><div class="sk" style="width:60px;height:10px"></div><div style="flex:1"></div></div>
+            <div class="sk-row"><div class="sk" style="width:200px;height:12px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div>
+        <div class="sec-title">Activity Log</div>
+        <div class="card" id="log-list">
+          <div class="sk-row"><div class="sk" style="width:80px;height:16px;border-radius:3px"></div><div class="sk" style="width:160px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:44px;height:12px"></div></div>
+          <div class="sk-row"><div class="sk" style="width:80px;height:16px;border-radius:3px"></div><div class="sk" style="width:130px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:44px;height:12px"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <div class="footer">
+      <div>Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by <strong style="color:var(--muted)">AssistAi</strong></div>
+      <button class="rbtn" id="rbtn" onclick="manualRefresh()">↻ Refresh</button>
+    </div>
   </div>
 </div>
-
-<div class="section">
-  <div class="section-title">Services</div>
-  <div class="card" id="monitor-list">
-    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:160px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
-    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:130px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
-    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:180px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-title">Logs</div>
-  <div class="card" id="log-list">
-    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:200px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
-    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:160px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
-    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:220px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
-  </div>
-</div>
-
-<footer>
-  <div>Auto-refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistAi</div>
-  <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
-</footer>
 
 <script>
-  const MONITORS = [
-    { key: 'm803038901-de5f8200e02d0175f3623542', label: 'Assistbot' },
-    { key: 'm803138290-466db08e8901a7e49b6ac3d5', label: 'Assistmusic' },
-    { key: 'm803121772-30a8ddf61c429ebddfca1ac0', label: 'Dashboard' },
-  ];
-  const API_URL = 'https://api.uptimerobot.com/v2/getMonitors';
+const MONITORS=[
+  {key:'m803038901-de5f8200e02d0175f3623542',label:'Assistbot'},
+  {key:'m803138290-466db08e8901a7e49b6ac3d5',label:'Assistmusic'},
+  {key:'m803121772-30a8ddf61c429ebddfca1ac0',label:'Dashboard'},
+];
+const UR_API='https://api.uptimerobot.com/v2/getMonitors';
+const DSP_API='https://discordstatus.com/api/v2/summary.json';
+const INC_API='https://discordstatus.com/api/v2/incidents.json';
 
-  let countdown = 60;
-  let timer;
-  let lastFetch = 0;
-  let cachedMonitors = null;
-  let logEntries = [];
-  const COOLDOWN = 15000; // 15s minimum between API calls
+let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[];
+const COOLDOWN=15000;
 
-  function statusClass(s) {
-    if (s === 2) return 'up';
-    if (s === 9 || s === 8) return 'down';
-    if (s === 0) return 'paused';
-    return 'unknown';
-  }
-  function statusLabel(s) {
-    if (s === 2) return 'Operational';
-    if (s === 9) return 'Outage';
-    if (s === 8) return 'Degraded';
-    if (s === 0) return 'Paused';
-    return 'Unknown';
-  }
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-  function uptimeBars(ratio) {
-    const bars = [];
-    for (let i = 0; i < 40; i++) {
-      const isUp = ((i * 7 + 3) % 100) / 100 < ratio / 100;
-      bars.push(`<div class="bar-seg ${isUp?'up':'down'}"></div>`);
-    }
-    return `<div class="uptime-bar-wrap">${bars.join('')}</div>`;
-  }
-  function timeNow() {
-    return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  }
-  function addLog(type, text) {
-    logEntries.unshift({ type, text, time: timeNow() });
-    if (logEntries.length > 20) logEntries.pop();
-    renderLogs();
-  }
-  function renderLogs() {
-    const el = document.getElementById('log-list');
-    if (!logEntries.length) return;
-    el.innerHTML = logEntries.map(l => `
-      <div class="log-row">
-        <div class="log-badge ${l.type}">${l.type === 'check' ? 'Status Check' : l.type === 'up' ? 'Online' : 'Outage'}</div>
-        <div class="log-text">${l.text}</div>
-        <div class="log-time">${l.time}</div>
-      </div>`).join('');
-  }
+const sc=s=>s===2?'up':s===9||s===8?'down':s===0?'paused':'unknown';
+const sl=s=>s===2?'Operational':s===9?'Outage':s===8?'Degraded':s===0?'Paused':'Unknown';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const now12=()=>new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const dateStr=d=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-  async function fetchOneMonitor(key, fallbackLabel) {
-    const t0 = Date.now();
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ api_key: key, format: 'json', custom_uptime_ratios: '90', logs: '0' })
-    });
-    const ping = Date.now() - t0;
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); }
-    catch(e) { throw new Error('Bad API response: ' + text.slice(0, 60)); }
-    if (data.stat !== 'ok') throw new Error(data.error?.message || 'API error');
-    const m = data.monitors[0];
-    return { ...m, friendly_name: m.friendly_name || fallbackLabel, _ping: ping };
+function bars(r){
+  let h='';for(let i=0;i<32;i++){const up=((i*7+3)%100)/100<r/100;h+=`<div class="bar ${up?'up':'down'}"></div>`;}
+  return `<div class="bars">${h}</div>`;
+}
+function addLog(type,text){logs.unshift({type,text,time:now12()});if(logs.length>20)logs.pop();renderLogs();}
+function renderLogs(){
+  const el=document.getElementById('log-list');
+  if(!logs.length)return;
+  el.innerHTML=logs.map(l=>`<div class="lrow"><div class="ltype ${l.type}">${l.type==='check'?'Status Check':l.type==='up'?'Online':'Outage'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
+}
+
+async function fetchOne(key,label){
+  const t0=Date.now();
+  const res=await fetch(UR_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({api_key:key,format:'json',custom_uptime_ratios:'90',logs:'0'})});
+  const txt=await res.text();
+  let data;try{data=JSON.parse(txt);}catch(e){throw new Error('Rate limited — try again shortly');}
+  if(data.stat!=='ok')throw new Error(data.error?.message||'API error');
+  const m=data.monitors[0];
+  return{...m,friendly_name:m.friendly_name||label,_ping:Date.now()-t0};
+}
+
+async function fetchDiscordStatus(){
+  try{
+    const [sumRes,incRes]=await Promise.all([fetch(DSP_API),fetch(INC_API)]);
+    const sum=await sumRes.json();
+    const inc=await incRes.json();
+    renderDiscord(sum,inc);
+  }catch(e){
+    document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:12px;color:var(--muted)">Could not fetch Discord status</div>`;
   }
+}
 
-  async function fetchStatus(force = false) {
-    const now = Date.now();
-    // Rate-limit guard: use cache if called too soon
-    if (!force && cachedMonitors && (now - lastFetch) < COOLDOWN) {
-      renderMonitors(cachedMonitors, true);
-      return;
-    }
+function renderDiscord(sum,inc){
+  // Key components to show
+  const keys=['API','Gateway','Media Proxy','Voice','Client','Push Notifications'];
+  const comps=sum.components.filter(c=>keys.some(k=>c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,6);
 
-    const t0 = Date.now();
-    try {
-      const monitors = await Promise.all(
-        MONITORS.map(({ key, label }) => fetchOneMonitor(key, label))
-      );
-      const ping = Math.round(monitors.reduce((a, m) => a + (m._ping || 0), 0) / monitors.length);
-      document.getElementById('ping-val').textContent = ping;
-      cachedMonitors = monitors;
-      lastFetch = Date.now();
-      renderMonitors(monitors, false);
-      addLog('check', `Checked <strong>${monitors.length} services</strong> — ${monitors.filter(m=>m.status===2).length} operational`);
-    } catch (err) {
-      if (cachedMonitors) {
-        // Show stale cache silently rather than error
-        renderMonitors(cachedMonitors, true);
-        addLog('check', `<strong>Rate limited</strong> — showing cached data`);
-      } else {
-        document.getElementById('monitor-list').innerHTML =
-          `<div style="padding:16px;color:var(--red);font-size:13px;font-weight:600">⚠️ ${escHtml(err.message)}</div>`;
-        addLog('check', `<strong>Error:</strong> ${escHtml(err.message)}`);
-      }
-    }
-    resetCountdown();
+  document.getElementById('discord-list').innerHTML=comps.map(c=>{
+    const s=c.status;
+    const dotClass=s==='operational'?'up':s==='major_outage'?'down':'paused';
+    const label=s.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname" style="font-size:13px">${esc(c.name)}</div><div class="badge ${s}" style="font-size:10px">${label}</div></div>`;
+  }).join('');
+
+  // Sidebar discord nav
+  document.getElementById('discord-nav').innerHTML=comps.slice(0,4).map(c=>{
+    const dotClass=c.status==='operational'?'up':c.status==='major_outage'?'down':'paused';
+    return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
+  }).join('');
+
+  // Incidents
+  renderIncidents(inc.incidents||[]);
+}
+
+function renderIncidents(incidents){
+  const el=document.getElementById('incident-list');
+  const all=[...customUpdates,...incidents.slice(0,5)];
+  if(!all.length){el.innerHTML=`<div style="padding:14px;font-size:13px;color:var(--muted);text-align:center">No incidents reported ✓</div>`;return;}
+  el.innerHTML=all.map(i=>{
+    const isCustom=!!i._custom;
+    const latest=isCustom?i:i.incident_updates?.[0];
+    const status=isCustom?i.type:latest?.status||'resolved';
+    const body=isCustom?i.body:latest?.body||'';
+    const date=isCustom?i.date:dateStr(i.created_at);
+    return `<div class="inc-row">
+      <div class="inc-date">${date}</div>
+      <div class="inc-title">${esc(isCustom?i.title:i.name)}</div>
+      <div class="inc-body"><span class="inc-status ${status}">${status}</span>${esc(body)}</div>
+    </div>`;
+  }).join('');
+}
+
+function postUpdate(){
+  const text=document.getElementById('update-text').value.trim();
+  if(!text)return;
+  const type=document.getElementById('update-type').value;
+  const service=document.getElementById('update-service').value;
+  customUpdates.unshift({
+    _custom:true,
+    title:`[${service}] Status Update`,
+    type,body:text,
+    date:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})
+  });
+  document.getElementById('update-text').value='';
+  renderIncidents(window._lastIncidents||[]);
+  addLog(type==='resolved'?'up':type==='investigating'||type==='identified'?'down':'check',`<strong>Update posted</strong> for ${esc(service)}: ${esc(text.slice(0,60))}${text.length>60?'…':''}`);
+}
+
+async function fetchStatus(force=false){
+  const now=Date.now();
+  if(!force&&cache&&(now-lastFetch)<COOLDOWN){render(cache,true);return;}
+  try{
+    const monitors=await Promise.all(MONITORS.map(({key,label})=>fetchOne(key,label)));
+    const ping=Math.round(monitors.reduce((a,m)=>a+(m._ping||0),0)/monitors.length);
+    document.getElementById('ping-val').textContent=ping;
+    cache=monitors;lastFetch=Date.now();
+    render(monitors,false);
+    addLog('check',`Checked <strong>${monitors.length} services</strong> — ${monitors.filter(m=>m.status===2).length} operational`);
+  }catch(err){
+    if(cache){render(cache,true);addLog('check',`<strong>Rate limited</strong> — showing cached data`);}
+    else{document.getElementById('monitor-list').innerHTML=`<div style="padding:12px 14px;color:var(--red);font-size:13px;font-weight:600">⚠️ ${esc(err.message)}</div>`;}
   }
+  resetCountdown();
+}
 
-  function renderMonitors(monitors, stale) {
-    const banner  = document.getElementById('banner');
-    const bannerText = document.getElementById('banner-text');
-    const allUp   = monitors.every(m => m.status === 2);
-    const anyDown = monitors.some(m => m.status === 9);
+function render(monitors,stale){
+  const allUp=monitors.every(m=>m.status===2),anyDown=monitors.some(m=>m.status===9);
+  const state=allUp?'operational':anyDown?'outage':'degraded';
+  const label=allUp?'All Systems Operational':anyDown?'Service Outage Detected':'Partial Service Degradation';
+  document.getElementById('banner').className='banner '+state;
+  document.getElementById('banner-label').textContent=label+(stale?' (cached)':'');
+  document.getElementById('banner-icon').textContent=allUp?'✅':anyDown?'🔴':'⚠️';
+  document.getElementById('tb-sub').textContent=label;
+  document.getElementById('monitor-list').innerHTML=monitors.map(m=>{
+    const s=sc(m.status),up=parseFloat(m.custom_uptime_ratio||100).toFixed(2);
+    return `<div class="mrow"><div class="sdot ${s}"></div><div class="mname">${esc(m.friendly_name)}</div>${bars(parseFloat(up))}<div class="mup">${up}%</div><div class="badge ${s}">${sl(m.status)}</div></div>`;
+  }).join('');
+  document.getElementById('nav-items').innerHTML=monitors.map(m=>{
+    const s=sc(m.status);
+    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+  }).join('');
+}
 
-    banner.className = 'banner ' + (allUp ? 'operational' : anyDown ? 'outage' : 'degraded');
-    bannerText.textContent = (allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Partial Service Degradation')
-      + (stale ? '  (cached)' : '');
-    banner.querySelector('.banner-icon').textContent = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
-
-    document.getElementById('monitor-list').innerHTML = monitors.map(m => {
-      const sc = statusClass(m.status);
-      const uptime = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-      return `<div class="monitor-row">
-        <div class="status-dot ${sc}"></div>
-        <div class="monitor-name">${escHtml(m.friendly_name)}</div>
-        ${uptimeBars(parseFloat(uptime))}
-        <div class="monitor-uptime">${uptime}%</div>
-        <div class="monitor-badge ${sc}">${statusLabel(m.status)}</div>
-      </div>`;
-    }).join('');
+function manualRefresh(){
+  const btn=document.getElementById('rbtn');
+  const wait=Math.ceil((COOLDOWN-(Date.now()-lastFetch))/1000);
+  if(cache&&(Date.now()-lastFetch)<COOLDOWN){
+    btn.textContent=`Wait ${wait}s`;btn.disabled=true;
+    setTimeout(()=>{btn.textContent='↻ Refresh';btn.disabled=false;},wait*1000);
+    render(cache,true);return;
   }
-
-  function manualRefresh() {
-    const btn = document.getElementById('refresh-btn');
-    const now = Date.now();
-    const wait = Math.ceil((COOLDOWN - (now - lastFetch)) / 1000);
-    if (cachedMonitors && (now - lastFetch) < COOLDOWN) {
-      btn.textContent = `Wait ${wait}s`;
-      btn.disabled = true;
-      setTimeout(() => { btn.textContent = '↻ Refresh'; btn.disabled = false; }, (wait * 1000));
-      renderMonitors(cachedMonitors, true);
-      return;
-    }
-    fetchStatus(true);
-  }
-
-  function resetCountdown() {
-    clearInterval(timer);
-    countdown = 60;
-    document.getElementById('countdown').textContent = countdown;
-    timer = setInterval(() => {
-      countdown--;
-      document.getElementById('countdown').textContent = countdown;
-      if (countdown <= 0) fetchStatus();
-    }, 1000);
-  }
-
   fetchStatus(true);
+}
+
+function resetCountdown(){
+  clearInterval(timer);countdown=60;document.getElementById('countdown').textContent=countdown;
+  timer=setInterval(()=>{countdown--;document.getElementById('countdown').textContent=countdown;if(countdown<=0)fetchStatus();},1000);
+}
+
+// Boot
+fetchStatus(true);
+fetchDiscordStatus();
+// refresh Discord status every 5 min
+setInterval(fetchDiscordStatus,300000);
 </script>
 </body>
 </html>
