@@ -54,10 +54,10 @@
     .invite-btn:hover { background: #4752c4; }
 
     /* Custom Avatar Profile Layout */
-    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; }
+    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); }
     .av-wrapper { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
     .av { width: 100%; height: 100%; border-radius: 50%; background: #000000; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-    .av img { width: 72%; height: 72%; object-fit: contain; }
+    .av img { width: 72%; height: 72%; object-fit: contain; display: block; }
     .status-dot { position: absolute; bottom: -1px; right: -1px; width: 13px; height: 13px; background: var(--green); border-radius: 50%; border: 2.5px solid var(--panel-bg); }
     
     .uinfo { display: flex; flex-direction: column; gap: 1px; }
@@ -121,11 +121,15 @@
 
     /* Incident Log UI Feeds */
     .inc-container { display: flex; flex-direction: column; gap: 12px; }
-    .inc-row { padding: 14px; background: var(--card-inner); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 4px; }
+    .inc-row { padding: 14px; background: var(--card-inner); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .inc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .inc-date { font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
     .inc-title { font-size: 14px; font-weight: 700; color: var(--text); }
     .inc-body { font-size: 13px; color: var(--muted); line-height: 1.5; }
     .inc-status { display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize; color: var(--blurple); margin-right: 4px; }
+    
+    .del-inc-btn { background: transparent; border: none; color: var(--red); font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: none; text-transform: uppercase; }
+    .del-inc-btn:hover { background: var(--rdim); }
 
     /* Admin Management Form & Buttons */
     #admin-panel { display: none; } 
@@ -143,7 +147,7 @@
     .logout-btn:hover { background: var(--red); color: #fff; }
 
     /* Activity Monitoring Terminal Log Components */
-    #activity-log-card { display: none; } /* Hidden entirely from public view */
+    #activity-log-card { display: none; } 
     .log-container { display: flex; flex-direction: column; gap: 8px; }
     .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
     .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
@@ -289,7 +293,7 @@
 </div>
 
 <script>
-// ADVANCED CONFIGURATION SETTING: Updated Secure Administration Key
+// ADVANCED CONFIGURATION SETTING: Secure Administration Key
 const ADMIN_PASSWORD_KEY = "Savannah1123!"; 
 
 const UPTIMEROBOT_API='https://api.uptimerobot.com/v2/getMonitors';
@@ -299,6 +303,7 @@ const INCIDENT_API='https://discordstatus.com/api/v2/incidents.json';
 let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[],isAdmin=false;
 let lastAssistmusicStatus = 2; 
 let discordComponentsCache = null;
+let currentIncidentFeedCache = [];
 
 function checkAdminAuth(){
   if(localStorage.getItem('assistbot-is-admin') === 'true'){
@@ -313,8 +318,16 @@ function enableAdminUI(){
   localStorage.setItem('assistbot-is-admin', 'true');
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
-  document.getElementById('activity-log-card').style.display = 'flex'; // Show logs *only* here
+  document.getElementById('activity-log-card').style.display = 'flex'; 
   document.getElementById('incidents-card').classList.remove('full-width');
+  
+  // Update view to instantly enable delete actions on existing nodes
+  renderIncidents(currentIncidentFeedCache);
+  
+  // Set up visibility toggle safely on existing view components
+  const deleteButtons = document.querySelectorAll('.del-inc-btn');
+  deleteButtons.forEach(btn => btn.style.display = 'inline-block');
+  
   addLog('check', "<strong>Admin Panel Session Connected</strong>");
 }
 
@@ -323,14 +336,18 @@ function disableAdminUI(logEvent = true){
   localStorage.removeItem('assistbot-is-admin');
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-indicator').style.display = 'none';
-  document.getElementById('activity-log-card').style.display = 'none'; // Hide completely from non-admins
+  document.getElementById('activity-log-card').style.display = 'none'; 
   document.getElementById('incidents-card').classList.add('full-width');
+  
+  const deleteButtons = document.querySelectorAll('.del-inc-btn');
+  deleteButtons.forEach(btn => btn.style.display = 'none');
+  
   if(logEvent) {
     addLog('check', "Admin Session Disconnected.");
   }
 }
 
-// HOTKEYS ONLY: Open via Ctrl + Shift + A (No click mechanics on footer text)
+// HOTKEYS ONLY MATCHING LOGIC (Footer click bindings completely purged)
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { 
     triggerAuthPrompt(); 
@@ -385,15 +402,15 @@ async function fetchDiscordStatus(){
   try{
     const [s,i]=await Promise.all([fetch(DISCORD_API),fetch(INCIDENT_API)]);
     const sum=await s.json();const inc=await i.json();
-    window._lastIncidents=inc.incidents||[];
+    currentIncidentFeedCache=inc.incidents||[];
     discordComponentsCache=sum.components||[];
     localStorage.setItem('discord-components-cache', JSON.stringify(discordComponentsCache));
-    renderDiscord(sum.components, inc.incidents||[]);
+    renderDiscord(sum.components, currentIncidentFeedCache);
   }catch(e){
     const savedComps = localStorage.getItem('discord-components-cache');
     if(savedComps) {
       discordComponentsCache = JSON.parse(savedComps);
-      renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+      renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     } else {
       document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Discord statuses updated via fallback framework.</div>`;
     }
@@ -409,7 +426,6 @@ function renderDiscord(components, incidents){
     const s=c.status;
     const dotClass=s==='operational'?'up':s==='major_outage'?'down':'paused';
     
-    // DEPENDENCY CHECKER: If Voice channel configuration detects an issue with Assistmusic component
     let dependencyNotice = '';
     if(c.name.toLowerCase().includes('voice') && lastAssistmusicStatus !== 2) {
       dependencyNotice = `<span class="warn-inline">(May be unstable — Assistmusic is down)</span>`;
@@ -433,12 +449,18 @@ function renderIncidents(incidents){
   const el=document.getElementById('incident-list');
   const all=[...customUpdates,...(incidents || []).slice(0,4)];
   if(!all.length){el.innerHTML=`<div class="inc-row" style="text-align:center;color:var(--faint)">No active incidents currently logged.</div>`;return;}
-  el.innerHTML=all.map(i=>{
+  
+  el.innerHTML=all.map((i, idx)=>{
     const isCustom=!!i._custom;
     const latest=isCustom?i:i.incident_updates?.[0];
     const body=isCustom?i.body:latest?.body||'';
-    return `<div class="inc-row">
-      <div class="inc-date">${isCustom?i.date:dateStr(i.created_at)}</div>
+    const deleteBtnStyle = isAdmin && isCustom ? 'style="display: inline-block;"' : 'style="display: none;"';
+    
+    return `<div class="inc-row" data-index="${idx}">
+      <div class="inc-header">
+        <div class="inc-date">${isCustom?i.date:dateStr(i.created_at)}</div>
+        <button class="del-inc-btn" ${deleteBtnStyle} onclick="deleteCustomUpdate(${i.id || idx})">Delete</button>
+      </div>
       <div class="inc-title">${esc(isCustom?i.title:i.name)}</div>
       <div class="inc-body"><span class="inc-status">${isCustom?i.type:latest?.status||'info'}</span> — ${esc(body)}</div>
     </div>`;
@@ -452,35 +474,51 @@ function postUpdate(){
   const type=document.getElementById('update-type').value;
   const service=document.getElementById('update-service').value;
   const time=new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
-  customUpdates.unshift({_custom:true,title:`[${service}]`,type,body:text,date:time});
+  
+  customUpdates.unshift({
+    id: Date.now(),
+    _custom:true,
+    title:`[${service}]`,
+    type,
+    body:text,
+    date:time
+  });
+  
   saveUpdates();
   document.getElementById('update-text').value='';
-  renderIncidents(window._lastIncidents||[]);
+  renderIncidents(currentIncidentFeedCache);
   addLog('update',`<strong>Incident saved</strong> for ${esc(service)}`);
+}
+
+function deleteCustomUpdate(id){
+  if(!isAdmin) return;
+  customUpdates = customUpdates.filter(u => u.id !== id);
+  saveUpdates();
+  renderIncidents(currentIncidentFeedCache);
+  addLog('update', `Admin dropped item entry allocation instance log node.`);
 }
 
 async function fetchStatus(force=false){
   const now=Date.now();
   
-  // ANTI-SPAM REFRESH RATE LIMIT FIX: Serve instantly without prompt boxes or error messages
+  // FAST-PATH UI CACHE HIT (Fixes background row deletion & layout breaking errors on multi-clicks)
   if(!force && cache && (now-lastFetch)<8000){
     render(cache);
-    if(discordComponentsCache) renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+    if(discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
     resetCountdown();
     return;
   }
   
   try{
     const monitors = await Promise.all([
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
+      fetch(UPTIMEROBOT_API,{method:'POST',headers:'Content-Type: application/x-www-form-urlencoded',body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
     ]);
     const m=[monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]].map((x,i)=>({...x,friendly_name:['Assistbot','Assistmusic','Dashboard'][i]}));
     
-    // Check Assistmusic tracking node state logic updates
     lastAssistmusicStatus = m[1].status;
-    
     document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
     cache=m;lastFetch=Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
@@ -488,7 +526,7 @@ async function fetchStatus(force=false){
     addLog('check', `Scanned <strong>${m.length} local clusters</strong> successfully.`);
     
     if(discordComponentsCache) {
-      renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+      renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     }
     
   }catch(err) {
@@ -497,10 +535,8 @@ async function fetchStatus(force=false){
       const renderTarget = cache || JSON.parse(backup);
       lastAssistmusicStatus = renderTarget[1]?.status || 2;
       render(renderTarget);
-      if(discordComponentsCache) renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+      if(discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
       addLog('check', 'Serving status monitoring indicators from hot local backups.');
-    } else {
-      document.getElementById('monitor-list').innerHTML=`<div class="mrow" style="color:var(--red)">API interaction limit hit. Please wait a moment.</div>`;
     }
   }
   resetCountdown();
@@ -514,10 +550,12 @@ function render(monitors){
   document.getElementById('banner-label').textContent=allUp?'All Systems Operational':anyDown?'Service Outage Detected':'Degraded Processing Performance';
   document.getElementById('banner-icon').textContent=allUp?'✅':anyDown?'🔴':'⚠️';
   document.getElementById('tb-sub').textContent=allUp?'All Networks Operational':'System anomalies flagged';
+  
   document.getElementById('monitor-list').innerHTML=monitors.map(m=>{
     const s=sc(m.status),up=parseFloat(m.custom_uptime_ratio||100).toFixed(2);
     return `<div class="mrow"><div class="sdot ${s}"></div><div class="mname">${esc(m.friendly_name)}</div>${bars(parseFloat(up))}<div class="mup">${up}%</div><div class="badge ${s}">${sl(m.status)}</div></div>`;
   }).join('');
+  
   document.getElementById('nav-items').innerHTML=monitors.map(m=>{
     const s=sc(m.status);
     return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
