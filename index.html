@@ -183,6 +183,13 @@
 
     #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
     .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; display: none; }
+    .website-btn-wrapper { position: relative; margin-bottom: 8px; }
+    .website-disabled { background: rgba(242, 63, 67, 0.15) !important; border: 1px solid rgba(242, 63, 67, 0.3) !important; color: var(--red) !important; cursor: not-allowed !important; opacity: 0.85; pointer-events: auto !important; }
+    .website-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #111214; color: #fff; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; visibility: hidden; opacity: 0; transition: opacity 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); pointer-events: none; }
+    .website-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #111214; }
+    .website-btn-wrapper:hover .website-tooltip { visibility: visible; opacity: 1; }
+    .sb-section { gap: 6px; }
+    .nav-item { margin-bottom: 2px; }
     @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
   </style>
 </head>
@@ -192,7 +199,7 @@
   <div class="sidebar">
     <div class="sb-content">
       <div class="sb-section">
-        <div class="sb-label">My Services</div>
+        <div class="sb-label">Bot Services</div>
         <div id="nav-items">
           <div class="nav-item"><div class="ndot unknown"></div>Loading services…</div>
         </div>
@@ -206,10 +213,20 @@
     </div>
     
     <div class="invite-box" style="padding: 0 12px 8px;">
-      <a href="https://assist-bot-website.vercel.app/" target="_blank" class="invite-btn" style="background: #2b2d31; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        AssistServer Website
-      </a>
+      <div class="website-btn-wrapper">
+        <div class="invite-btn website-disabled">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          AssistBot Website
+        </div>
+        <div class="website-tooltip">⚠️ Website is under development and is very outdated</div>
+      </div>
+      <div class="website-btn-wrapper" style="margin-bottom: 8px;">
+        <div class="invite-btn website-disabled">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          AssistBot Dashboard
+        </div>
+        <div class="website-tooltip">⚠️ Dashboard is currently under development</div>
+      </div>
     </div>
     <div class="invite-box">
       <a href="https://discord.com/oauth2/authorize?client_id=1044078182514565210" target="_blank" class="invite-btn">
@@ -254,7 +271,7 @@
 
       <div class="grid2">
         <div class="card">
-          <div class="sec-title">My Services</div>
+          <div class="sec-title">Bot Services</div>
           <div id="monitor-list" style="display: flex; flex-direction: column; gap: 10px;">
             <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:120px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
             <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:100px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
