@@ -73,7 +73,14 @@
     .tb-div { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 4px; }
     .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
     
-    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(0,0,0,0.1); }
+    /* Advanced Ping Wrapper with Custom Tooltip */
+    .ping-wrapper { position: relative; display: inline-block; }
+    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(0,0,0,0.1); cursor: help; transition: background 0.15s; }
+    .ping-pill:hover { background: rgba(0,0,0,0.2); color: var(--text); }
+    
+    .ping-tooltip { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #111214; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; visibility: hidden; opacity: 0; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
+    .ping-tooltip::before { content: ''; position: absolute; bottom: 100%; right: 16px; border: 5px solid transparent; border-bottom-color: #111214; }
+    .ping-wrapper:hover .ping-tooltip { visibility: visible; opacity: 1; transform: translateY(0); }
     
     .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -223,7 +230,10 @@
       <div class="tb-div"></div>
       <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
       <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
-      <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
+      <div class="ping-wrapper">
+        <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
+        <div class="ping-tooltip">Updates every 60 seconds</div>
+      </div>
       <div class="live-indicator"><span class="ldot"></span>Live</div>
     </div>
 
@@ -316,6 +326,7 @@ let currentIncidentFeedCache = [];
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
+  if(!container) return;
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.innerHTML = `<span>${message}</span>`;
@@ -466,16 +477,17 @@ function renderIncidents(incidents){
   const all=[...customUpdates,...(incidents || []).slice(0,4)];
   if(!all.length){el.innerHTML=`<div class="inc-row" style="text-align:center;color:var(--faint)">No active incidents currently logged.</div>`;return;}
   
-  el.innerHTML=all.map((i, idx)=>{
+  el.innerHTML=all.map((i)=>{
     const isCustom=!!i._custom;
     const latest=isCustom?i:i.incident_updates?.[0];
     const body=isCustom?i.body:latest?.body||'';
     const deleteBtnStyle = isAdmin && isCustom ? 'style="display: inline-block;"' : 'style="display: none;"';
+    const targetId = isCustom ? i.id : 0;
     
-    return `<div class="inc-row" data-index="${idx}">
+    return `<div class="inc-row">
       <div class="inc-header">
         <div class="inc-date">${isCustom?i.date:dateStr(i.created_at)}</div>
-        <button class="del-inc-btn" ${deleteBtnStyle} onclick="deleteCustomUpdate(${i.id || idx})">Delete</button>
+        <button class="del-inc-btn" ${deleteBtnStyle} onclick="deleteCustomUpdate(${targetId})">Delete</button>
       </div>
       <div class="inc-title">${esc(isCustom?i.title:i.name)}</div>
       <div class="inc-body"><span class="inc-status">${isCustom?i.type:latest?.status||'info'}</span> — ${esc(body)}</div>
@@ -509,7 +521,8 @@ function postUpdate(){
 
 function deleteCustomUpdate(id){
   if(!isAdmin) return;
-  customUpdates = customUpdates.filter(u => u.id !== id);
+  // STRICT DATA TYPE OVERHAUL: Enforces structural numbers parsing over local arrays
+  customUpdates = customUpdates.filter(u => u.id !== Number(id));
   saveUpdates();
   renderIncidents(currentIncidentFeedCache);
   addLog('update', `Admin dropped item entry allocation instance log node.`);
@@ -528,7 +541,7 @@ async function fetchStatus(force=false){
   }
   
   try{
-    // CRITICAL API PATCH: Converted headers into a properly formatted object wrapper
+    // OBJECT CONTAINER HEADERS FIX: Secured network data layer from breaking elements mapping below
     const monitors = await Promise.all([
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
       fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type': 'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
