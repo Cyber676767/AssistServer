@@ -92,7 +92,7 @@
 
     /* Responsive Clean Card Styling Configuration */
     .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 14px; position: relative; }
-    .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; }
+    .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
     
     .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.15s; border: 1px solid rgba(0,0,0,0.1); }
     .mrow:hover { background: #232428; }
@@ -103,7 +103,7 @@
     .sdot.paused { background: var(--yellow); box-shadow: 0 0 8px rgba(240,177,50,0.4); }
     .sdot.unknown { background: var(--faint); }
     
-    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; }
+    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
     
@@ -127,7 +127,7 @@
     .inc-body { font-size: 13px; color: var(--muted); line-height: 1.5; }
     .inc-status { display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize; color: var(--blurple); margin-right: 4px; }
 
-    /* Admin Management Form */
+    /* Admin Management Form & Buttons */
     #admin-panel { display: none; } 
     .update-form { display: flex; flex-direction: column; gap: 12px; }
     .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s; }
@@ -138,8 +138,12 @@
     
     .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; }
     .post-btn:hover { background: #4752c4; }
+    
+    .logout-btn { background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: background 0.15s, color 0.15s; text-transform: uppercase; letter-spacing: 0.02em; }
+    .logout-btn:hover { background: var(--red); color: #fff; }
 
     /* Activity Monitoring Terminal Log Components */
+    #activity-log-card { display: none; } /* Hidden entirely from public view */
     .log-container { display: flex; flex-direction: column; gap: 8px; }
     .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
     .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
@@ -236,7 +240,10 @@
         </div>
 
         <div class="card" id="admin-panel">
-          <div class="sec-title">Post Update</div>
+          <div class="sec-title">
+            <span>Post Update</span>
+            <button class="logout-btn" onclick="disableAdminUI()">Log Out</button>
+          </div>
           <div class="update-form">
             <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
             <div class="form-row">
@@ -265,7 +272,7 @@
         </div>
       </div>
 
-      <div class="card full-width">
+      <div class="card full-width" id="activity-log-card">
         <div class="sec-title">Activity Log</div>
         <div id="log-list" class="log-container">
           <div class="sk-row"><div class="sk" style="width:80px;height:14px"></div><div class="sk" style="width:200px;height:12px"></div></div>
@@ -275,7 +282,7 @@
     </div>
 
     <div class="footer">
-      <div id="footer-text" style="cursor:pointer;">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by status framework</div>
+      <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by status framework</div>
       <button class="rbtn" id="rbtn" onclick="manualRefresh()">Refresh</button>
     </div>
   </div>
@@ -290,11 +297,14 @@ const DISCORD_API='https://discordstatus.com/api/v2/summary.json';
 const INCIDENT_API='https://discordstatus.com/api/v2/incidents.json';
 
 let countdown=60,timer,lastFetch=0,cache=null,logs=[],customUpdates=[],isAdmin=false;
-let lastAssistmusicStatus = 2; // Default tracking state to healthy
+let lastAssistmusicStatus = 2; 
+let discordComponentsCache = null;
 
 function checkAdminAuth(){
   if(localStorage.getItem('assistbot-is-admin') === 'true'){
     enableAdminUI();
+  } else {
+    disableAdminUI(false);
   }
 }
 
@@ -303,21 +313,35 @@ function enableAdminUI(){
   localStorage.setItem('assistbot-is-admin', 'true');
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
+  document.getElementById('activity-log-card').style.display = 'flex'; // Show logs *only* here
   document.getElementById('incidents-card').classList.remove('full-width');
+  addLog('check', "<strong>Admin Panel Session Connected</strong>");
 }
 
-// Secret Unlock Commands: Ctrl + Shift + A or Click on footer text links
+function disableAdminUI(logEvent = true){
+  isAdmin=false;
+  localStorage.removeItem('assistbot-is-admin');
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-indicator').style.display = 'none';
+  document.getElementById('activity-log-card').style.display = 'none'; // Hide completely from non-admins
+  document.getElementById('incidents-card').classList.add('full-width');
+  if(logEvent) {
+    addLog('check', "Admin Session Disconnected.");
+  }
+}
+
+// HOTKEYS ONLY: Open via Ctrl + Shift + A (No click mechanics on footer text)
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { triggerAuthPrompt(); }
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { 
+    triggerAuthPrompt(); 
+  }
 });
-document.getElementById('footer-text').addEventListener('click', () => { triggerAuthPrompt(); });
 
 function triggerAuthPrompt(){
   if(isAdmin) return;
   const entry = prompt("Enter Administration Key:");
   if(entry === ADMIN_PASSWORD_KEY){
     enableAdminUI();
-    addLog('check', "<strong>Admin Panel Access Verified</strong>");
   } else if(entry !== null) {
     alert("Access Denied.");
   }
@@ -353,7 +377,7 @@ function addLog(type,text){
 
 function renderLogs(){
   const el=document.getElementById('log-list');
-  if(!logs.length)return;
+  if(!el || !logs.length)return;
   el.innerHTML=logs.map(l=>`<div class="lrow"><div class="ltype">${l.type==='check'?'System Check':'Update Log'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
 }
 
@@ -362,24 +386,33 @@ async function fetchDiscordStatus(){
     const [s,i]=await Promise.all([fetch(DISCORD_API),fetch(INCIDENT_API)]);
     const sum=await s.json();const inc=await i.json();
     window._lastIncidents=inc.incidents||[];
-    renderDiscord(sum,inc.incidents||[]);
+    discordComponentsCache=sum.components||[];
+    localStorage.setItem('discord-components-cache', JSON.stringify(discordComponentsCache));
+    renderDiscord(sum.components, inc.incidents||[]);
   }catch(e){
-    document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Discord statuses updated via fallback framework.</div>`;
+    const savedComps = localStorage.getItem('discord-components-cache');
+    if(savedComps) {
+      discordComponentsCache = JSON.parse(savedComps);
+      renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+    } else {
+      document.getElementById('discord-list').innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Discord statuses updated via fallback framework.</div>`;
+    }
   }
 }
 
-function renderDiscord(sum,incidents){
+function renderDiscord(components, incidents){
+  if(!components || !components.length) return;
   const keys=['API','Gateway','Media Proxy','Voice'];
-  const comps=sum.components.filter(c=>keys.some(k=>c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
+  const comps=components.filter(c=>keys.some(k=>c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
   
   document.getElementById('discord-list').innerHTML=comps.map(c=>{
     const s=c.status;
     const dotClass=s==='operational'?'up':s==='major_outage'?'down':'paused';
     
-    // DEPENDENCY CHECKER: If this element item is Voice, check parent cluster status
+    // DEPENDENCY CHECKER: If Voice channel configuration detects an issue with Assistmusic component
     let dependencyNotice = '';
     if(c.name.toLowerCase().includes('voice') && lastAssistmusicStatus !== 2) {
-      dependencyNotice = `<span class="warn-inline">(May be unstable — Assistmusic cluster down)</span>`;
+      dependencyNotice = `<span class="warn-inline">(May be unstable — Assistmusic is down)</span>`;
     }
     
     return `<div class="mrow">
@@ -398,7 +431,7 @@ function renderDiscord(sum,incidents){
 
 function renderIncidents(incidents){
   const el=document.getElementById('incident-list');
-  const all=[...customUpdates,...incidents.slice(0,4)];
+  const all=[...customUpdates,...(incidents || []).slice(0,4)];
   if(!all.length){el.innerHTML=`<div class="inc-row" style="text-align:center;color:var(--faint)">No active incidents currently logged.</div>`;return;}
   el.innerHTML=all.map(i=>{
     const isCustom=!!i._custom;
@@ -429,9 +462,10 @@ function postUpdate(){
 async function fetchStatus(force=false){
   const now=Date.now();
   
-  // ANTI-SPAM REFRESH RATE LIMIT FIX
+  // ANTI-SPAM REFRESH RATE LIMIT FIX: Serve instantly without prompt boxes or error messages
   if(!force && cache && (now-lastFetch)<8000){
     render(cache);
+    if(discordComponentsCache) renderDiscord(discordComponentsCache, window._lastIncidents||[]);
     resetCountdown();
     return;
   }
@@ -444,7 +478,7 @@ async function fetchStatus(force=false){
     ]);
     const m=[monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0]].map((x,i)=>({...x,friendly_name:['Assistbot','Assistmusic','Dashboard'][i]}));
     
-    // Store Assistmusic status to adjust Voice text warnings
+    // Check Assistmusic tracking node state logic updates
     lastAssistmusicStatus = m[1].status;
     
     document.getElementById('ping-val').textContent=Math.round(Math.random()*25+15);
@@ -453,15 +487,17 @@ async function fetchStatus(force=false){
     render(m);
     addLog('check', `Scanned <strong>${m.length} local clusters</strong> successfully.`);
     
-    // Update Discord list interface text indicators if already loaded
-    if(window._lastIncidents) renderDiscord({components: JSON.parse(localStorage.getItem('discord-components-cache') || '[]')}, window._lastIncidents);
+    if(discordComponentsCache) {
+      renderDiscord(discordComponentsCache, window._lastIncidents||[]);
+    }
     
-  }catch(err){
+  }catch(err) {
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if(backup || cache){
       const renderTarget = cache || JSON.parse(backup);
       lastAssistmusicStatus = renderTarget[1]?.status || 2;
       render(renderTarget);
+      if(discordComponentsCache) renderDiscord(discordComponentsCache, window._lastIncidents||[]);
       addLog('check', 'Serving status monitoring indicators from hot local backups.');
     } else {
       document.getElementById('monitor-list').innerHTML=`<div class="mrow" style="color:var(--red)">API interaction limit hit. Please wait a moment.</div>`;
@@ -500,9 +536,6 @@ function resetCountdown(){
 // Initial Launch Sequencing 
 loadUpdates();
 checkAdminAuth();
-if(!isAdmin){
-  document.getElementById('incidents-card').classList.add('full-width');
-}
 fetchStatus(true);
 fetchDiscordStatus();
 setInterval(fetchDiscordStatus,300000);
