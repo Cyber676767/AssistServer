@@ -7,258 +7,222 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:           #f6f7f8;
-      --card:         #ffffff;
-      --border:       #e3e5e8;
-      --text-primary: #060607;
-      --text-muted:   #4e5058;
-      --text-faint:   #80848e;
-      --green:        #23a55a;
-      --green-bg:     #e6f4ed;
-      --yellow:       #f0b132;
-      --yellow-bg:    #fef9ec;
-      --red:          #f23f43;
-      --red-bg:       #fde8e8;
-      --blue:         #5865f2;
-      --radius:       8px;
-      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --bg:        #1a1b1e;
+      --card:      #2b2d31;
+      --card2:     #232428;
+      --border:    #3a3c40;
+      --text:      #dbdee1;
+      --muted:     #949ba4;
+      --faint:     #6d6f78;
+      --green:     #23a55a;
+      --green-bg:  rgba(35,165,90,.15);
+      --yellow:    #f0b132;
+      --yellow-bg: rgba(240,177,50,.15);
+      --red:       #f23f43;
+      --red-bg:    rgba(242,63,67,.15);
+      --blue:      #5865f2;
+      --radius:    8px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Nunito', sans-serif;
       background: var(--bg);
-      color: var(--text-primary);
+      color: var(--text);
       min-height: 100vh;
     }
 
+    /* ── Header ── */
     header {
-      background: var(--card);
+      background: var(--card2);
       border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 64px;
+      padding: 0 20px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 10;
-      box-shadow: var(--shadow);
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 18px;
-      color: var(--text-primary);
-      text-decoration: none;
-    }
-
-    .logo-icon {
-      width: 36px;
-      height: 36px;
+    .bot-info { display: flex; align-items: center; gap: 10px; }
+    .bot-avatar {
+      width: 38px; height: 38px;
       background: var(--blue);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      position: relative;
     }
-
-    .header-right {
-      font-size: 13px;
-      color: var(--text-faint);
+    .bot-avatar::after {
+      content: '';
+      position: absolute;
+      bottom: 1px; right: 1px;
+      width: 10px; height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      border: 2px solid var(--card2);
     }
-
-    .hero {
-      margin: 32px auto 0;
-      max-width: 860px;
-      padding: 0 24px;
+    .bot-name { font-weight: 800; font-size: 16px; }
+    .bot-tag  { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .header-stats { display: flex; gap: 20px; align-items: center; }
+    .stat-pill {
+      font-size: 12px; font-weight: 700;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
     }
+    .stat-pill span { color: var(--text); }
 
+    /* ── Banner ── */
+    .hero { max-width: 860px; margin: 24px auto 0; padding: 0 16px; }
     .banner {
       border-radius: var(--radius);
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-weight: 700;
-      font-size: 17px;
-      margin-bottom: 28px;
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 700; font-size: 15px;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
       transition: all .3s;
     }
+    .banner.operational { background: var(--green-bg);  border-color: rgba(35,165,90,.3);  color: #3fba7a; }
+    .banner.degraded    { background: var(--yellow-bg); border-color: rgba(240,177,50,.3); color: #f0b132; }
+    .banner.outage      { background: var(--red-bg);    border-color: rgba(242,63,67,.3);  color: #f23f43; }
+    .banner-icon { font-size: 20px; }
 
-    .banner.operational { background: var(--green-bg); color: #1a7a43; border: 1px solid #b7dfc8; }
-    .banner.degraded    { background: var(--yellow-bg); color: #9a6f00; border: 1px solid #f5d98a; }
-    .banner.outage      { background: var(--red-bg);    color: #b02a2d; border: 1px solid #f5b8b9; }
-
-    .banner-icon { font-size: 22px; }
-
-    .section {
-      max-width: 860px;
-      margin: 0 auto 24px;
-      padding: 0 24px;
-    }
-
+    /* ── Section ── */
+    .section { max-width: 860px; margin: 0 auto 20px; padding: 0 16px; }
     .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 10px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--faint); margin-bottom: 8px;
     }
 
+    /* ── Card ── */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      box-shadow: var(--shadow);
     }
 
+    /* ── Monitor Row ── */
     .monitor-row {
-      display: flex;
-      align-items: center;
-      padding: 14px 20px;
+      display: flex; align-items: center;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
-      gap: 12px;
+      gap: 10px;
       transition: background .15s;
     }
-
     .monitor-row:last-child { border-bottom: none; }
-    .monitor-row:hover { background: #f8f9fa; }
+    .monitor-row:hover { background: rgba(255,255,255,.03); }
 
     .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
+      width: 10px; height: 10px;
+      border-radius: 50%; flex-shrink: 0;
     }
-    .status-dot.up       { background: var(--green); box-shadow: 0 0 0 3px rgba(35,165,90,.18); }
-    .status-dot.down     { background: var(--red);   box-shadow: 0 0 0 3px rgba(242,63,67,.18); }
-    .status-dot.paused   { background: var(--yellow);box-shadow: 0 0 0 3px rgba(240,177,50,.18); }
-    .status-dot.unknown  { background: #b0b5bf;      box-shadow: 0 0 0 3px rgba(176,181,191,.18); }
+    .status-dot.up     { background: var(--green);  box-shadow: 0 0 0 3px rgba(35,165,90,.2); }
+    .status-dot.down   { background: var(--red);    box-shadow: 0 0 0 3px rgba(242,63,67,.2); }
+    .status-dot.paused { background: var(--yellow); box-shadow: 0 0 0 3px rgba(240,177,50,.2); }
+    .status-dot.unknown{ background: #4e5058;       box-shadow: 0 0 0 3px rgba(78,80,88,.2); }
 
-    .monitor-name {
-      font-weight: 600;
-      font-size: 15px;
-      flex: 1;
-    }
-
-    .monitor-uptime {
-      font-size: 13px;
-      color: var(--text-faint);
-      font-weight: 500;
-    }
+    .monitor-name { font-weight: 700; font-size: 14px; flex: 1; color: var(--text); }
+    .monitor-uptime { font-size: 12px; color: var(--muted); font-weight: 600; }
 
     .monitor-badge {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
+      font-size: 11px; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .04em;
     }
-    .monitor-badge.up     { background: var(--green-bg); color: var(--green); }
-    .monitor-badge.down   { background: var(--red-bg);   color: var(--red); }
-    .monitor-badge.paused { background: var(--yellow-bg);color: var(--yellow); }
-    .monitor-badge.unknown{ background: #f0f1f3;         color: var(--text-faint); }
+    .monitor-badge.up     { background: var(--green-bg);  color: var(--green); }
+    .monitor-badge.down   { background: var(--red-bg);    color: var(--red); }
+    .monitor-badge.paused { background: var(--yellow-bg); color: var(--yellow); }
+    .monitor-badge.unknown{ background: rgba(78,80,88,.2);color: var(--muted); }
 
-    .uptime-bar-wrap {
-      display: flex;
-      gap: 2px;
-      align-items: center;
+    /* ── Uptime bars ── */
+    .uptime-bar-wrap { display: flex; gap: 2px; align-items: center; }
+    .bar-seg { width: 5px; height: 20px; border-radius: 2px; background: var(--border); }
+    .bar-seg.up   { background: var(--green); }
+    .bar-seg.down { background: var(--red); }
+
+    /* ── Log rows ── */
+    .log-row {
+      display: flex; align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px; font-size: 13px;
+      transition: background .15s;
     }
-
-    .uptime-bar-wrap .bar-seg {
-      width: 6px;
-      height: 22px;
-      border-radius: 2px;
-      background: #e3e5e8;
+    .log-row:last-child { border-bottom: none; }
+    .log-row:hover { background: rgba(255,255,255,.03); }
+    .log-badge {
+      font-size: 10px; font-weight: 800;
+      padding: 2px 7px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .05em;
+      flex-shrink: 0; min-width: 90px; text-align: center;
     }
-    .uptime-bar-wrap .bar-seg.up   { background: var(--green); }
-    .uptime-bar-wrap .bar-seg.down { background: var(--red); }
+    .log-badge.check  { background: rgba(88,101,242,.2); color: #8891f2; }
+    .log-badge.up     { background: var(--green-bg);     color: var(--green); }
+    .log-badge.down   { background: var(--red-bg);       color: var(--red); }
+    .log-text { flex: 1; color: var(--muted); }
+    .log-text strong { color: var(--text); font-weight: 700; }
+    .log-time { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
+    /* ── Footer ── */
     footer {
-      max-width: 860px;
-      margin: 0 auto 40px;
-      padding: 0 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-faint);
+      max-width: 860px; margin: 0 auto 32px;
+      padding: 0 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--faint);
     }
-
     .refresh-btn {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-family: inherit;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-weight: 600;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 14px;
+      font-size: 12px; font-family: inherit;
+      color: var(--muted); cursor: pointer; font-weight: 700;
       transition: all .15s;
     }
-    .refresh-btn:hover { background: var(--card); border-color: #b0b5bf; color: var(--text-primary); }
+    .refresh-btn:hover { background: var(--card2); color: var(--text); }
+    .refresh-btn:disabled { opacity: .4; cursor: not-allowed; }
 
+    /* ── Skeleton ── */
     .skeleton {
-      background: linear-gradient(90deg, #e8eaed 25%, #f0f2f5 50%, #e8eaed 75%);
+      background: linear-gradient(90deg, var(--border) 25%, #3f4146 50%, var(--border) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
       border-radius: 4px;
     }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
     .skeleton-row {
-      display: flex;
-      align-items: center;
-      padding: 14px 20px;
-      gap: 12px;
+      display: flex; align-items: center;
+      padding: 12px 16px; gap: 10px;
       border-bottom: 1px solid var(--border);
     }
     .skeleton-row:last-child { border-bottom: none; }
 
     @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .5; transform: scale(1.4); }
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(1.5); }
     }
     .live-dot {
-      display: inline-block;
-      width: 7px; height: 7px;
-      background: var(--green);
-      border-radius: 50%;
-      margin-right: 5px;
-      animation: pulse 2s infinite;
+      display: inline-block; width: 7px; height: 7px;
+      background: var(--green); border-radius: 50%;
+      margin-right: 4px; animation: pulse 2s infinite;
     }
-
-    .error-box {
-      background: var(--red-bg);
-      border: 1px solid #f5b8b9;
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      color: #b02a2d;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
     #countdown { font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="#">
-    <div class="logo-icon">🤖</div>
-    AssistBot Status
-  </a>
-  <div class="header-right">
-    <span class="live-dot"></span> Live
+  <div class="bot-info">
+    <div class="bot-avatar">🤖</div>
+    <div>
+      <div class="bot-name">AssistBot<span style="color:var(--faint);font-weight:600">#8085</span></div>
+      <div class="bot-tag" style="color:var(--green)">● Online</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill">Ping: <span id="ping-val">—</span>ms</div>
+    <div class="stat-pill"><span class="live-dot"></span> Live</div>
   </div>
 </header>
 
@@ -272,48 +236,40 @@
 <div class="section">
   <div class="section-title">Services</div>
   <div class="card" id="monitor-list">
-    <div class="skeleton-row">
-      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
-      <div class="skeleton" style="width:180px;height:14px"></div>
-      <div style="flex:1"></div>
-      <div class="skeleton" style="width:60px;height:14px"></div>
-    </div>
-    <div class="skeleton-row">
-      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
-      <div class="skeleton" style="width:140px;height:14px"></div>
-      <div style="flex:1"></div>
-      <div class="skeleton" style="width:60px;height:14px"></div>
-    </div>
-    <div class="skeleton-row">
-      <div class="skeleton" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
-      <div class="skeleton" style="width:200px;height:14px"></div>
-      <div style="flex:1"></div>
-      <div class="skeleton" style="width:60px;height:14px"></div>
-    </div>
+    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:160px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
+    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:130px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
+    <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="width:180px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:55px;height:13px"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Logs</div>
+  <div class="card" id="log-list">
+    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:200px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
+    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:160px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
+    <div class="skeleton-row"><div class="skeleton" style="width:90px;height:13px;border-radius:4px"></div><div class="skeleton" style="width:220px;height:13px"></div><div style="flex:1"></div><div class="skeleton" style="width:50px;height:13px"></div></div>
   </div>
 </div>
 
 <footer>
-  <div>Auto-refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by UptimeRobot</div>
-  <button class="refresh-btn" onclick="fetchStatus()">↻ Refresh</button>
+  <div>Auto-refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistAi</div>
+  <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
 </footer>
 
 <script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
-  // UptimeRobot monitor-specific read keys (each key fetches its own monitor)
   const MONITORS = [
     { key: 'm803038901-de5f8200e02d0175f3623542', label: 'Assistbot' },
     { key: 'm803138290-466db08e8901a7e49b6ac3d5', label: 'Assistmusic' },
     { key: 'm803121772-30a8ddf61c429ebddfca1ac0', label: 'Dashboard' },
   ];
-  // If you have an account-level read key (starts with "ur..."), set it here
-  // and the page will use a single API call instead:
-  const ACCOUNT_KEY = '';
-  // ─────────────────────────────────────────────────────────────────────────
-
   const API_URL = 'https://api.uptimerobot.com/v2/getMonitors';
+
   let countdown = 60;
   let timer;
+  let lastFetch = 0;
+  let cachedMonitors = null;
+  let logEntries = [];
+  const COOLDOWN = 15000; // 15s minimum between API calls
 
   function statusClass(s) {
     if (s === 2) return 'up';
@@ -321,7 +277,6 @@
     if (s === 0) return 'paused';
     return 'unknown';
   }
-
   function statusLabel(s) {
     if (s === 2) return 'Operational';
     if (s === 9) return 'Outage';
@@ -329,104 +284,122 @@
     if (s === 0) return 'Paused';
     return 'Unknown';
   }
-
-  function uptimeBars(ratio90) {
-    const bars = [];
-    const seed = ratio90 / 100;
-    for (let i = 0; i < 45; i++) {
-      // Use a deterministic-ish pattern based on ratio so bars look stable
-      const isUp = ((i * 7 + 3) % 100) / 100 < seed;
-      bars.push(`<div class="bar-seg ${isUp ? 'up' : 'down'}" title="${isUp ? 'Up' : 'Down'}"></div>`);
-    }
-    return `<div class="uptime-bar-wrap">${bars.join('')}</div>`;
-  }
-
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+  function uptimeBars(ratio) {
+    const bars = [];
+    for (let i = 0; i < 40; i++) {
+      const isUp = ((i * 7 + 3) % 100) / 100 < ratio / 100;
+      bars.push(`<div class="bar-seg ${isUp?'up':'down'}"></div>`);
+    }
+    return `<div class="uptime-bar-wrap">${bars.join('')}</div>`;
+  }
+  function timeNow() {
+    return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  }
+  function addLog(type, text) {
+    logEntries.unshift({ type, text, time: timeNow() });
+    if (logEntries.length > 20) logEntries.pop();
+    renderLogs();
+  }
+  function renderLogs() {
+    const el = document.getElementById('log-list');
+    if (!logEntries.length) return;
+    el.innerHTML = logEntries.map(l => `
+      <div class="log-row">
+        <div class="log-badge ${l.type}">${l.type === 'check' ? 'Status Check' : l.type === 'up' ? 'Online' : 'Outage'}</div>
+        <div class="log-text">${l.text}</div>
+        <div class="log-time">${l.time}</div>
+      </div>`).join('');
+  }
 
   async function fetchOneMonitor(key, fallbackLabel) {
+    const t0 = Date.now();
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        api_key: key,
-        format: 'json',
-        custom_uptime_ratios: '90',
-        logs: '0'
-      })
+      body: new URLSearchParams({ api_key: key, format: 'json', custom_uptime_ratios: '90', logs: '0' })
     });
-    const data = await res.json();
+    const ping = Date.now() - t0;
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { throw new Error('Bad API response: ' + text.slice(0, 60)); }
     if (data.stat !== 'ok') throw new Error(data.error?.message || 'API error');
-    // Monitor-specific keys return exactly one monitor
     const m = data.monitors[0];
-    return { ...m, friendly_name: m.friendly_name || fallbackLabel };
+    return { ...m, friendly_name: m.friendly_name || fallbackLabel, _ping: ping };
   }
 
-  async function fetchAllMonitors() {
-    if (ACCOUNT_KEY) {
-      // Single call with account key
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          api_key: ACCOUNT_KEY,
-          format: 'json',
-          custom_uptime_ratios: '90',
-          logs: '0'
-        })
-      });
-      const data = await res.json();
-      if (data.stat !== 'ok') throw new Error(data.error?.message || 'API error');
-      return data.monitors;
+  async function fetchStatus(force = false) {
+    const now = Date.now();
+    // Rate-limit guard: use cache if called too soon
+    if (!force && cachedMonitors && (now - lastFetch) < COOLDOWN) {
+      renderMonitors(cachedMonitors, true);
+      return;
     }
 
-    // One call per monitor-specific key (parallel)
-    return Promise.all(
-      MONITORS.map(({ key, label }) => fetchOneMonitor(key, label))
-    );
-  }
-
-  async function fetchStatus() {
-    const list = document.getElementById('monitor-list');
-    const banner = document.getElementById('banner');
-    const bannerText = document.getElementById('banner-text');
-
+    const t0 = Date.now();
     try {
-      const monitors = await fetchAllMonitors();
-
-      const allUp      = monitors.every(m => m.status === 2);
-      const anyDown    = monitors.some(m => m.status === 9);
-
-      banner.className = 'banner ' + (allUp ? 'operational' : anyDown ? 'outage' : 'degraded');
-      bannerText.textContent = allUp
-        ? 'All Systems Operational'
-        : anyDown
-        ? 'Service Outage Detected'
-        : 'Partial Service Degradation';
-      banner.querySelector('.banner-icon').textContent = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
-
-      list.innerHTML = monitors.map(m => {
-        const sc = statusClass(m.status);
-        const uptime = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-        return `
-          <div class="monitor-row">
-            <div class="status-dot ${sc}"></div>
-            <div class="monitor-name">${escHtml(m.friendly_name)}</div>
-            ${uptimeBars(parseFloat(uptime))}
-            <div class="monitor-uptime">${uptime}%</div>
-            <div class="monitor-badge ${sc}">${statusLabel(m.status)}</div>
-          </div>`;
-      }).join('');
-
+      const monitors = await Promise.all(
+        MONITORS.map(({ key, label }) => fetchOneMonitor(key, label))
+      );
+      const ping = Math.round(monitors.reduce((a, m) => a + (m._ping || 0), 0) / monitors.length);
+      document.getElementById('ping-val').textContent = ping;
+      cachedMonitors = monitors;
+      lastFetch = Date.now();
+      renderMonitors(monitors, false);
+      addLog('check', `Checked <strong>${monitors.length} services</strong> — ${monitors.filter(m=>m.status===2).length} operational`);
     } catch (err) {
-      list.innerHTML = `<div class="error-box">⚠️ Could not load status data. Check your API keys or network settings.<br><small style="font-weight:400;opacity:.8">${escHtml(err.message)}</small></div>`;
-      banner.className = 'banner degraded';
-      bannerText.textContent = 'Status Unavailable';
-      banner.querySelector('.banner-icon').textContent = '⚠️';
+      if (cachedMonitors) {
+        // Show stale cache silently rather than error
+        renderMonitors(cachedMonitors, true);
+        addLog('check', `<strong>Rate limited</strong> — showing cached data`);
+      } else {
+        document.getElementById('monitor-list').innerHTML =
+          `<div style="padding:16px;color:var(--red);font-size:13px;font-weight:600">⚠️ ${escHtml(err.message)}</div>`;
+        addLog('check', `<strong>Error:</strong> ${escHtml(err.message)}`);
+      }
     }
-
     resetCountdown();
+  }
+
+  function renderMonitors(monitors, stale) {
+    const banner  = document.getElementById('banner');
+    const bannerText = document.getElementById('banner-text');
+    const allUp   = monitors.every(m => m.status === 2);
+    const anyDown = monitors.some(m => m.status === 9);
+
+    banner.className = 'banner ' + (allUp ? 'operational' : anyDown ? 'outage' : 'degraded');
+    bannerText.textContent = (allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Partial Service Degradation')
+      + (stale ? '  (cached)' : '');
+    banner.querySelector('.banner-icon').textContent = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+
+    document.getElementById('monitor-list').innerHTML = monitors.map(m => {
+      const sc = statusClass(m.status);
+      const uptime = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
+      return `<div class="monitor-row">
+        <div class="status-dot ${sc}"></div>
+        <div class="monitor-name">${escHtml(m.friendly_name)}</div>
+        ${uptimeBars(parseFloat(uptime))}
+        <div class="monitor-uptime">${uptime}%</div>
+        <div class="monitor-badge ${sc}">${statusLabel(m.status)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function manualRefresh() {
+    const btn = document.getElementById('refresh-btn');
+    const now = Date.now();
+    const wait = Math.ceil((COOLDOWN - (now - lastFetch)) / 1000);
+    if (cachedMonitors && (now - lastFetch) < COOLDOWN) {
+      btn.textContent = `Wait ${wait}s`;
+      btn.disabled = true;
+      setTimeout(() => { btn.textContent = '↻ Refresh'; btn.disabled = false; }, (wait * 1000));
+      renderMonitors(cachedMonitors, true);
+      return;
+    }
+    fetchStatus(true);
   }
 
   function resetCountdown() {
@@ -440,7 +413,7 @@
     }, 1000);
   }
 
-  fetchStatus();
+  fetchStatus(true);
 </script>
 </body>
 </html>
