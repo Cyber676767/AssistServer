@@ -328,12 +328,17 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const ADMIN_PASSWORD = "SSTTRROONNGGCCAANNOOEE981!";
+const ADMIN_PASSWORD  = "SSTTRROONNGGCCAANNOOEE981!";
 
-const GITHUB_TOKEN = "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";
-const GITHUB_REPO  = "Cyber676767/assist-server";
-const GITHUB_FILE  = "updates.json";
-const GITHUB_API   = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
+const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
+const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
+const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
+const SUPABASE_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
 
 const UPTIMEROBOT_API = 'https://api.uptimerobot.com/v2/getMonitors';
 const DISCORD_API     = 'https://discordstatus.com/api/v2/summary.json';
@@ -345,60 +350,68 @@ let isAdmin = false;
 let lastAssistmusicStatus = 2;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
-let githubFileSha = null; // needed by GitHub API to update existing files
 
-// ── GITHUB STORAGE HELPERS ───────────────────────────────────────────────────
+// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
 
 async function loadUpdates() {
   try {
-    const res = await fetch(GITHUB_API, {
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.desc&limit=15`, {
+      headers: SUPABASE_HEADERS
     });
-    if (res.status === 404) {
-      // File doesn't exist yet — start empty
-      customUpdates = [];
-      githubFileSha = null;
-      return;
-    }
-    const data = await res.json();
-    githubFileSha = data.sha;
-    const decoded = JSON.parse(atob(data.content.replace(/\n/g, '')));
-    customUpdates = decoded || [];
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    // Map DB rows back to the shape the rest of the code expects
+    customUpdates = rows.map(r => ({
+      id: r.id,
+      _custom: true,
+      title: r.title,
+      type: r.type,
+      body: r.body,
+      date: r.date
+    }));
   } catch(e) {
-    console.warn('Could not load updates from GitHub:', e);
+    console.warn('Could not load updates from Supabase:', e);
     customUpdates = [];
   }
 }
 
 async function saveUpdates() {
-  try {
-    const content = btoa(unescape(encodeURIComponent(
-      JSON.stringify(customUpdates.slice(0, 15), null, 2)
-    )));
-    const body = {
-      message: 'Update status page entries',
-      content: content,
-    };
-    if (githubFileSha) body.sha = githubFileSha; // required for updates, omit for creates
+  // saveUpdates is now a no-op — inserts/deletes happen individually
+}
 
-    const res = await fetch(GITHUB_API, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
+async function insertUpdate(update) {
+  try {
+    const res = await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({
+        id: update.id,
+        title: update.title,
+        type: update.type,
+        body: update.body,
+        service: update.service,
+        date: update.date
+      })
     });
-    const data = await res.json();
-    // Update SHA so next save works
-    githubFileSha = data.content?.sha || githubFileSha;
+    if (!res.ok) throw new Error(await res.text());
   } catch(e) {
-    console.error('Could not save updates to GitHub:', e);
-    showToast("Failed to save update to GitHub.", "error");
+    console.error('Could not insert update:', e);
+    showToast("Failed to save update to database.", "error");
+    throw e;
+  }
+}
+
+async function deleteUpdate(id) {
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: SUPABASE_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) {
+    console.error('Could not delete update:', e);
+    showToast("Failed to delete update.", "error");
+    throw e;
   }
 }
 
@@ -600,32 +613,38 @@ async function postUpdate() {
   const type    = document.getElementById('update-type').value;
   const service = document.getElementById('update-service').value;
   const time    = new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
-  
-  customUpdates.unshift({
+
+  const newUpdate = {
     id: Date.now(),
     _custom: true,
     title: `[${service}]`,
     type,
     body: text,
+    service,
     date: time
-  });
-  
-  showToast("Saving to GitHub…", "info");
-  await saveUpdates(); // ← writes updates.json to GitHub repo so ALL visitors see it
-  document.getElementById('update-text').value = '';
-  renderIncidents(currentIncidentFeedCache);
-  addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
-  showToast("Update saved — visible to all visitors!", "success");
+  };
+
+  showToast("Saving to database…", "info");
+  try {
+    await insertUpdate(newUpdate);
+    customUpdates.unshift(newUpdate);
+    document.getElementById('update-text').value = '';
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
+    showToast("Update saved — visible to all visitors!", "success");
+  } catch(e) { /* error toast already shown in insertUpdate */ }
 }
 
 async function deleteCustomUpdate(id) {
   if (!isAdmin) return;
-  customUpdates = customUpdates.filter(u => u.id !== Number(id));
-  showToast("Removing from GitHub…", "info");
-  await saveUpdates();
-  renderIncidents(currentIncidentFeedCache);
-  addLog('update', 'Update entry removed.');
-  showToast("Update removed for all visitors.", "info");
+  showToast("Deleting from database…", "info");
+  try {
+    await deleteUpdate(Number(id));
+    customUpdates = customUpdates.filter(u => u.id !== Number(id));
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', 'Update entry removed.');
+    showToast("Update removed for all visitors.", "info");
+  } catch(e) { /* error toast already shown in deleteUpdate */ }
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
