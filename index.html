@@ -735,14 +735,25 @@ async function loadForceStatus() {
 async function saveForceStatus(name, value) {
   const key = `force_${name}`;
   try {
-    // Upsert — insert or update if key exists
-    const res = await fetch(SUPABASE_CONFIG, {
-      method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    // Try update first
+    const upd = await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
+      method: 'PATCH',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ value })
     });
-    if (!res.ok) throw new Error(await res.text());
-  } catch(e) { console.error('Could not save force status:', e); }
+    if (!upd.ok) throw new Error(await upd.text());
+
+    // If no row was updated (0 rows matched), insert instead
+    const count = upd.headers.get('content-range');
+    if (count === '*/0' || count === null) {
+      const ins = await fetch(SUPABASE_CONFIG, {
+        method: 'POST',
+        headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ key, value })
+      });
+      if (!ins.ok) throw new Error(await ins.text());
+    }
+  } catch(e) { console.error('Could not save force status:', e); showToast('Failed to save status override.', 'error'); }
 }
 
 // ── THEME ────────────────────────────────────────────────────────────────────
@@ -923,6 +934,10 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('activity-log-card').style.display = 'none';
   document.getElementById('incidents-card').classList.add('full-width');
   renderIncidents(currentIncidentFeedCache);
+  // Re-render bot services to strip any (forced) badges
+  if (cache) render(cache);
+  // Resume auto-refresh
+  resetCountdown();
   if (logEvent && wasAdmin) {
     addLog('check', "Admin session ended.");
     showToast("Logged out of Admin Mode.", "info");
@@ -1402,10 +1417,8 @@ function render(monitors) {
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
     const s  = sc(m.status);
     const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-    // (forced) badge only visible to admin
-    const forcedBadge = (m._forced && isAdmin)
-      ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
-      : '';
+    // Never show (forced) badge in render() — it runs on page load before isAdmin is set.
+    // The badge is only added via setForceStatus() which requires active admin interaction.
 
     const warnings = window._serviceWarnings || {};
     const warnText = warnings[m.friendly_name] && !m._forced
@@ -1414,7 +1427,7 @@ function render(monitors) {
 
     return `<div class="mrow">
       <div class="sdot ${s}"></div>
-      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
+      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
       ${bars(parseFloat(up))}
       <div class="mup">${up}%</div>
       <div class="badge ${s}">${sl(m.status)}</div>
@@ -1439,29 +1452,82 @@ function renderForceStatusRows(monitors) {
     return `<div class="force-row">
       <div class="force-name">${esc(name)}</div>
       <div class="force-btns">
-        <button class="force-btn op  ${cur==='op' ?'active':''}" onclick="setForceStatus('${name}','op')">Operational</button>
-        <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg')">Degraded</button>
-        <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out')">Outage</button>
-        <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto')">Auto</button>
+        <button class="force-btn op  ${cur==='op' ?'active':''}" onclick="setForceStatus('${name}','op',this)">Operational</button>
+        <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
+        <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
+        <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
       </div>
     </div>`;
   }).join('');
 }
 
-async function setForceStatus(name, value) {
+async function setForceStatus(name, value, btn) {
   forceStatus[name] = value;
-  if (cache) render(cache);
+
+  // Immediately update button states in the DOM — no full re-render needed
+  const row = btn.closest('.force-row');
+  row.querySelectorAll('.force-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Update the bot services display
+  if (cache) {
+    const effective = cache.map(m => {
+      const override = forceStatus[m.friendly_name];
+      if (!override || override === 'auto') return m;
+      const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+      return { ...m, status: fakeStatus, _forced: override };
+    });
+    const allUp  = effective.every(m => m.status === 2);
+    const anyDown = effective.some(m => m.status === 9);
+    const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+    document.getElementById('banner').className = 'banner ' + state;
+    document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
+    document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+    document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+    document.getElementById('monitor-list').innerHTML = effective.map(m => {
+      const s  = sc(m.status);
+      const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
+      const forcedBadge = m._forced
+        ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
+        : '';
+      const warnings = window._serviceWarnings || {};
+      const warnText = warnings[m.friendly_name] && !m._forced
+        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>`
+        : '';
+      return `<div class="mrow">
+        <div class="sdot ${s}"></div>
+        <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
+        ${bars(parseFloat(up))}
+        <div class="mup">${up}%</div>
+        <div class="badge ${s}">${sl(m.status)}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('nav-items').innerHTML = effective.map(m => {
+      const s = sc(m.status);
+      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+    }).join('');
+  }
+
   await saveForceStatus(name, value);
   addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
-  showToast(`${name} set to ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
+  showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
 }
 
 function resetCountdown() {
-  clearInterval(timer); countdown = 60;
+  clearInterval(timer);
+  // Don't auto-refresh while admin is active — they may be mid-edit
+  if (isAdmin) {
+    document.getElementById('countdown').textContent = '—';
+    document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
+    return;
+  }
+  countdown = 60;
   document.getElementById('countdown').textContent = countdown;
+  document.getElementById('footer-text').innerHTML = `Refreshes in <span id="countdown">${countdown}</span>s &nbsp;·&nbsp; Powered by AssistBot`;
   timer = setInterval(() => {
     countdown--;
-    document.getElementById('countdown').textContent = countdown;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = countdown;
     if (countdown <= 0) fetchStatus(true);
   }, 1000);
 }
