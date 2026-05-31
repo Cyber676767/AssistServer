@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AssistBot Status</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
+    /* ── THEME VARIABLES ── */
+    :root[data-theme="dark"] {
       --bg: #2b2d31;
       --sidebar: #1e1f22;
       --main-bg: #313338;
@@ -24,22 +25,77 @@
       --rdim: rgba(242, 63, 67, 0.1);
       --blurple: #5865f2;
       --panel-bg: #232428;
+      --scrollbar-thumb: #3f4147;
+      --scrollbar-track: #1e1f22;
+      --timeline-line: #3f4147;
+      --input-bg: #1e1f22;
+      --input-border: #111214;
+      --modal-bg: #313338;
+      --footer-bg: #2b2d31;
+      --sb-footer-hover: #2e3035;
+      --topbar-border: rgba(0,0,0,0.2);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f2f3f5;
+      --sidebar: #e3e5e8;
+      --main-bg: #ffffff;
+      --card: #f2f3f5;
+      --card-inner: #e3e5e8;
+      --border: #d4d7dc;
+      --text: #060607;
+      --muted: #4e5058;
+      --faint: #6d6f78;
+      --green: #1a8a47;
+      --gdim: rgba(26, 138, 71, 0.1);
+      --yellow: #c87619;
+      --ydim: rgba(200, 118, 25, 0.1);
+      --red: #da373c;
+      --rdim: rgba(218, 55, 60, 0.1);
+      --blurple: #5865f2;
+      --panel-bg: #e3e5e8;
+      --scrollbar-thumb: #c4c9d4;
+      --scrollbar-track: #e3e5e8;
+      --timeline-line: #c4c9d4;
+      --input-bg: #ebedef;
+      --input-border: #d4d7dc;
+      --modal-bg: #ffffff;
+      --footer-bg: #f2f3f5;
+      --sb-footer-hover: #dadeе2;
+      --topbar-border: rgba(0,0,0,0.08);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Noto Sans', sans-serif; background: var(--main-bg); color: var(--text); min-height: 100vh; font-size: 14px; display: flex; }
+
+    /* Scrollbar theming */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    *::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+    html, body {
+      height: 100%;
+      background: var(--main-bg);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    body { font-family: 'Noto Sans', sans-serif; color: var(--text); min-height: 100vh; font-size: 14px; display: flex; }
     
     .layout { display: flex; width: 100%; min-height: 100vh; }
 
-    .sidebar { width: 240px; min-width: 240px; background: var(--sidebar); display: flex; flex-direction: column; position: relative; }
+    /* ── SIDEBAR ── */
+    .sidebar { width: 240px; min-width: 240px; background: var(--sidebar); display: flex; flex-direction: column; position: relative; transition: background 0.2s; }
     .sb-content { flex: 1; padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 20px; }
     
-    .sb-section { display: flex; flex-direction: column; gap: 4px; }
+    .sb-section { display: flex; flex-direction: column; gap: 6px; }
     .sb-label { padding: 0 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
     
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
-    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
-    .nav-item.active { background: rgba(88, 101, 242, 0.2); color: #dbdee1; font-weight: 600; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(128,128,128,0.08); color: var(--text); }
+    .nav-item.active { background: rgba(88, 101, 242, 0.2); color: var(--text); font-weight: 600; }
     
     .ndot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .ndot.up { background: var(--green); }
@@ -47,12 +103,77 @@
     .ndot.unknown { background: var(--faint); }
     .ndot.paused { background: var(--yellow); }
 
-    .invite-box { padding: 0 12px 16px; margin-top: auto; }
+    /* ── WEBSITE / DASHBOARD BUTTONS ── */
+    .invite-box { padding: 0 12px 8px; }
+    .invite-box-bottom { padding: 0 12px 16px; }
+
+    .website-btn-wrapper { position: relative; margin-bottom: 8px; }
+
+    .website-disabled {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: rgba(88,101,242,0.15);
+      color: var(--blurple);
+      border: 1px solid rgba(88,101,242,0.25);
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .website-disabled:hover {
+      background: rgba(242, 63, 67, 0.15);
+      color: var(--red);
+      border-color: rgba(242, 63, 67, 0.3);
+    }
+
+    .website-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111214;
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      /* Allow wrapping so it doesn't go off screen */
+      white-space: normal;
+      max-width: 200px;
+      text-align: center;
+      width: max-content;
+      max-width: 210px;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s, visibility 0.15s;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .website-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #111214;
+    }
+    .website-btn-wrapper:hover .website-tooltip { visibility: visible; opacity: 1; }
+
     .invite-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--blurple); color: #fff; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.15s; box-shadow: 0 4px 12px rgba(88,101,242,0.15); }
     .invite-btn:hover { background: #4752c4; }
 
     .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); width: 100%; overflow: hidden; cursor: pointer; transition: background 0.15s; }
-    .sb-footer:hover { background: #2e3035; }
+    .sb-footer:hover { background: var(--sb-footer-hover); }
     .av-wrapper { position: relative; width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; }
     .av { width: 40px; height: 40px; border-radius: 50%; background: #36393f; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
     .av img { width: 100%; height: 100%; object-fit: cover; display: block; min-width: 100%; min-height: 100%; }
@@ -62,16 +183,52 @@
     .uname { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ustatus { font-size: 12px; color: var(--muted); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--main-bg); }
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--main-bg); transition: background 0.2s; }
     
-    .topbar { height: 64px; background: var(--main-bg); border-bottom: 1px solid rgba(0,0,0,0.2); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+    .topbar { height: 64px; background: var(--main-bg); border-bottom: 1px solid var(--topbar-border); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; }
     .tb-title { font-size: 18px; font-weight: 700; color: var(--text); }
-    .tb-div { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 4px; }
+    .tb-div { width: 1px; height: 24px; background: rgba(128,128,128,0.2); margin: 0 4px; }
     .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
     
+    /* ── THEME TOGGLE ── */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-inner);
+      border-radius: 20px;
+      padding: 4px 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--card); }
+    .theme-toggle svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+    .toggle-track {
+      width: 28px; height: 16px;
+      background: var(--border);
+      border-radius: 8px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--blurple); }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 12px; height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(12px); }
+
     .ping-wrapper { position: relative; display: inline-block; }
-    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(0,0,0,0.1); cursor: help; transition: background 0.15s; }
-    .ping-pill:hover { background: rgba(0,0,0,0.2); color: var(--text); }
+    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(128,128,128,0.08); cursor: help; transition: background 0.15s; }
+    .ping-pill:hover { background: rgba(128,128,128,0.15); color: var(--text); }
     
     .ping-tooltip { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #111214; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; visibility: hidden; opacity: 0; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
     .ping-tooltip::before { content: ''; position: absolute; bottom: 100%; right: 16px; border: 5px solid transparent; border-bottom-color: #111214; }
@@ -83,19 +240,21 @@
 
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
-    .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid transparent; }
-    .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: #43b581; }
+    /* ── BANNER ── */
+    .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid transparent; }
+    .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: var(--green); }
     .banner.degraded { background: var(--ydim); border-color: rgba(240, 178, 50, 0.2); color: var(--yellow); }
     .banner.outage { background: var(--rdim); border-color: rgba(242, 63, 67, 0.2); color: var(--red); }
 
+    /* ── GRID & CARDS ── */
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     .full-width { grid-column: span 2; }
 
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 14px; position: relative; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 14px; position: relative; transition: background 0.2s; }
     .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
     
-    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.15s; border: 1px solid rgba(0,0,0,0.1); }
-    .mrow:hover { background: #232428; }
+    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.15s; border: 1px solid rgba(0,0,0,0.06); }
+    .mrow:hover { background: var(--card-inner); filter: brightness(1.04); }
     
     .sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .sdot.up { background: var(--green); box-shadow: 0 0 8px rgba(35,165,90,0.4); }
@@ -108,7 +267,7 @@
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
     
     .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
-    .bar { width: 5px; height: 22px; border-radius: 3px; background: #3f4147; }
+    .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
     .bar.up { background: var(--green); }
     .bar.down { background: var(--red); }
 
@@ -118,29 +277,121 @@
     .badge.paused { color: var(--yellow); }
     .badge.unknown { color: var(--faint); }
 
-    .inc-container { display: flex; flex-direction: column; gap: 12px; }
-    .inc-row { padding: 14px; background: var(--card-inner); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 4px; position: relative; }
-    .inc-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .inc-date { font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
-    
-    .origin-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 6px; border-radius: 4px; }
-    .origin-badge.assistbot { background: rgba(88, 101, 242, 0.15); color: #5865f2; border: 1px solid rgba(88, 101, 242, 0.25); }
-    .origin-badge.discord { background: rgba(240, 178, 50, 0.12); color: var(--yellow); border: 1px solid rgba(240, 178, 50, 0.2); }
+    /* ── INCIDENT TIMELINE (Discord-style) ── */
+    .inc-group { display: flex; flex-direction: column; gap: 0; }
+    .inc-date-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--faint); padding: 14px 0 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .inc-date-header:first-child { border-top: none; padding-top: 0; }
 
-    .inc-title { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .inc-body { font-size: 13px; color: var(--muted); line-height: 1.5; }
-    .inc-status { display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize; color: var(--blurple); margin-right: 4px; }
-    
-    .del-inc-btn { background: transparent; border: none; color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: none; text-transform: uppercase; }
+    .inc-item {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Timeline spine */
+    .inc-spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 32px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .inc-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+      z-index: 1;
+      position: relative;
+    }
+    .inc-dot.resolved   { background: var(--green); box-shadow: 0 0 6px rgba(35,165,90,0.4); }
+    .inc-dot.monitoring { background: var(--blurple); box-shadow: 0 0 6px rgba(88,101,242,0.4); }
+    .inc-dot.identified { background: var(--yellow); box-shadow: 0 0 6px rgba(240,178,50,0.4); }
+    .inc-dot.investigating { background: var(--red); box-shadow: 0 0 6px rgba(242,63,67,0.4); }
+    .inc-dot.info       { background: var(--faint); }
+
+    .inc-line {
+      width: 2px;
+      flex: 1;
+      background: var(--timeline-line);
+      min-height: 12px;
+    }
+
+    .inc-body-wrap {
+      flex: 1;
+      padding: 0 0 18px 10px;
+    }
+    .inc-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .inc-title {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      line-height: 1.3;
+    }
+    .inc-origin-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+      padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+    }
+    .inc-origin-badge.assistbot { background: rgba(88,101,242,0.15); color: var(--blurple); border: 1px solid rgba(88,101,242,0.25); }
+    .inc-origin-badge.discord   { background: var(--ydim); color: var(--yellow); border: 1px solid rgba(240,178,50,0.2); }
+
+    /* Individual updates within an incident */
+    .inc-updates { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+
+    .inc-update-item { display: flex; gap: 0; }
+    .inc-update-spine {
+      display: flex; flex-direction: column; align-items: center;
+      width: 20px; flex-shrink: 0;
+    }
+    .inc-update-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; z-index: 1;
+    }
+    .inc-update-dot.resolved    { background: var(--green); }
+    .inc-update-dot.monitoring  { background: var(--blurple); }
+    .inc-update-dot.identified  { background: var(--yellow); }
+    .inc-update-dot.investigating { background: var(--red); }
+    .inc-update-dot.info        { background: var(--faint); }
+    .inc-update-line { width: 1px; flex: 1; background: var(--timeline-line); min-height: 8px; }
+
+    .inc-update-content { flex: 1; padding: 0 0 12px 8px; }
+    .inc-status-label {
+      display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize;
+      margin-right: 4px;
+    }
+    .inc-status-label.resolved    { color: var(--green); }
+    .inc-status-label.monitoring  { color: var(--blurple); }
+    .inc-status-label.identified  { color: var(--yellow); }
+    .inc-status-label.investigating { color: var(--red); }
+    .inc-status-label.info        { color: var(--faint); }
+
+    .inc-update-body { font-size: 13px; color: var(--muted); line-height: 1.5; display: inline; }
+    .inc-update-time { font-size: 11px; color: var(--faint); margin-top: 3px; display: block; }
+
+    .del-inc-btn { background: transparent; border: none; color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: none; text-transform: uppercase; flex-shrink: 0; }
     .del-inc-btn:hover { background: var(--rdim); }
+    .del-inc-btn.visible { display: block; }
 
-    #admin-panel { display: none; } 
+    .no-incidents { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
+
+    /* ── ADMIN PANEL ── */
+    #admin-panel { display: none; }
     .update-form { display: flex; flex-direction: column; gap: 12px; }
-    .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s; }
+    .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s, background 0.2s; }
     .update-form textarea:focus { border-color: var(--blurple); }
+    .update-form textarea::placeholder { color: var(--faint); }
     
-    .form-row { display: flex; gap: 10px; align-items: center; }
-    .sel { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; min-width: 130px; }
+    .form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .sel { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; min-width: 130px; transition: background 0.2s; }
     
     .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; }
     .post-btn:hover { background: #4752c4; }
@@ -148,20 +399,22 @@
     .logout-btn { background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: background 0.15s, color 0.15s; text-transform: uppercase; }
     .logout-btn:hover { background: var(--red); color: #fff; }
 
-    .oauth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 18, 20, 0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+    /* ── OAUTH MODAL ── */
+    .oauth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17,18,20,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
     .oauth-modal.open { opacity: 1; visibility: visible; }
-    .oauth-card { background: #313338; width: 100%; max-width: 420px; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.04); }
+    .oauth-card { background: var(--modal-bg); width: 100%; max-width: 420px; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
     .oauth-logo { width: 56px; height: 56px; color: var(--blurple); margin-bottom: 16px; }
-    .oauth-h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .oauth-h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
     .oauth-p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.4; }
-    .oauth-input { width: 100%; background: #1e1f22; border: 1px solid #111214; padding: 10px; border-radius: 4px; color: #fff; font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.15s; text-align: center; }
+    .oauth-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 4px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.15s, background 0.2s; text-align: center; }
     .oauth-input:focus { border-color: var(--blurple); }
     .oauth-submit { width: 100%; background: var(--blurple); color: #fff; border: none; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
     .oauth-submit:hover { background: #4752c4; }
     .oauth-cancel { font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; background: none; border: none; font-family: inherit; }
     .oauth-cancel:hover { color: var(--text); text-decoration: underline; }
 
-    #activity-log-card { display: none; } 
+    /* ── ACTIVITY LOG ── */
+    #activity-log-card { display: none; }
     .log-container { display: flex; flex-direction: column; gap: 8px; }
     .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
     .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
@@ -169,27 +422,24 @@
     .lmsg strong { color: var(--text); font-weight: 600; }
     .ltime { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
-    .footer { padding: 18px 24px; border-top: 1px solid rgba(0,0,0,0.15); background: var(--card); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; }
+    /* ── FOOTER ── */
+    .footer { padding: 18px 24px; border-top: 1px solid var(--topbar-border); background: var(--footer-bg); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; transition: background 0.2s; }
 
+    /* ── TOAST ── */
     .toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
     .toast { background: var(--sidebar); border-left: 4px solid var(--blurple); color: var(--text); padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transform: translateX(-120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .toast.show { transform: translateX(0); }
     .toast.success { border-left-color: var(--green); }
     .toast.error { border-left-color: var(--red); }
 
-    .sk { background: linear-gradient(90deg, #3f4147 25%, #4f5157 50%, #3f4147 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    /* ── SKELETONS ── */
+    .sk { background: linear-gradient(90deg, var(--card-inner) 25%, var(--border) 50%, var(--card-inner) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
     @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
     .sk-row { display: flex; align-items: center; padding: 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; }
 
     #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
-    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; display: none; }
-    .website-btn-wrapper { position: relative; margin-bottom: 8px; }
-    .website-disabled { background: rgba(242, 63, 67, 0.15) !important; border: 1px solid rgba(242, 63, 67, 0.3) !important; color: var(--red) !important; cursor: not-allowed !important; opacity: 0.85; pointer-events: auto !important; }
-    .website-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #111214; color: #fff; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; visibility: hidden; opacity: 0; transition: opacity 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); pointer-events: none; }
-    .website-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #111214; }
-    .website-btn-wrapper:hover .website-tooltip { visibility: visible; opacity: 1; }
-    .sb-section { gap: 6px; }
-    .nav-item { margin-bottom: 2px; }
+    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 4px; display: none; }
+
     @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
   </style>
 </head>
@@ -212,23 +462,23 @@
       </div>
     </div>
     
-    <div class="invite-box" style="padding: 0 12px 8px;">
+    <div class="invite-box">
       <div class="website-btn-wrapper">
-        <div class="invite-btn website-disabled">
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'website')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           AssistBot Website
         </div>
         <div class="website-tooltip">⚠️ Website is under development and is very outdated</div>
       </div>
-      <div class="website-btn-wrapper" style="margin-bottom: 8px;">
-        <div class="invite-btn website-disabled">
+      <div class="website-btn-wrapper">
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'dashboard')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
           AssistBot Dashboard
         </div>
         <div class="website-tooltip">⚠️ Dashboard is currently under development</div>
       </div>
     </div>
-    <div class="invite-box">
+    <div class="invite-box" style="padding-bottom: 12px;">
       <a href="https://discord.com/oauth2/authorize?client_id=1044078182514565210" target="_blank" class="invite-btn">
         <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
         Add Bot to Server
@@ -238,7 +488,7 @@
     <div class="sb-footer" id="sb-footer">
       <div class="av-wrapper">
         <div class="av">
-          <img src="data:image/png;base64,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" alt="AssistBot">
+          <img src="data:image/png;base64,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" alt="AssistBot">
         </div>
         <div class="status-dot"></div>
       </div>
@@ -255,6 +505,16 @@
       <div class="tb-div"></div>
       <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
       <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
+      <!-- Theme Toggle -->
+      <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <!-- Moon icon -->
+        <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- Sun icon -->
+        <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <div class="toggle-track" id="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
       <div class="ping-wrapper">
         <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
         <div class="ping-tooltip">Updates every 60 seconds</div>
@@ -313,7 +573,7 @@
 
         <div class="card" id="incidents-card">
           <div class="sec-title">Incidents &amp; Updates</div>
-          <div id="incident-list" class="inc-container" style="max-height:240px; overflow-y:auto;">
+          <div id="incident-list" style="max-height:420px; overflow-y:auto; padding-right: 4px;">
             <div class="sk-row"><div class="sk" style="width:180px;height:12px"></div></div>
           </div>
         </div>
@@ -329,7 +589,7 @@
     </div>
 
     <div class="footer">
-      <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistAI</div>
+      <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot</div>
     </div>
   </div>
 </div>
@@ -370,8 +630,35 @@ let lastAssistmusicStatus = 2;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
 
-// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
+// ── THEME ────────────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('assistbot-theme', theme);
+  const isDark = theme === 'dark';
+  // Show moon in light mode (click to go dark), sun in dark mode (click to go light)
+  document.getElementById('icon-moon').style.display = isDark ? 'none' : 'block';
+  document.getElementById('icon-sun').style.display  = isDark ? 'block' : 'none';
+  const track = document.getElementById('toggle-track');
+  if (isDark) track.classList.add('on'); else track.classList.remove('on');
+}
 
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Init theme on load — default dark
+(function() {
+  const saved = localStorage.getItem('assistbot-theme') || 'dark';
+  applyTheme(saved);
+})();
+
+// ── DISABLED BUTTON CLICK ────────────────────────────────────────────────────
+function handleDisabledClick(el, type) {
+  showToast(type === 'website' ? '⚠️ Website is under development and is very outdated.' : '⚠️ Dashboard is currently under development.', 'error');
+}
+
+// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
 async function loadUpdates() {
   try {
     const res = await fetch(`${SUPABASE_TABLE}?order=created_at.desc&limit=15`, {
@@ -379,23 +666,20 @@ async function loadUpdates() {
     });
     if (!res.ok) throw new Error(await res.text());
     const rows = await res.json();
-    // Map DB rows back to the shape the rest of the code expects
     customUpdates = rows.map(r => ({
       id: r.id,
       _custom: true,
       title: r.title,
       type: r.type,
       body: r.body,
-      date: r.date
+      service: r.service,
+      date: r.date,
+      created_at: r.created_at
     }));
   } catch(e) {
     console.warn('Could not load updates from Supabase:', e);
     customUpdates = [];
   }
-}
-
-async function saveUpdates() {
-  // saveUpdates is now a no-op — inserts/deletes happen individually
 }
 
 async function insertUpdate(update) {
@@ -470,7 +754,6 @@ async function submitOAuthHandshake() {
   const inputVal = document.getElementById('oauth-field').value;
   if (!inputVal) return;
 
-  // Disable button while checking
   const btn = document.querySelector('.oauth-submit');
   btn.disabled = true;
   btn.textContent = 'Verifying…';
@@ -485,7 +768,6 @@ async function submitOAuthHandshake() {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      // Store token in sessionStorage — not the password
       sessionStorage.setItem('assistbot-admin-token', data.token);
       closeOAuthModal();
       enableAdminUI(true);
@@ -504,7 +786,6 @@ async function submitOAuthHandshake() {
 
 function enableAdminUI(notify = true) {
   isAdmin = true;
-  // token already set in sessionStorage by submitOAuthHandshake
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
@@ -535,12 +816,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeOAuthModal();
 });
 
-// Ctrl+Shift+Click on the footer avatar to open admin login
 document.getElementById('sb-footer').addEventListener('click', e => {
   if (e.ctrlKey && e.shiftKey) openOAuthModal();
 });
 
-// Allow pressing Enter in the password field
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('oauth-field').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitOAuthHandshake();
@@ -552,7 +831,8 @@ const sc   = s => s===2?'up':s===9||s===8?'down':s===0?'paused':'unknown';
 const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':'Paused';
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
 function bars(r) {
   let h = '';
@@ -615,34 +895,124 @@ function renderDiscord(components, incidents) {
   renderIncidents(incidents);
 }
 
-// ── INCIDENTS ────────────────────────────────────────────────────────────────
+// ── INCIDENTS (Discord-style timeline) ───────────────────────────────────────
+function statusDotClass(status) {
+  if (!status) return 'info';
+  const s = status.toLowerCase();
+  if (s.includes('resolv')) return 'resolved';
+  if (s.includes('monitor')) return 'monitoring';
+  if (s.includes('identif')) return 'identified';
+  if (s.includes('investig')) return 'investigating';
+  return 'info';
+}
+
 function renderIncidents(incidents) {
   const el = document.getElementById('incident-list');
-  const all = [...customUpdates, ...(incidents || []).slice(0,4)];
-  if (!all.length) {
-    el.innerHTML = `<div class="inc-row" style="text-align:center;color:var(--faint)">No active incidents currently logged.</div>`;
+
+  // Build unified list: custom (from Supabase) + Discord
+  // Group by date
+  const allItems = [];
+
+  // Custom updates — each is its own "incident" with a single update entry
+  customUpdates.forEach(u => {
+    allItems.push({
+      _isCustom: true,
+      id: u.id,
+      date: u.date,
+      dateObj: new Date(u.created_at || Date.now()),
+      title: `[${u.service || 'All Services'}]`,
+      updates: [{
+        status: u.type,
+        body: u.body,
+        time: u.date
+      }]
+    });
+  });
+
+  // Discord incidents
+  (incidents || []).slice(0, 6).forEach(inc => {
+    allItems.push({
+      _isCustom: false,
+      id: inc.id,
+      date: dateStr(inc.created_at),
+      dateObj: new Date(inc.created_at),
+      title: inc.name,
+      updates: (inc.incident_updates || []).map(u => ({
+        status: u.status,
+        body: u.body,
+        time: u.created_at ? timeStr(u.created_at) : ''
+      }))
+    });
+  });
+
+  if (!allItems.length) {
+    el.innerHTML = `<div class="no-incidents">No active incidents currently logged.</div>`;
     return;
   }
-  
-  el.innerHTML = all.map(i => {
-    const isCustom = !!i._custom;
-    const latest   = isCustom ? i : i.incident_updates?.[0];
-    const body     = isCustom ? i.body : latest?.body || '';
-    const deleteBtnStyle = isAdmin && isCustom ? 'style="display:block;"' : 'style="display:none;"';
-    const targetId = isCustom ? i.id : 0;
-    const originLabel = isCustom ? 'AssistAI Updates' : 'Discord Official';
-    const originClass = isCustom ? 'assistbot' : 'discord';
-    
-    return `<div class="inc-row">
-      <div class="inc-header">
-        <div class="inc-date">${isCustom ? i.date : dateStr(i.created_at)}</div>
-        <div class="origin-badge ${originClass}">${originLabel}</div>
-        <button class="del-inc-btn" ${deleteBtnStyle} data-id="${targetId}">Delete</button>
-      </div>
-      <div class="inc-title">${esc(isCustom ? i.title : i.name)}</div>
-      <div class="inc-body"><span class="inc-status">${isCustom ? i.type : latest?.status || 'info'}</span> — ${esc(body)}</div>
-    </div>`;
-  }).join('');
+
+  // Sort by date descending
+  allItems.sort((a, b) => b.dateObj - a.dateObj);
+
+  // Group by date string
+  const groups = {};
+  allItems.forEach(item => {
+    const key = item._isCustom ? item.date : dateStr(item.dateObj);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([dateLabel, items]) => {
+    html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
+
+    items.forEach(item => {
+      const topStatus = item.updates.length ? statusDotClass(item.updates[0].status) : 'info';
+      const originClass = item._isCustom ? 'assistbot' : 'discord';
+      const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
+      const deleteBtn = (isAdmin && item._isCustom)
+        ? `<button class="del-inc-btn visible" data-id="${item.id}">Delete</button>`
+        : '';
+
+      // Build the update entries (sub-timeline)
+      let updatesHtml = '';
+      item.updates.forEach((u, idx) => {
+        const uDotClass = statusDotClass(u.status);
+        const isLast = idx === item.updates.length - 1;
+        updatesHtml += `
+          <div class="inc-update-item">
+            <div class="inc-update-spine">
+              <div class="inc-update-dot ${uDotClass}"></div>
+              ${!isLast ? '<div class="inc-update-line"></div>' : ''}
+            </div>
+            <div class="inc-update-content">
+              <span class="inc-status-label ${uDotClass}">${esc(u.status || 'info')}</span>
+              <span class="inc-update-body">— ${esc(u.body)}</span>
+              ${u.time ? `<span class="inc-update-time">${esc(u.time)}</span>` : ''}
+            </div>
+          </div>`;
+      });
+
+      html += `
+        <div class="inc-item">
+          <div class="inc-spine">
+            <div class="inc-dot ${topStatus}"></div>
+            <div class="inc-line"></div>
+          </div>
+          <div class="inc-body-wrap">
+            <div class="inc-title-row">
+              <div class="inc-title">${esc(item.title)}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span class="inc-origin-badge ${originClass}">${originLabel}</span>
+                ${deleteBtn}
+              </div>
+            </div>
+            <div class="inc-updates">${updatesHtml}</div>
+          </div>
+        </div>`;
+    });
+  });
+
+  el.innerHTML = html;
 }
 
 document.getElementById('incident-list').addEventListener('click', function(e) {
@@ -658,7 +1028,7 @@ async function postUpdate() {
   if (!text) return;
   const type    = document.getElementById('update-type').value;
   const service = document.getElementById('update-service').value;
-  const time    = new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const time    = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
 
   const newUpdate = {
     id: Date.now(),
@@ -667,7 +1037,8 @@ async function postUpdate() {
     type,
     body: text,
     service,
-    date: time
+    date: time,
+    created_at: new Date().toISOString()
   };
 
   showToast("Saving to database…", "info");
@@ -678,7 +1049,7 @@ async function postUpdate() {
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
     showToast("Update saved — visible to all visitors!", "success");
-  } catch(e) { /* error toast already shown in insertUpdate */ }
+  } catch(e) { /* error toast already shown */ }
 }
 
 async function deleteCustomUpdate(id) {
@@ -690,7 +1061,7 @@ async function deleteCustomUpdate(id) {
     renderIncidents(currentIncidentFeedCache);
     addLog('update', 'Update entry removed.');
     showToast("Update removed for all visitors.", "info");
-  } catch(e) { /* error toast already shown in deleteUpdate */ }
+  } catch(e) { /* error toast already shown */ }
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
@@ -754,8 +1125,6 @@ function render(monitors) {
   }).join('');
 }
 
-function manualRefresh() { fetchStatus(false); }
-
 function resetCountdown() {
   clearInterval(timer); countdown = 60;
   document.getElementById('countdown').textContent = countdown;
@@ -768,12 +1137,11 @@ function resetCountdown() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  await loadUpdates();  // load shared updates before rendering
+  await loadUpdates();
   checkAdminAuth();
   fetchStatus(true);
   fetchDiscordStatus();
   setInterval(fetchDiscordStatus, 300000);
-  // Periodically refresh updates from GitHub every 60s so visitors see new posts
   setInterval(async () => {
     await loadUpdates();
     renderIncidents(currentIncidentFeedCache);
