@@ -381,6 +381,35 @@
     .del-inc-btn:hover { background: var(--rdim); }
     .del-inc-btn.visible { display: block; }
 
+    /* ── FORCE STATUS ── */
+    .force-status-section { display: flex; flex-direction: column; gap: 10px; }
+    .force-status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+    .sec-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-bottom: -4px; }
+
+    .force-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+    .force-btns { display: flex; gap: 6px; }
+    .force-btn {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px;
+      border: 1px solid transparent; cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s, transform 0.1s; opacity: 0.45;
+      background: transparent;
+    }
+    .force-btn:hover { opacity: 0.75; }
+    .force-btn.active { opacity: 1; transform: scale(1.05); }
+    .force-btn.op  { color: var(--green); border-color: rgba(35,165,90,0.35); }
+    .force-btn.op.active  { background: var(--gdim); }
+    .force-btn.deg { color: var(--yellow); border-color: rgba(240,178,50,0.35); }
+    .force-btn.deg.active { background: var(--ydim); }
+    .force-btn.out { color: var(--red); border-color: rgba(242,63,67,0.35); }
+    .force-btn.out.active { background: var(--rdim); }
+    .force-btn.auto { color: var(--faint); border-color: var(--border); }
+    .force-btn.auto.active { background: rgba(128,128,128,0.1); opacity: 1; }
+
     .no-incidents { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
 
     /* ── ADMIN PANEL ── */
@@ -547,9 +576,20 @@
 
         <div class="card" id="admin-panel">
           <div class="sec-title">
-            <span>Post Update</span>
+            <span>Admin Controls</span>
             <button class="logout-btn" onclick="disableAdminUI()">Log Out</button>
           </div>
+
+          <!-- Force Status overrides -->
+          <div class="force-status-section">
+            <div class="force-status-label">Force Bot Service Status</div>
+            <div id="force-status-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+          <!-- Post Update -->
+          <div class="sec-subtitle">Post Incident Update</div>
           <div class="update-form">
             <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
             <div class="form-row">
@@ -626,9 +666,12 @@ const INCIDENT_API    = 'https://discordstatus.com/api/v2/incidents.json';
 let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
 let customUpdates = [];
 let isAdmin = false;
-let lastAssistmusicStatus = 2;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
+
+// forceStatus: { 'Assistbot': 'op'|'deg'|'out'|'auto', ... }
+const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
+let forceStatus = {};
 
 // ── THEME ────────────────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -791,6 +834,7 @@ function enableAdminUI(notify = true) {
   document.getElementById('activity-log-card').style.display = 'flex';
   document.getElementById('incidents-card').classList.remove('full-width');
   renderIncidents(currentIncidentFeedCache);
+  renderForceStatusRows(cache || null);
   if (notify) {
     addLog('check', "<strong>Admin access granted.</strong>");
     showToast("Logged in! Admin mode active.", "success");
@@ -873,25 +917,58 @@ async function fetchDiscordStatus() {
   }
 }
 
+// Maps Discord component keywords → which AssistBot services may be affected
+const DISCORD_IMPACT_MAP = [
+  { keywords: ['api'],         affects: ['Assistbot','Assistmusic','Dashboard','AssistServer'] },
+  { keywords: ['gateway'],     affects: ['Assistbot','Assistmusic'] },
+  { keywords: ['voice'],       affects: ['Assistmusic'] },
+  { keywords: ['media proxy'], affects: ['Assistbot','Dashboard'] },
+];
+
+// Returns list of AssistBot service names impacted by a down Discord component
+function getImpactedServices(compName) {
+  const n = compName.toLowerCase();
+  for (const rule of DISCORD_IMPACT_MAP) {
+    if (rule.keywords.some(k => n.includes(k))) return rule.affects;
+  }
+  return [];
+}
+
 function renderDiscord(components, incidents) {
   if (!components || !components.length) return;
   const keys = ['API','Gateway','Media Proxy','Voice'];
   const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
-  
+
+  // Build a map: serviceName → [affected Discord component names that are down]
+  const serviceWarnings = {};
+  comps.forEach(c => {
+    const isDown = c.status !== 'operational';
+    if (isDown) {
+      getImpactedServices(c.name).forEach(svc => {
+        if (!serviceWarnings[svc]) serviceWarnings[svc] = [];
+        serviceWarnings[svc].push(c.name);
+      });
+    }
+  });
+
+  // Render Discord component rows (no dep warnings here — they show on Bot Services side)
   document.getElementById('discord-list').innerHTML = comps.map(c => {
     const s = c.status;
     const dotClass = s==='operational'?'up':s==='major_outage'?'down':'paused';
-    let dep = '';
-    if (c.name.toLowerCase().includes('voice') && lastAssistmusicStatus !== 2)
-      dep = `<span class="warn-inline">(May be unstable — Assistmusic is down)</span>`;
-    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)} ${dep}</div><div class="badge ${dotClass}">${s.replace(/_/g,' ')}</div></div>`;
+    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${s.replace(/_/g,' ')}</div></div>`;
   }).join('');
-  
+
   document.getElementById('discord-nav').innerHTML = comps.slice(0,3).map(c => {
     const dotClass = c.status==='operational'?'up':'down';
     return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
   }).join('');
-  
+
+  // Store warnings globally so render() can use them
+  window._serviceWarnings = serviceWarnings;
+
+  // Re-render bot services with new warnings if we have cache
+  if (cache) render(cache);
+
   renderIncidents(incidents);
 }
 
@@ -1085,7 +1162,6 @@ async function fetchStatus(force = false) {
     const m = [monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0],monitors[3].monitors[0]]
       .map((x,i) => ({...x, friendly_name: ['Assistbot','Assistmusic','Dashboard','AssistServer'][i]}));
     
-    lastAssistmusicStatus = m[1].status;
     document.getElementById('ping-val').textContent = Math.round(Math.random()*25+15);
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
@@ -1096,7 +1172,6 @@ async function fetchStatus(force = false) {
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
-      lastAssistmusicStatus = renderTarget[1]?.status || 2;
       render(renderTarget);
       if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
       addLog('check', 'Serving from cached data.');
@@ -1107,22 +1182,77 @@ async function fetchStatus(force = false) {
 
 function render(monitors) {
   if (!monitors || !monitors.length) return;
-  const allUp = monitors.every(m => m.status===2), anyDown = monitors.some(m => m.status===9);
-  const state = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+
+  // Apply forceStatus overrides
+  const effective = monitors.map(m => {
+    const override = forceStatus[m.friendly_name];
+    if (!override || override === 'auto') return m;
+    const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+    return { ...m, status: fakeStatus, _forced: override };
+  });
+
+  const allUp  = effective.every(m => m.status === 2);
+  const anyDown = effective.some(m => m.status === 9);
+  const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+
   document.getElementById('banner').className = 'banner ' + state;
   document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
-  document.getElementById('banner-icon').textContent = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+  document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
   document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
-  
-  document.getElementById('monitor-list').innerHTML = monitors.map(m => {
-    const s = sc(m.status), up = parseFloat(m.custom_uptime_ratio||100).toFixed(2);
-    return `<div class="mrow"><div class="sdot ${s}"></div><div class="mname">${esc(m.friendly_name)}</div>${bars(parseFloat(up))}<div class="mup">${up}%</div><div class="badge ${s}">${sl(m.status)}</div></div>`;
+
+  const warnings = window._serviceWarnings || {};
+
+  document.getElementById('monitor-list').innerHTML = effective.map(m => {
+    const s  = sc(m.status);
+    const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
+    const forcedBadge = m._forced ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:4px;text-transform:uppercase;">(forced)</span>` : '';
+
+    // Discord impact warning on this service
+    const discordWarn = warnings[m.friendly_name] && !m._forced
+      ? `<span class="warn-inline" title="Discord ${warnings[m.friendly_name].join(', ')} is having issues">⚠ Discord ${warnings[m.friendly_name].join(' & ')} issues — ${m.friendly_name} may be affected</span>`
+      : '';
+
+    return `<div class="mrow">
+      <div class="sdot ${s}"></div>
+      <div class="mname">${esc(m.friendly_name)}${forcedBadge}${discordWarn ? '<br><span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>' : ''}</div>
+      ${bars(parseFloat(up))}
+      <div class="mup">${up}%</div>
+      <div class="badge ${s}">${sl(m.status)}</div>
+    </div>`;
   }).join('');
-  
-  document.getElementById('nav-items').innerHTML = monitors.map(m => {
+
+  document.getElementById('nav-items').innerHTML = effective.map(m => {
     const s = sc(m.status);
     return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
   }).join('');
+
+  // Render force-status control rows in admin panel
+  if (isAdmin) renderForceStatusRows(monitors);
+}
+
+function renderForceStatusRows(monitors) {
+  const container = document.getElementById('force-status-rows');
+  if (!container) return;
+  const names = monitors ? monitors.map(m => m.friendly_name) : SERVICE_NAMES;
+  container.innerHTML = names.map(name => {
+    const cur = forceStatus[name] || 'auto';
+    return `<div class="force-row">
+      <div class="force-name">${esc(name)}</div>
+      <div class="force-btns">
+        <button class="force-btn op  ${cur==='op' ?'active':''}" onclick="setForceStatus('${name}','op')">Operational</button>
+        <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg')">Degraded</button>
+        <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out')">Outage</button>
+        <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto')">Auto</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setForceStatus(name, value) {
+  forceStatus[name] = value;
+  if (cache) render(cache);
+  addLog('update', `<strong>${esc(name)}</strong> status forced to <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
+  showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
 }
 
 function resetCountdown() {
