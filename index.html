@@ -268,8 +268,9 @@
     
     .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
     .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
-    .bar.up { background: var(--green); }
+    .bar.up   { background: var(--green); }
     .bar.down { background: var(--red); }
+    .bar.warn { background: var(--yellow); }
 
     .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
     .badge.up { color: var(--green); }
@@ -967,11 +968,29 @@ const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
-function bars(r) {
+// bars(uptimeRatio, status) — accurate bars based on real uptime %, colored by status
+function bars(ratio, status) {
+  const count = 24;
+  // For forced outage: all red. For forced degraded: half yellow.
+  // For real data: use actual uptime ratio to fill bars green/red.
   let h = '';
-  for (let i = 0; i < 24; i++) {
-    const up = ((i*7+3)%100)/100 < r/100;
-    h += `<div class="bar ${up?'up':'down'}"></div>`;
+  for (let i = 0; i < count; i++) {
+    // What fraction of bars should be "good"
+    const threshold = ratio / 100;
+    // Fill from left: first N bars are good, rest are bad
+    const isFilled = (i / count) < threshold;
+
+    let cls;
+    if (status === 'down') {
+      // All red
+      cls = 'down';
+    } else if (status === 'paused') {
+      // ~50% yellow bars
+      cls = i < count / 2 ? 'warn' : '';
+    } else {
+      cls = isFilled ? 'up' : 'down';
+    }
+    h += `<div class="bar ${cls}"></div>`;
   }
   return `<div class="bars">${h}</div>`;
 }
@@ -1419,20 +1438,33 @@ function render(monitors) {
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
     const s  = sc(m.status);
     const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-    // Never show (forced) badge in render() — it runs on page load before isAdmin is set.
-    // The badge is only added via setForceStatus() which requires active admin interaction.
+    // For forced overrides, use 0% uptime for outage, 50% for degraded
+    const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : parseFloat(up);
 
     const warnings = window._serviceWarnings || {};
-    const warnText = warnings[m.friendly_name] && !m._forced
-      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>`
-      : '';
+    // Smart Discord impact: if a related Discord component is down and this service isn't already forced/down,
+    // show it as degraded with yellow warning
+    const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
+    const effectiveStatus = discordDown ? 'paused' : s;
+    const effectiveRatio  = discordDown ? 75 : displayRatio;
+
+    const warnText = discordDown
+      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+      : (warnings[m.friendly_name] && !m._forced)
+        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+        : '';
+
+    // Use effectiveStatus for dot/badge color when Discord is pulling it down
+    const dotClass   = discordDown ? 'paused' : s;
+    const badgeClass = discordDown ? 'paused' : s;
+    const badgeText  = discordDown ? 'Degraded' : sl(m.status);
 
     return `<div class="mrow">
-      <div class="sdot ${s}"></div>
+      <div class="sdot ${dotClass}"></div>
       <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
-      ${bars(parseFloat(up))}
+      ${bars(effectiveRatio, effectiveStatus)}
       <div class="mup">${up}%</div>
-      <div class="badge ${s}">${sl(m.status)}</div>
+      <div class="badge ${badgeClass}">${badgeText}</div>
     </div>`;
   }).join('');
 
@@ -1486,17 +1518,18 @@ async function setForceStatus(name, value, btn) {
     document.getElementById('monitor-list').innerHTML = effective.map(m => {
       const s  = sc(m.status);
       const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : parseFloat(up);
       const forcedBadge = m._forced
         ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
         : '';
       const warnings = window._serviceWarnings || {};
       const warnText = warnings[m.friendly_name] && !m._forced
-        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>`
+        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
         : '';
       return `<div class="mrow">
         <div class="sdot ${s}"></div>
         <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
-        ${bars(parseFloat(up))}
+        ${bars(displayRatio, s)}
         <div class="mup">${up}%</div>
         <div class="badge ${s}">${sl(m.status)}</div>
       </div>`;
