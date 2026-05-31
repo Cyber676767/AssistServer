@@ -968,27 +968,22 @@ const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
-// bars(uptimeRatio, status) — accurate bars based on real uptime %, colored by status
+// bars(uptimeRatio 0-100, status) — accurate, never fully empty
 function bars(ratio, status) {
   const count = 24;
-  // For forced outage: all red. For forced degraded: half yellow.
-  // For real data: use actual uptime ratio to fill bars green/red.
+  // Clamp so at least 1 bar always shows (never fully blank)
+  const clampedRatio = Math.max(ratio, 100 / count);
   let h = '';
-  for (let i = 0; i < count; i++) {
-    // What fraction of bars should be "good"
-    const threshold = ratio / 100;
-    // Fill from left: first N bars are good, rest are bad
-    const isFilled = (i / count) < threshold;
 
+  for (let i = 0; i < count; i++) {
+    const filled = i < Math.round((clampedRatio / 100) * count);
     let cls;
     if (status === 'down') {
-      // All red
-      cls = 'down';
+      cls = 'down';                          // all red
     } else if (status === 'paused') {
-      // ~50% yellow bars
-      cls = i < count / 2 ? 'warn' : '';
+      cls = filled ? 'warn' : '';            // yellow for filled, grey rest
     } else {
-      cls = isFilled ? 'up' : 'down';
+      cls = filled ? 'up' : 'down';          // green filled, red empty
     }
     h += `<div class="bar ${cls}"></div>`;
   }
@@ -1380,14 +1375,22 @@ async function fetchStatus(force = false) {
         fetch(UPTIMEROBOT_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ api_key: key, format: 'json', custom_uptime_ratios: '90', response_times: '1', response_times_limit: '1' })
+          body: new URLSearchParams({
+            api_key: key,
+            format: 'json',
+            all_time_uptime_ratio: '1',
+            response_times: '1',
+            response_times_limit: '1'
+          })
         }).then(r => r.json())
       )
     );
 
     const m = monitors.map((res, i) => ({
       ...res.monitors[0],
-      friendly_name: SERVICE_NAMES[i]
+      friendly_name: SERVICE_NAMES[i],
+      // Use all_time_uptime_ratio for accuracy; fall back to custom_uptime_ratio
+      _uptime: parseFloat(res.monitors[0]?.all_time_uptime_ratio || res.monitors[0]?.custom_uptime_ratio || 100)
     }));
 
     // Real ping: average_response_time from Assistbot monitor (index 0)
@@ -1437,24 +1440,23 @@ function render(monitors) {
 
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
     const s  = sc(m.status);
-    const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-    // For forced overrides, use 0% uptime for outage, 50% for degraded
-    const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : parseFloat(up);
+    // Use _uptime (all_time) if available, else fall back
+    const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+    const upStr = uptime.toFixed(2);
+
+    // For forced overrides: outage = 0%, degraded = 50%, operational = real uptime
+    // For paused: use real uptime (not 0) so bars show actual history
+    const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
 
     const warnings = window._serviceWarnings || {};
-    // Smart Discord impact: if a related Discord component is down and this service isn't already forced/down,
-    // show it as degraded with yellow warning
     const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
     const effectiveStatus = discordDown ? 'paused' : s;
     const effectiveRatio  = discordDown ? 75 : displayRatio;
 
-    const warnText = discordDown
+    const warnText = (warnings[m.friendly_name] && !m._forced)
       ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
-      : (warnings[m.friendly_name] && !m._forced)
-        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
-        : '';
+      : '';
 
-    // Use effectiveStatus for dot/badge color when Discord is pulling it down
     const dotClass   = discordDown ? 'paused' : s;
     const badgeClass = discordDown ? 'paused' : s;
     const badgeText  = discordDown ? 'Degraded' : sl(m.status);
@@ -1463,9 +1465,11 @@ function render(monitors) {
       <div class="sdot ${dotClass}"></div>
       <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
       ${bars(effectiveRatio, effectiveStatus)}
-      <div class="mup">${up}%</div>
+      <div class="mup">${upStr}%</div>
       <div class="badge ${badgeClass}">${badgeText}</div>
     </div>`;
+  }).join('');
+
   }).join('');
 
   document.getElementById('nav-items').innerHTML = effective.map(m => {
