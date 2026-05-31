@@ -412,6 +412,43 @@
 
     .no-incidents { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
 
+    /* ── INCIDENT EXPAND PANEL ── */
+    .inc-item-clickable .inc-title-row { cursor: default; }
+    .inc-action-btn {
+      background: rgba(88,101,242,0.12); border: 1px solid rgba(88,101,242,0.25);
+      color: var(--blurple); font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .inc-action-btn:hover { background: rgba(88,101,242,0.22); }
+
+    .inc-expand-panel {
+      margin-top: 10px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .inc-expand-tabs { display: flex; gap: 6px; }
+    .inc-tab {
+      font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
+    }
+    .inc-tab:hover { background: rgba(128,128,128,0.1); color: var(--text); }
+    .inc-tab.active { background: var(--blurple); color: #fff; border-color: var(--blurple); }
+    .inc-tab-content { display: flex; flex-direction: column; gap: 6px; }
+    .inc-expand-ta {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 10px;
+      resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s;
+    }
+    .inc-expand-ta:focus { border-color: var(--blurple); }
+    .inc-expand-ta::placeholder { color: var(--faint); }
+    .inc-cancel-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .inc-cancel-btn:hover { background: rgba(128,128,128,0.1); }
+
     /* ── ADMIN PANEL ── */
     #admin-panel { display: none; }
     .update-form { display: flex; flex-direction: column; gap: 12px; }
@@ -659,9 +696,18 @@ const SUPABASE_HEADERS = {
   'Prefer': 'return=representation'
 };
 
-const UPTIMEROBOT_API = 'https://api.uptimerobot.com/v2/getMonitors';
-const DISCORD_API     = 'https://discordstatus.com/api/v2/summary.json';
-const INCIDENT_API    = 'https://discordstatus.com/api/v2/incidents.json';
+const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
+const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
+const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
+const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
+
+// UptimeRobot API keys — index matches SERVICE_NAMES order
+const UR_KEYS = [
+  'm803038901-de5f8200e02d0175f3623542',
+  'm803138290-466db08e8901a7e49b6ac3d5',
+  'm803121772-30a8ddf61c429ebddfca1ac0',
+  'm803183133-1f3331868c8b0d7b5937f984',
+];
 
 let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
 let customUpdates = [];
@@ -669,9 +715,35 @@ let isAdmin = false;
 let discordComponentsCache = null;
 let currentIncidentFeedCache = [];
 
-// forceStatus: { 'Assistbot': 'op'|'deg'|'out'|'auto', ... }
 const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
 let forceStatus = {};
+
+// ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+async function loadForceStatus() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    forceStatus = {};
+    rows.forEach(r => {
+      const name = r.key.replace('force_', '');
+      forceStatus[name] = r.value;
+    });
+  } catch(e) { console.warn('Could not load force status:', e); }
+}
+
+async function saveForceStatus(name, value) {
+  const key = `force_${name}`;
+  try {
+    // Upsert — insert or update if key exists
+    const res = await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) { console.error('Could not save force status:', e); }
+}
 
 // ── THEME ────────────────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -704,7 +776,7 @@ function handleDisabledClick(el, type) {
 // ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
 async function loadUpdates() {
   try {
-    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.desc&limit=15`, {
+    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.asc&limit=100`, {
       headers: SUPABASE_HEADERS
     });
     if (!res.ok) throw new Error(await res.text());
@@ -717,6 +789,7 @@ async function loadUpdates() {
       body: r.body,
       service: r.service,
       date: r.date,
+      parent_id: r.parent_id || null,
       created_at: r.created_at
     }));
   } catch(e) {
@@ -972,7 +1045,7 @@ function renderDiscord(components, incidents) {
   renderIncidents(incidents);
 }
 
-// ── INCIDENTS (Discord-style timeline) ───────────────────────────────────────
+// ── INCIDENTS (Discord-style timeline + click-to-update) ─────────────────────
 function statusDotClass(status) {
   if (!status) return 'info';
   const s = status.toLowerCase();
@@ -983,40 +1056,42 @@ function statusDotClass(status) {
   return 'info';
 }
 
+// Track which incident is expanded for editing
+let expandedIncidentId = null;
+
 function renderIncidents(incidents) {
   const el = document.getElementById('incident-list');
-
-  // Build unified list: custom (from Supabase) + Discord
-  // Group by date
   const allItems = [];
 
-  // Custom updates — each is its own "incident" with a single update entry
-  customUpdates.forEach(u => {
+  // Group child updates under their parent
+  const parents = customUpdates.filter(u => !u.parent_id);
+  const children = customUpdates.filter(u => u.parent_id);
+
+  parents.forEach(u => {
+    const kids = children
+      .filter(c => String(c.parent_id) === String(u.id))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    // All updates for this incident, oldest first so timeline reads top→bottom
+    const allUpdates = [u, ...kids].map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }));
+
     allItems.push({
       _isCustom: true,
       id: u.id,
-      date: u.date,
       dateObj: new Date(u.created_at || Date.now()),
       title: `[${u.service || 'All Services'}]`,
-      updates: [{
-        status: u.type,
-        body: u.body,
-        time: u.date
-      }]
+      updates: allUpdates
     });
   });
 
-  // Discord incidents
   (incidents || []).slice(0, 6).forEach(inc => {
     allItems.push({
       _isCustom: false,
       id: inc.id,
-      date: dateStr(inc.created_at),
       dateObj: new Date(inc.created_at),
       title: inc.name,
       updates: (inc.incident_updates || []).map(u => ({
-        status: u.status,
-        body: u.body,
+        status: u.status, body: u.body,
         time: u.created_at ? timeStr(u.created_at) : ''
       }))
     });
@@ -1027,13 +1102,11 @@ function renderIncidents(incidents) {
     return;
   }
 
-  // Sort by date descending
   allItems.sort((a, b) => b.dateObj - a.dateObj);
 
-  // Group by date string
   const groups = {};
   allItems.forEach(item => {
-    const key = item._isCustom ? item.date : dateStr(item.dateObj);
+    const key = dateStr(item.dateObj);
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);
   });
@@ -1043,14 +1116,15 @@ function renderIncidents(incidents) {
     html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
 
     items.forEach(item => {
-      const topStatus = item.updates.length ? statusDotClass(item.updates[0].status) : 'info';
+      const topStatus = item.updates.length ? statusDotClass(item.updates[item.updates.length - 1].status) : 'info';
       const originClass = item._isCustom ? 'assistbot' : 'discord';
       const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
-      const deleteBtn = (isAdmin && item._isCustom)
-        ? `<button class="del-inc-btn visible" data-id="${item.id}">Delete</button>`
-        : '';
+      const isExpanded = expandedIncidentId === String(item.id);
 
-      // Build the update entries (sub-timeline)
+      const adminBtns = (isAdmin && item._isCustom) ? `
+        <button class="inc-action-btn" data-action="expand" data-id="${item.id}">✏️ Update</button>
+        <button class="del-inc-btn visible" data-id="${item.id}">Delete</button>` : '';
+
       let updatesHtml = '';
       item.updates.forEach((u, idx) => {
         const uDotClass = statusDotClass(u.status);
@@ -1069,8 +1143,37 @@ function renderIncidents(incidents) {
           </div>`;
       });
 
+      // Inline edit/add panel
+      const expandPanel = (isExpanded && isAdmin && item._isCustom) ? `
+        <div class="inc-expand-panel">
+          <div class="inc-expand-tabs">
+            <button class="inc-tab active" data-tab="add" data-id="${item.id}">➕ Add Update</button>
+            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Latest</button>
+          </div>
+          <div class="inc-tab-content" id="tab-add-${item.id}">
+            <select class="sel" id="chain-type-${item.id}" style="width:100%;margin-bottom:8px;">
+              <option value="investigating">🔍 Investigating</option>
+              <option value="identified">⚠️ Identified</option>
+              <option value="monitoring">👁 Monitoring</option>
+              <option value="resolved" selected>✅ Resolved</option>
+            </select>
+            <textarea class="inc-expand-ta" id="chain-body-${item.id}" placeholder="Describe what changed…"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="addChainUpdate(${item.id})">Post Update</button>
+            </div>
+          </div>
+          <div class="inc-tab-content" id="tab-edit-${item.id}" style="display:none;">
+            <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit the latest update message…">${esc(item.updates[item.updates.length-1]?.body || '')}</textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editLatestUpdate(${item.id}, ${item.updates[item.updates.length-1]?.id || 'null'})">Save Edit</button>
+            </div>
+          </div>
+        </div>` : '';
+
       html += `
-        <div class="inc-item">
+        <div class="inc-item${isAdmin && item._isCustom ? ' inc-item-clickable' : ''}" data-id="${item.id}">
           <div class="inc-spine">
             <div class="inc-dot ${topStatus}"></div>
             <div class="inc-line"></div>
@@ -1080,10 +1183,11 @@ function renderIncidents(incidents) {
               <div class="inc-title">${esc(item.title)}</div>
               <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                 <span class="inc-origin-badge ${originClass}">${originLabel}</span>
-                ${deleteBtn}
+                ${adminBtns}
               </div>
             </div>
             <div class="inc-updates">${updatesHtml}</div>
+            ${expandPanel}
           </div>
         </div>`;
     });
@@ -1093,11 +1197,94 @@ function renderIncidents(incidents) {
 }
 
 document.getElementById('incident-list').addEventListener('click', function(e) {
-  if (e.target && e.target.classList.contains('del-inc-btn')) {
-    const rawId = e.target.getAttribute('data-id');
-    if (rawId) deleteCustomUpdate(rawId);
+  // Delete
+  if (e.target.classList.contains('del-inc-btn')) {
+    deleteCustomUpdate(e.target.getAttribute('data-id'));
+    return;
+  }
+  // Expand/collapse update panel
+  if (e.target.classList.contains('inc-action-btn') && e.target.dataset.action === 'expand') {
+    const id = String(e.target.getAttribute('data-id'));
+    expandedIncidentId = expandedIncidentId === id ? null : id;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Cancel expand
+  if (e.target.classList.contains('inc-cancel-btn')) {
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Tab switching
+  if (e.target.classList.contains('inc-tab')) {
+    const id = e.target.dataset.id;
+    const tab = e.target.dataset.tab;
+    document.querySelectorAll(`.inc-tab`).forEach(t => { if (t.dataset.id === id) t.classList.remove('active'); });
+    e.target.classList.add('active');
+    document.getElementById(`tab-add-${id}`).style.display  = tab === 'add'  ? 'flex' : 'none';
+    document.getElementById(`tab-edit-${id}`).style.display = tab === 'edit' ? 'flex' : 'none';
+    return;
   }
 });
+
+async function addChainUpdate(parentId) {
+  if (!isAdmin) return;
+  const type = document.getElementById(`chain-type-${parentId}`)?.value;
+  const body = document.getElementById(`chain-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const time = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const newId = Date.now();
+
+  const parent = customUpdates.find(u => String(u.id) === String(parentId));
+  const newUpdate = {
+    id: newId, _custom: true,
+    title: parent?.title || '',
+    type, body,
+    service: parent?.service || 'All Services',
+    date: time,
+    parent_id: Number(parentId),
+    created_at: new Date().toISOString()
+  };
+
+  showToast('Saving…', 'info');
+  try {
+    await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({ id: newId, title: newUpdate.title, type, body, service: newUpdate.service, date: time, parent_id: Number(parentId) })
+    });
+    customUpdates.push(newUpdate);
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Chained <strong>${type}</strong> onto incident #${parentId}`);
+    showToast('Update added to incident!', 'success');
+  } catch(e) { showToast('Failed to save.', 'error'); }
+}
+
+async function editLatestUpdate(parentId, updateId) {
+  if (!isAdmin) return;
+  const body = document.getElementById(`edit-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const targetId = updateId || parentId;
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
+      method: 'PATCH',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // Update in memory
+    const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
+    if (idx !== -1) customUpdates[idx].body = body;
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Edited update #${targetId}`);
+    showToast('Update edited!', 'success');
+  } catch(e) { showToast('Failed to save edit.', 'error'); }
+}
 
 async function postUpdate() {
   if (!isAdmin) return;
@@ -1147,26 +1334,38 @@ async function fetchStatus(force = false) {
   if (!force && cache && (now - lastFetch) < 8000) {
     render(cache);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
-    document.getElementById('ping-val').textContent = Math.round(Math.random()*25+15);
     resetCountdown();
     return;
   }
   
   try {
-    const monitors = await Promise.all([
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803038901-de5f8200e02d0175f3623542',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803138290-466db08e8901a7e49b6ac3d5',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803121772-30a8ddf61c429ebddfca1ac0',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-      fetch(UPTIMEROBOT_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({api_key:'m803183133-1f3331868c8b0d7b5937f984',format:'json',custom_uptime_ratios:'90'})}).then(r=>r.json()),
-    ]);
-    const m = [monitors[0].monitors[0],monitors[1].monitors[0],monitors[2].monitors[0],monitors[3].monitors[0]]
-      .map((x,i) => ({...x, friendly_name: ['Assistbot','Assistmusic','Dashboard','AssistServer'][i]}));
-    
-    document.getElementById('ping-val').textContent = Math.round(Math.random()*25+15);
+    const monitors = await Promise.all(
+      UR_KEYS.map(key =>
+        fetch(UPTIMEROBOT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ api_key: key, format: 'json', custom_uptime_ratios: '90', response_times: '1', response_times_limit: '1' })
+        }).then(r => r.json())
+      )
+    );
+
+    const m = monitors.map((res, i) => ({
+      ...res.monitors[0],
+      friendly_name: SERVICE_NAMES[i]
+    }));
+
+    // Real ping: average_response_time from Assistbot monitor (index 0)
+    const rawPing = m[0]?.average_response_time;
+    const pingVal = rawPing && rawPing > 0 ? Math.round(rawPing) : '—';
+    document.getElementById('ping-val').textContent = pingVal;
+    // Color ping based on latency
+    const pingEl = document.getElementById('ping-val');
+    pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
-    addLog('check', `Scanned <strong>${m.length} nodes</strong> successfully.`);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
     const backup = localStorage.getItem('assistbot-cache-monitors');
@@ -1200,21 +1399,22 @@ function render(monitors) {
   document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
   document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
 
-  const warnings = window._serviceWarnings || {};
-
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
     const s  = sc(m.status);
     const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-    const forcedBadge = m._forced ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:4px;text-transform:uppercase;">(forced)</span>` : '';
+    // (forced) badge only visible to admin
+    const forcedBadge = (m._forced && isAdmin)
+      ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
+      : '';
 
-    // Discord impact warning on this service
-    const discordWarn = warnings[m.friendly_name] && !m._forced
-      ? `<span class="warn-inline" title="Discord ${warnings[m.friendly_name].join(', ')} is having issues">⚠ Discord ${warnings[m.friendly_name].join(' & ')} issues — ${m.friendly_name} may be affected</span>`
+    const warnings = window._serviceWarnings || {};
+    const warnText = warnings[m.friendly_name] && !m._forced
+      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>`
       : '';
 
     return `<div class="mrow">
       <div class="sdot ${s}"></div>
-      <div class="mname">${esc(m.friendly_name)}${forcedBadge}${discordWarn ? '<br><span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — ${esc(m.friendly_name)} may be affected</span>' : ''}</div>
+      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
       ${bars(parseFloat(up))}
       <div class="mup">${up}%</div>
       <div class="badge ${s}">${sl(m.status)}</div>
@@ -1248,11 +1448,12 @@ function renderForceStatusRows(monitors) {
   }).join('');
 }
 
-function setForceStatus(name, value) {
+async function setForceStatus(name, value) {
   forceStatus[name] = value;
   if (cache) render(cache);
-  addLog('update', `<strong>${esc(name)}</strong> status forced to <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
-  showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
+  await saveForceStatus(name, value);
+  addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
+  showToast(`${name} set to ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
 }
 
 function resetCountdown() {
@@ -1267,7 +1468,7 @@ function resetCountdown() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  await loadUpdates();
+  await Promise.all([loadUpdates(), loadForceStatus()]);
   checkAdminAuth();
   fetchStatus(true);
   fetchDiscordStatus();
