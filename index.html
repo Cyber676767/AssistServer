@@ -698,16 +698,9 @@ const SUPABASE_HEADERS = {
 
 const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
 const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
+const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
 const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
 const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
-
-// UptimeRobot API keys — index matches SERVICE_NAMES order
-const UR_KEYS = [
-  'm803038901-de5f8200e02d0175f3623542',
-  'm803138290-466db08e8901a7e49b6ac3d5',
-  'm803121772-30a8ddf61c429ebddfca1ac0',
-  'm803183133-1f3331868c8b0d7b5937f984',
-];
 
 let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
 let customUpdates = [];
@@ -1373,28 +1366,33 @@ async function fetchStatus(force = false) {
   }
   
   try {
-    const monitors = await Promise.all(
-      UR_KEYS.map(key =>
-        fetch(UPTIMEROBOT_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            api_key: key,
-            format: 'json',
-            all_time_uptime_ratio: '1',
-            response_times: '1',
-            response_times_limit: '1'
-          })
-        }).then(r => r.json())
-      )
-    );
+    // Single batched call — fetches all monitors at once, no rate limit issues
+    const res = await fetch(UPTIMEROBOT_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        api_key: UR_MAIN_KEY,
+        format: 'json',
+        all_time_uptime_ratio: '1',
+        response_times: '1',
+        response_times_limit: '1'
+      })
+    });
+    const data = await res.json();
+    if (!data.monitors) throw new Error('No monitors in response');
 
-    const m = monitors.map((res, i) => ({
-      ...res.monitors[0],
-      friendly_name: SERVICE_NAMES[i],
-      // Use all_time_uptime_ratio for accuracy; fall back to custom_uptime_ratio
-      _uptime: parseFloat(res.monitors[0]?.all_time_uptime_ratio || res.monitors[0]?.custom_uptime_ratio || 100)
-    }));
+    // Map by friendly name to our order
+    const nameMap = {};
+    data.monitors.forEach(mon => { nameMap[mon.friendly_name] = mon; });
+
+    const m = SERVICE_NAMES.map(name => {
+      const mon = nameMap[name] || nameMap[Object.keys(nameMap).find(k => k.toLowerCase().includes(name.toLowerCase()))] || {};
+      return {
+        ...mon,
+        friendly_name: name,
+        _uptime: parseFloat(mon.all_time_uptime_ratio || mon.custom_uptime_ratio || 100)
+      };
+    });
 
     // Real ping: average_response_time from Assistbot monitor (index 0)
     const rawPing = m[0]?.average_response_time;
