@@ -253,8 +253,14 @@
     .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 14px; position: relative; transition: background 0.2s; }
     .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
     
-    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.15s; border: 1px solid rgba(0,0,0,0.06); }
-    .mrow:hover { background: var(--card-inner); filter: brightness(1.04); }
+    .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
+    .badge.up      { color: var(--green); }
+    .badge.down    { color: var(--red); }
+    .badge.paused  { color: var(--yellow); }
+    .badge.unknown { color: var(--faint); }
+
+    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.2s, border-color 0.2s; border: 1px solid rgba(0,0,0,0.06); }
+    .mrow:hover { filter: brightness(0.97); }
     
     .sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .sdot.up { background: var(--green); box-shadow: 0 0 8px rgba(35,165,90,0.4); }
@@ -265,18 +271,12 @@
     .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
-    
+
     .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
     .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
     .bar.up   { background: var(--green); }
     .bar.down { background: var(--red); }
     .bar.warn { background: var(--yellow); }
-
-    .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
-    .badge.up { color: var(--green); }
-    .badge.down { color: var(--red); }
-    .badge.paused { color: var(--yellow); }
-    .badge.unknown { color: var(--faint); }
 
     /* ── INCIDENT TIMELINE (Discord-style) ── */
     .inc-group { display: flex; flex-direction: column; gap: 0; }
@@ -985,45 +985,44 @@ const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
-// bars(monitor) — uses real log history, each bar = one check (green up, red down, yellow paused)
+// bars(monitor, forcedOverride) — uses response_times for accurate per-check bars
 function bars(monitor, forcedOverride) {
   const count = 24;
   const status = monitor.status;
-  const logs = monitor.logs || [];
 
-  // If forced outage — all red
+  // Forced overrides
   if (forcedOverride === 'out') {
     return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
-  // If forced degraded — 50% yellow
   if (forcedOverride === 'deg') {
     return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
-  // If paused (status 0) — 50% yellow regardless
+  // Paused — 50% yellow
   if (status === 0) {
     return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
+  // Degraded (status 8) — mostly yellow with a few grey
+  if (status === 8) {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 18 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
 
-  // Use real log history if available
-  if (logs.length > 0) {
-    // logs: type 1=down, type 2=up, type 98=paused, type 99=started
-    // Take last 24, newest on right
-    const history = logs.slice(-count);
-    // Pad left with grey if fewer than count
-    const padded = Array(count - history.length).fill(null).concat(history);
-    return `<div class="bars">${padded.map(log => {
-      if (!log) return '<div class="bar"></div>';
-      if (log.type === 1) return '<div class="bar down"></div>';
-      if (log.type === 98) return '<div class="bar warn"></div>';
-      return '<div class="bar up"></div>';
+  // Use response_times — each entry = one actual check result
+  const rt = monitor.response_times || [];
+  if (rt.length > 0) {
+    // response_times: value > 0 = up, value = 0 = down/timeout
+    const history = rt.slice(0, count).reverse(); // newest on right
+    const padded = Array(Math.max(0, count - history.length)).fill(null).concat(history);
+    return `<div class="bars">${padded.map(r => {
+      if (!r) return '<div class="bar"></div>';
+      return r.value > 0 ? '<div class="bar up"></div>' : '<div class="bar down"></div>';
     }).join('')}</div>`;
   }
 
-  // Fallback: use uptime ratio to fill bars
+  // Final fallback: uptime ratio
   const uptime = monitor._uptime || 100;
   const filledCount = Math.max(1, Math.round((uptime / 100) * count));
   return `<div class="bars">${Array(count).fill(0).map((_,i) =>
-    `<div class="bar ${i < filledCount ? (status === 8 ? 'warn' : 'up') : (status === 8 ? '' : 'down')}"></div>`
+    `<div class="bar ${i < filledCount ? 'up' : 'down'}"></div>`
   ).join('')}</div>`;
 }
 
