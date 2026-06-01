@@ -915,6 +915,9 @@ async function submitOAuthHandshake() {
 
 function enableAdminUI(notify = true) {
   isAdmin = true;
+  clearInterval(timer);
+  document.getElementById('countdown').textContent = '—';
+  document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
@@ -1521,8 +1524,9 @@ async function setForceStatus(name, value, btn) {
     document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
     document.getElementById('monitor-list').innerHTML = effective.map(m => {
       const s  = sc(m.status);
-      const up = parseFloat(m.custom_uptime_ratio || 100).toFixed(2);
-      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : parseFloat(up);
+      const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+      const upStr = uptime.toFixed(2);
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
       const forcedBadge = m._forced
         ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
         : '';
@@ -1534,7 +1538,7 @@ async function setForceStatus(name, value, btn) {
         <div class="sdot ${s}"></div>
         <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
         ${bars(displayRatio, s)}
-        <div class="mup">${up}%</div>
+        <div class="mup">${upStr}%</div>
         <div class="badge ${s}">${sl(m.status)}</div>
       </div>`;
     }).join('');
