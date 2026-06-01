@@ -967,21 +967,19 @@ const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minu
 // bars(uptimeRatio 0-100, status) — accurate, never fully empty
 function bars(ratio, status) {
   const count = 24;
-  // Clamp so at least 1 bar always shows (never fully blank)
-  const clampedRatio = Math.max(ratio, 100 / count);
   let h = '';
 
-  for (let i = 0; i < count; i++) {
-    const filled = i < Math.round((clampedRatio / 100) * count);
-    let cls;
-    if (status === 'down') {
-      cls = 'down';                          // all red
-    } else if (status === 'paused') {
-      cls = filled ? 'warn' : '';            // yellow for filled, grey rest
-    } else {
-      cls = filled ? 'up' : 'down';          // green filled, red empty
-    }
-    h += `<div class="bar ${cls}"></div>`;
+  if (status === 'down') {
+    // All red — outage
+    for (let i = 0; i < count; i++) h += `<div class="bar down"></div>`;
+  } else if (status === 'paused') {
+    // 50% yellow, rest grey — paused/degraded, not actually down
+    const filled = Math.round(count * 0.5);
+    for (let i = 0; i < count; i++) h += `<div class="bar ${i < filled ? 'warn' : ''}"></div>`;
+  } else {
+    // Real uptime: green bars = uptime%, grey = remainder (not red — service is up)
+    const filledCount = Math.max(1, Math.round((ratio / 100) * count));
+    for (let i = 0; i < count; i++) h += `<div class="bar ${i < filledCount ? 'up' : ''}"></div>`;
   }
   return `<div class="bars">${h}</div>`;
 }
@@ -1435,9 +1433,10 @@ function render(monitors) {
     const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
     const upStr = uptime.toFixed(2);
 
-    // For forced overrides: outage = 0%, degraded = 50%, operational = real uptime
-    // For paused: use real uptime (not 0) so bars show actual history
-    const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
+    // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
+    // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
+    const isPaused = m.status === 0 || s === 'paused';
+    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg' || isPaused) ? 50 : uptime;
 
     const warnings = window._serviceWarnings || {};
     const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
