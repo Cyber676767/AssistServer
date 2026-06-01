@@ -1491,8 +1491,22 @@ async function fetchStatus(force = false) {
   }
   
   try {
-    // Single call through Vercel proxy — avoids CORS and rate limits
-    const res = await fetch('/api/monitors', { method: 'GET' });
+    // Fetch monitors and bot ping in parallel
+    const [res] = await Promise.all([
+      fetch('/api/monitors', { method: 'GET' }),
+      fetch('/api/botping').then(r => r.json()).then(data => {
+        const pingVal = (data.ping !== null && data.ping !== undefined) ? Math.round(data.ping) : '—';
+        const pingEl = document.getElementById('ping-val');
+        if (pingEl) {
+          pingEl.textContent = pingVal;
+          pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+        }
+      }).catch(() => {
+        const pingEl = document.getElementById('ping-val');
+        if (pingEl) pingEl.textContent = '—';
+      })
+    ]);
+
     const data = await res.json();
     if (!data.monitors) throw new Error('No monitors in response');
 
@@ -1505,26 +1519,17 @@ async function fetchStatus(force = false) {
       return {
         ...mon,
         friendly_name: name,
-        _uptime: parseFloat(mon.all_time_uptime_ratio || mon.custom_uptime_ratio || 100)
+        _uptime: parseFloat(mon.all_time_uptime_ratio || 100)
       };
-    });
-
-    // Real ping: fetch from bot directly
-    fetch('/api/botping').then(r => r.json()).then(data => {
-      const pingVal = data.ping !== null && data.ping !== undefined ? Math.round(data.ping) : '—';
-      const pingEl = document.getElementById('ping-val');
-      pingEl.textContent = pingVal;
-      pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
-    }).catch(() => {
-      document.getElementById('ping-val').textContent = '—';
     });
 
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
-    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> successfully.`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
+    console.error('fetchStatus error:', err);
     hideSplash();
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
