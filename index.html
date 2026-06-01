@@ -1366,18 +1366,8 @@ async function fetchStatus(force = false) {
   }
   
   try {
-    // Single batched call — fetches all monitors at once, no rate limit issues
-    const res = await fetch(UPTIMEROBOT_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        api_key: UR_MAIN_KEY,
-        format: 'json',
-        all_time_uptime_ratio: '1',
-        response_times: '1',
-        response_times_limit: '1'
-      })
-    });
+    // Single call through Vercel proxy — avoids CORS and rate limits
+    const res = await fetch('/api/monitors', { method: 'GET' });
     const data = await res.json();
     if (!data.monitors) throw new Error('No monitors in response');
 
