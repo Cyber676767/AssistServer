@@ -692,6 +692,8 @@
   <div class="splash-dots">
     <span></span><span></span><span></span>
   </div>
+  <div class="splash-msg" id="splash-msg"></div>
+  <button class="splash-skip" id="splash-skip" onclick="hideSplash()" style="display:none;">Continue anyway →</button>
 </div>
 <style>
 #splash {
@@ -714,6 +716,33 @@
 .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
 .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes splashDot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
+
+.splash-msg {
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 13px; text-align: center; line-height: 1.6;
+  max-width: 320px; padding: 12px 18px; border-radius: 8px;
+  opacity: 0; transition: opacity 0.4s ease;
+  display: none;
+}
+.splash-msg.visible { opacity: 1; display: block; }
+.splash-msg.warn {
+  background: rgba(240,178,50,0.12); border: 1px solid rgba(240,178,50,0.25);
+  color: #c87619;
+}
+[data-theme="dark"] .splash-msg.warn { color: #f0b232; }
+.splash-msg.error {
+  background: rgba(242,63,67,0.1); border: 1px solid rgba(242,63,67,0.25);
+  color: #da373c;
+}
+[data-theme="dark"] .splash-msg.error { color: #f23f43; }
+
+.splash-skip {
+  font-family: 'Noto Sans', sans-serif; font-size: 13px; font-weight: 600;
+  background: transparent; border: 1px solid #5865f2; color: #5865f2;
+  padding: 7px 18px; border-radius: 6px; cursor: pointer;
+  transition: background 0.15s;
+}
+.splash-skip:hover { background: rgba(88,101,242,0.12); }
 </style>
 
 <div class="toast-container" id="toast-container"></div>
@@ -781,7 +810,38 @@ async function saveForceStatus(name, value) {
   }
 }
 
-// ── THEME ────────────────────────────────────────────────────────────────────
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (splash && splash.style.display !== 'none') {
+    // Clear all pending diagnostic timers
+    if (window._splashTimers) window._splashTimers.forEach(clearTimeout);
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
+}
+
+function showSplashMsg(text, type) {
+  const el = document.getElementById('splash-msg');
+  if (!el) return;
+  el.className = `splash-msg ${type} visible`;
+  el.innerHTML = text;
+}
+
+// Progressive loading diagnostics — escalates if loading takes too long
+window._splashTimers = [
+  setTimeout(() => {
+    showSplashMsg('⏳ Still loading… fetching monitor data.', 'warn');
+  }, 3000),
+  setTimeout(() => {
+    showSplashMsg('⚠️ Taking longer than usual.<br>This could be a slow network or the API is warming up.', 'warn');
+    const skip = document.getElementById('splash-skip');
+    if (skip) skip.style.display = 'block';
+  }, 6000),
+  setTimeout(() => {
+    showSplashMsg('🔴 Unable to reach the status API.<br>Possible causes:<br>• Your network is offline<br>• The Vercel deployment has an error<br>• UptimeRobot API is temporarily down<br><br>Try refreshing the page.', 'error');
+  }, 12000),
+  setTimeout(hideSplash, 18000) // hard fallback — always escape
+];
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('assistbot-theme', theme);
@@ -1465,6 +1525,7 @@ async function fetchStatus(force = false) {
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
+    hideSplash();
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
@@ -1480,11 +1541,7 @@ function render(monitors) {
   if (!monitors || !monitors.length) return;
 
   // Hide splash on first successful data load
-  const splash = document.getElementById('splash');
-  if (splash && splash.style.display !== 'none') {
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; }, 400);
-  }
+  hideSplash();
 
   // Apply forceStatus overrides
   const effective = monitors.map(m => {
