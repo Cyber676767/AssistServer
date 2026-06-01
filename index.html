@@ -1461,8 +1461,6 @@ function render(monitors) {
     </div>`;
   }).join('');
 
-  }).join('');
-
   document.getElementById('nav-items').innerHTML = effective.map(m => {
     const s = sc(m.status);
     return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
