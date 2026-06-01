@@ -61,13 +61,12 @@
       --input-border: #d4d7dc;
       --modal-bg: #ffffff;
       --footer-bg: #f2f3f5;
-      --sb-footer-hover: #dadeе2;
+      --sb-footer-hover: #dadee2;
       --topbar-border: rgba(0,0,0,0.08);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Scrollbar theming */
     * {
       scrollbar-width: thin;
       scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
@@ -103,7 +102,6 @@
     .ndot.unknown { background: var(--faint); }
     .ndot.paused { background: var(--yellow); }
 
-    /* ── WEBSITE / DASHBOARD BUTTONS ── */
     .invite-box { padding: 0 12px 8px; }
     .invite-box-bottom { padding: 0 12px 16px; }
 
@@ -144,12 +142,10 @@
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
-      /* Allow wrapping so it doesn't go off screen */
       white-space: normal;
-      max-width: 200px;
+      max-width: 210px;
       text-align: center;
       width: max-content;
-      max-width: 210px;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.15s, visibility 0.15s;
@@ -191,7 +187,6 @@
     .tb-div { width: 1px; height: 24px; background: rgba(128,128,128,0.2); margin: 0 4px; }
     .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
     
-    /* ── THEME TOGGLE ── */
     .theme-toggle {
       display: flex;
       align-items: center;
@@ -278,7 +273,7 @@
     .bar.down { background: var(--red); }
     .bar.warn { background: var(--yellow); }
 
-    /* ── INCIDENT TIMELINE (Discord-style) ── */
+    /* ── INCIDENT TIMELINE ── */
     .inc-group { display: flex; flex-direction: column; gap: 0; }
     .inc-date-header {
       font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
@@ -288,75 +283,30 @@
     }
     .inc-date-header:first-child { border-top: none; padding-top: 0; }
 
-    .inc-item {
-      display: flex;
-      gap: 0;
-      position: relative;
-    }
+    .inc-item { display: flex; gap: 0; position: relative; }
 
-    /* Timeline spine */
-    .inc-spine {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 32px;
-      flex-shrink: 0;
-      position: relative;
-    }
-    .inc-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 4px;
-      z-index: 1;
-      position: relative;
-    }
+    .inc-spine { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; position: relative; }
+    .inc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; z-index: 1; position: relative; }
     .inc-dot.resolved   { background: var(--green); box-shadow: 0 0 6px rgba(35,165,90,0.4); }
     .inc-dot.monitoring { background: var(--blurple); box-shadow: 0 0 6px rgba(88,101,242,0.4); }
     .inc-dot.identified { background: var(--yellow); box-shadow: 0 0 6px rgba(240,178,50,0.4); }
     .inc-dot.investigating { background: var(--red); box-shadow: 0 0 6px rgba(242,63,67,0.4); }
     .inc-dot.info       { background: var(--faint); }
 
-    .inc-line {
-      width: 2px;
-      flex: 1;
-      background: var(--timeline-line);
-      min-height: 12px;
-    }
+    .inc-line { width: 2px; flex: 1; background: var(--timeline-line); min-height: 12px; }
 
-    .inc-body-wrap {
-      flex: 1;
-      padding: 0 0 18px 10px;
-    }
-    .inc-title-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .inc-title {
-      font-size: 14px; font-weight: 700; color: var(--text);
-      line-height: 1.3;
-    }
-    .inc-origin-badge {
-      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
-      padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
-    }
+    .inc-body-wrap { flex: 1; padding: 0 0 18px 10px; }
+    .inc-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .inc-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .inc-origin-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
     .inc-origin-badge.assistbot { background: rgba(88,101,242,0.15); color: var(--blurple); border: 1px solid rgba(88,101,242,0.25); }
     .inc-origin-badge.discord   { background: var(--ydim); color: var(--yellow); border: 1px solid rgba(240,178,50,0.2); }
 
-    /* Individual updates within an incident */
     .inc-updates { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
 
     .inc-update-item { display: flex; gap: 0; }
-    .inc-update-spine {
-      display: flex; flex-direction: column; align-items: center;
-      width: 20px; flex-shrink: 0;
-    }
-    .inc-update-dot {
-      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; z-index: 1;
-    }
+    .inc-update-spine { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; }
+    .inc-update-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; z-index: 1; }
     .inc-update-dot.resolved    { background: var(--green); }
     .inc-update-dot.monitoring  { background: var(--blurple); }
     .inc-update-dot.identified  { background: var(--yellow); }
@@ -365,10 +315,7 @@
     .inc-update-line { width: 1px; flex: 1; background: var(--timeline-line); min-height: 8px; }
 
     .inc-update-content { flex: 1; padding: 0 0 12px 8px; }
-    .inc-status-label {
-      display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize;
-      margin-right: 4px;
-    }
+    .inc-status-label { display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize; margin-right: 4px; }
     .inc-status-label.resolved    { color: var(--green); }
     .inc-status-label.monitoring  { color: var(--blurple); }
     .inc-status-label.identified  { color: var(--yellow); }
@@ -387,19 +334,10 @@
     .force-status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
     .sec-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-bottom: -4px; }
 
-    .force-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; background: var(--card-inner); border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
+    .force-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-inner); border-radius: 8px; border: 1px solid rgba(0,0,0,0.06); }
     .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
     .force-btns { display: flex; gap: 6px; }
-    .force-btn {
-      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px;
-      border: 1px solid transparent; cursor: pointer; font-family: inherit;
-      transition: opacity 0.15s, transform 0.1s; opacity: 0.45;
-      background: transparent;
-    }
+    .force-btn { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px; border: 1px solid transparent; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; opacity: 0.45; background: transparent; }
     .force-btn:hover { opacity: 0.75; }
     .force-btn.active { opacity: 1; transform: scale(1.05); }
     .force-btn.op  { color: var(--green); border-color: rgba(35,165,90,0.35); }
@@ -415,39 +353,19 @@
 
     /* ── INCIDENT EXPAND PANEL ── */
     .inc-item-clickable .inc-title-row { cursor: default; }
-    .inc-action-btn {
-      background: rgba(88,101,242,0.12); border: 1px solid rgba(88,101,242,0.25);
-      color: var(--blurple); font-size: 11px; font-weight: 700; padding: 2px 8px;
-      border-radius: 4px; cursor: pointer; font-family: inherit;
-      transition: background 0.15s;
-    }
+    .inc-action-btn { background: rgba(88,101,242,0.12); border: 1px solid rgba(88,101,242,0.25); color: var(--blurple); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
     .inc-action-btn:hover { background: rgba(88,101,242,0.22); }
 
-    .inc-expand-panel {
-      margin-top: 10px; background: var(--card-inner); border-radius: 8px;
-      border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px;
-    }
+    .inc-expand-panel { margin-top: 10px; background: var(--card-inner); border-radius: 8px; border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .inc-expand-tabs { display: flex; gap: 6px; }
-    .inc-tab {
-      font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px;
-      border: 1px solid var(--border); background: transparent; color: var(--muted);
-      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
-    }
+    .inc-tab { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s; }
     .inc-tab:hover { background: rgba(128,128,128,0.1); color: var(--text); }
     .inc-tab.active { background: var(--blurple); color: #fff; border-color: var(--blurple); }
     .inc-tab-content { display: flex; flex-direction: column; gap: 6px; }
-    .inc-expand-ta {
-      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-family: inherit; font-size: 13px; padding: 10px;
-      resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s;
-    }
+    .inc-expand-ta { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 10px; resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s; }
     .inc-expand-ta:focus { border-color: var(--blurple); }
     .inc-expand-ta::placeholder { color: var(--faint); }
-    .inc-cancel-btn {
-      background: transparent; border: 1px solid var(--border); color: var(--muted);
-      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px;
-      cursor: pointer; font-family: inherit; transition: background 0.15s;
-    }
+    .inc-cancel-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
     .inc-cancel-btn:hover { background: rgba(128,128,128,0.1); }
 
     /* ── ADMIN PANEL ── */
@@ -555,7 +473,7 @@
     <div class="sb-footer" id="sb-footer">
       <div class="av-wrapper">
         <div class="av">
-          <img src="data:image/png;base64,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" alt="AssistBot">
+          <img src="data:image/png;base64,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" alt="AssistBot">
         </div>
         <div class="status-dot"></div>
       </div>
@@ -572,11 +490,8 @@
       <div class="tb-div"></div>
       <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
       <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
-      <!-- Theme Toggle -->
       <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-        <!-- Moon icon -->
         <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <!-- Sun icon -->
         <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <div class="toggle-track" id="toggle-track">
           <div class="toggle-thumb"></div>
@@ -618,7 +533,6 @@
             <button class="logout-btn" onclick="disableAdminUI()">Log Out</button>
           </div>
 
-          <!-- Force Status overrides -->
           <div class="force-status-section">
             <div class="force-status-label">Force Bot Service Status</div>
             <div id="force-status-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -626,7 +540,6 @@
 
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
-          <!-- Post Update -->
           <div class="sec-subtitle">Post Incident Update</div>
           <div class="update-form">
             <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
@@ -683,7 +596,6 @@
   </div>
 </div>
 
-<!-- Loading Splash — bouncing dots, theme-aware, only on first visit -->
 <div id="splash">
   <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
     <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
@@ -693,7 +605,7 @@
     <span></span><span></span><span></span>
   </div>
   <div class="splash-msg" id="splash-msg"></div>
-  <button class="splash-skip" id="splash-skip" onclick="hideSplash()" style="display:none;">Continue anyway →</button>
+  <button class="splash-skip" id="splash-skip" onclick="hideSplash()" style="display:none;">View last known status →</button>
 </div>
 <style>
 #splash {
@@ -748,7 +660,6 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
 const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
 const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
@@ -759,8 +670,6 @@ const SUPABASE_HEADERS = {
 };
 
 const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
-const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
-const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
 const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
 const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
 
@@ -773,7 +682,7 @@ let currentIncidentFeedCache = [];
 const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
 let forceStatus = {};
 
-// ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 async function loadForceStatus() {
   try {
     const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
@@ -790,7 +699,6 @@ async function loadForceStatus() {
 async function saveForceStatus(name, value) {
   const key = `force_${name}`;
   try {
-    // DELETE then INSERT is the most reliable upsert for Supabase free tier
     await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
       method: 'DELETE',
       headers: SUPABASE_HEADERS
@@ -800,20 +708,17 @@ async function saveForceStatus(name, value) {
       headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ key, value })
     });
-    if (!ins.ok) {
-      const err = await ins.text();
-      throw new Error(err);
-    }
+    if (!ins.ok) throw new Error(await ins.text());
   } catch(e) {
     console.error('Could not save force status:', e);
     showToast('Failed to save: ' + e.message, 'error');
   }
 }
 
+// ── SPLASH ────────────────────────────────────────────────────────────────────
 function hideSplash() {
   const splash = document.getElementById('splash');
   if (splash && splash.style.display !== 'none') {
-    // Clear all pending diagnostic timers
     if (window._splashTimers) window._splashTimers.forEach(clearTimeout);
     splash.style.opacity = '0';
     setTimeout(() => { splash.style.display = 'none'; }, 400);
@@ -827,26 +732,26 @@ function showSplashMsg(text, type) {
   el.innerHTML = text;
 }
 
-// Progressive loading diagnostics — escalates if loading takes too long
 window._splashTimers = [
   setTimeout(() => {
-    showSplashMsg('⏳ Still loading… fetching monitor data.', 'warn');
-  }, 3000),
+    showSplashMsg('⏳ Fetching live status data…', 'warn');
+  }, 5000),
   setTimeout(() => {
-    showSplashMsg('⚠️ Taking longer than usual.<br>This could be a slow network or the API is warming up.', 'warn');
+    showSplashMsg('🐢 Still loading — this sometimes happens when the server is waking up. Hang tight!', 'warn');
     const skip = document.getElementById('splash-skip');
     if (skip) skip.style.display = 'block';
-  }, 6000),
+  }, 10000),
   setTimeout(() => {
-    showSplashMsg('🔴 Unable to reach the status API.<br>Possible causes:<br>• Your network is offline<br>• The Vercel deployment has an error<br>• UptimeRobot API is temporarily down<br><br>Try refreshing the page.', 'error');
-  }, 12000),
-  setTimeout(hideSplash, 18000) // hard fallback — always escape
+    showSplashMsg('😕 Taking longer than expected.<br>Make sure you\'re connected to the internet. If the issue continues, try refreshing the page.', 'error');
+  }, 18000),
+  setTimeout(hideSplash, 25000)
 ];
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('assistbot-theme', theme);
   const isDark = theme === 'dark';
-  // Show moon in light mode (click to go dark), sun in dark mode (click to go light)
   document.getElementById('icon-moon').style.display = isDark ? 'none' : 'block';
   document.getElementById('icon-sun').style.display  = isDark ? 'block' : 'none';
   const track = document.getElementById('toggle-track');
@@ -858,18 +763,17 @@ function toggleTheme() {
   applyTheme(current === 'dark' ? 'light' : 'dark');
 }
 
-// Init theme instantly so splash background matches before any JS runs
 (function() {
   const saved = localStorage.getItem('assistbot-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
 })();
 
-// ── DISABLED BUTTON CLICK ────────────────────────────────────────────────────
+// ── DISABLED BUTTONS ──────────────────────────────────────────────────────────
 function handleDisabledClick(el, type) {
   showToast(type === 'website' ? '⚠️ Website is under development and is very outdated.' : '⚠️ Dashboard is currently under development.', 'error');
 }
 
-// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
+// ── SUPABASE STORAGE ──────────────────────────────────────────────────────────
 async function loadUpdates() {
   try {
     const res = await fetch(`${SUPABASE_TABLE}?order=created_at.asc&limit=100`, {
@@ -908,10 +812,7 @@ async function insertUpdate(update) {
         date: update.date
       })
     });
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
-    }
+    if (!res.ok) throw new Error(await res.text());
   } catch(e) {
     console.error('Could not insert update:', e);
     showToast('Failed to save: ' + e.message, 'error');
@@ -933,7 +834,7 @@ async function deleteUpdate(id) {
   }
 }
 
-// ── TOAST ────────────────────────────────────────────────────────────────────
+// ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -945,7 +846,7 @@ function showToast(message, type = 'info') {
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
 }
 
-// ── ADMIN AUTH ───────────────────────────────────────────────────────────────
+// ── ADMIN AUTH ────────────────────────────────────────────────────────────────
 function checkAdminAuth() {
   if (sessionStorage.getItem('assistbot-admin-token')) {
     enableAdminUI(false);
@@ -1025,9 +926,7 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('activity-log-card').style.display = 'none';
   document.getElementById('incidents-card').classList.add('full-width');
   renderIncidents(currentIncidentFeedCache);
-  // Re-render bot services to strip any (forced) badges
   if (cache) render(cache);
-  // Resume auto-refresh
   resetCountdown();
   if (logEvent && wasAdmin) {
     addLog('check', "Admin session ended.");
@@ -1049,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ── UTILITIES ────────────────────────────────────────────────────────────────
+// ── UTILITIES ─────────────────────────────────────────────────────────────────
 const sc   = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown';
 const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':'Paused';
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1057,58 +956,52 @@ const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
-// bars(monitor, forcedOverride) — 90 days, each bar = 1 day, like Discord's style
+// ── BARS (uses custom_uptime_ratio — per-day data from API) ───────────────────
 function bars(monitor, forcedOverride) {
   const count = 90;
   const status = monitor.status;
 
-  // Forced overrides
   if (forcedOverride === 'out') {
     return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
   if (forcedOverride === 'deg') {
     return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 60 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
-  // Paused — 50% yellow
   if (status === 0) {
     return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 45 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
-  // Degraded — mostly yellow
   if (status === 8) {
     return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 70 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
-
-  // Use logs — type 1=down, type 2=up, type 98=paused/started
-  // Each log entry covers a duration — build a day-by-day map for last 90 days
-  const logs = monitor.logs || [];
-  const now = Math.floor(Date.now() / 1000);
-  const dayMs = 86400;
-
-  // Build 90 buckets (0 = oldest, 89 = today)
-  const buckets = Array(count).fill('up'); // default green
-
-  if (logs.length > 0) {
-    logs.forEach(log => {
-      if (!log.datetime) return;
-      const logTime = log.datetime;
-      const daysAgo = Math.floor((now - logTime) / dayMs);
-      if (daysAgo >= 0 && daysAgo < count) {
-        const idx = count - 1 - daysAgo;
-        if (log.type === 1) buckets[idx] = 'down';           // outage
-        else if (log.type === 98) buckets[idx] = 'warn';     // paused
-      }
-    });
-  } else {
-    // Fallback: use all_time_uptime_ratio to fill proportionally
-    const uptime = monitor._uptime || 100;
-    const downDays = Math.round(((100 - uptime) / 100) * count);
-    // Scatter the down days across history
-    for (let i = 0; i < downDays; i++) {
-      buckets[Math.floor(i * (count / Math.max(downDays, 1)))] = 'down';
-    }
+  if (status === 9) {
+    return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
 
-  return `<div class="bars">${buckets.map(b => `<div class="bar ${b === 'up' ? 'up' : b === 'down' ? 'down' : 'warn'}"></div>`).join('')}</div>`;
+  // custom_uptime_ratio is a hyphen-separated string of per-day ratios, oldest to newest
+  const ratioStr = monitor.custom_uptime_ratio;
+  if (ratioStr) {
+    const ratios = ratioStr.split('-').map(Number);
+    const buckets = ratios.slice(0, count).map(r => {
+      if (r === 0)  return 'down';
+      if (r < 90)   return 'warn';
+      return 'up';
+    });
+    // Pad with 'up' on the left if fewer than 90 days of history
+    while (buckets.length < count) buckets.unshift('up');
+    return `<div class="bars">${buckets.map(b => `<div class="bar ${b}"></div>`).join('')}</div>`;
+  }
+
+  // Fallback: scatter outage days proportionally using all_time_uptime_ratio
+  const uptime = parseFloat(monitor.all_time_uptime_ratio || monitor._uptime || 99.9);
+  const downDays = Math.max(0, Math.round(((100 - uptime) / 100) * count));
+  const buckets = Array(count).fill('up');
+  if (downDays > 0) {
+    const spacing = Math.floor(count / downDays);
+    for (let i = 0; i < downDays; i++) {
+      buckets[Math.min(i * spacing, count - 1)] = 'down';
+    }
+  }
+  return `<div class="bars">${buckets.map(b => `<div class="bar ${b}"></div>`).join('')}</div>`;
 }
 
 function addLog(type, text) {
@@ -1123,7 +1016,7 @@ function renderLogs() {
   el.innerHTML = logs.map(l => `<div class="lrow"><div class="ltype">${l.type==='check'?'System Check':'Update Log'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
 }
 
-// ── DISCORD STATUS ───────────────────────────────────────────────────────────
+// ── DISCORD STATUS ────────────────────────────────────────────────────────────
 async function fetchDiscordStatus() {
   try {
     const [s, i] = await Promise.all([fetch(DISCORD_API), fetch(INCIDENT_API)]);
@@ -1141,7 +1034,6 @@ async function fetchDiscordStatus() {
   }
 }
 
-// Maps Discord component keywords → which AssistBot services may be affected
 const DISCORD_IMPACT_MAP = [
   { keywords: ['api'],         affects: ['Assistbot','Assistmusic','Dashboard','AssistServer'] },
   { keywords: ['gateway'],     affects: ['Assistbot','Assistmusic'] },
@@ -1149,7 +1041,6 @@ const DISCORD_IMPACT_MAP = [
   { keywords: ['media proxy'], affects: ['Assistbot','Dashboard'] },
 ];
 
-// Returns list of AssistBot service names impacted by a down Discord component
 function getImpactedServices(compName) {
   const n = compName.toLowerCase();
   for (const rule of DISCORD_IMPACT_MAP) {
@@ -1163,7 +1054,6 @@ function renderDiscord(components, incidents) {
   const keys = ['API','Gateway','Media Proxy','Voice'];
   const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
 
-  // Build a map: serviceName → [affected Discord component names that are down]
   const serviceWarnings = {};
   comps.forEach(c => {
     const isDown = c.status !== 'operational';
@@ -1175,7 +1065,6 @@ function renderDiscord(components, incidents) {
     }
   });
 
-  // Render Discord component rows (no dep warnings here — they show on Bot Services side)
   document.getElementById('discord-list').innerHTML = comps.map(c => {
     const s = c.status;
     const dotClass = s==='operational'?'up':s==='major_outage'?'down':'paused';
@@ -1187,16 +1076,12 @@ function renderDiscord(components, incidents) {
     return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
   }).join('');
 
-  // Store warnings globally so render() can use them
   window._serviceWarnings = serviceWarnings;
-
-  // Re-render bot services with new warnings if we have cache
   if (cache) render(cache);
-
   renderIncidents(incidents);
 }
 
-// ── INCIDENTS (Discord-style timeline + click-to-update) ─────────────────────
+// ── INCIDENTS ─────────────────────────────────────────────────────────────────
 function statusDotClass(status) {
   if (!status) return 'info';
   const s = status.toLowerCase();
@@ -1207,14 +1092,12 @@ function statusDotClass(status) {
   return 'info';
 }
 
-// Track which incident is expanded for editing
 let expandedIncidentId = null;
 
 function renderIncidents(incidents) {
   const el = document.getElementById('incident-list');
   const allItems = [];
 
-  // Group child updates under their parent
   const parents = customUpdates.filter(u => !u.parent_id);
   const children = customUpdates.filter(u => u.parent_id);
 
@@ -1223,7 +1106,6 @@ function renderIncidents(incidents) {
       .filter(c => String(c.parent_id) === String(u.id))
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    // newest update first (Resolved shows at top, like Discord)
     const allUpdates = [...kids, u].reverse().map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }));
 
     allItems.push({
@@ -1294,7 +1176,6 @@ function renderIncidents(incidents) {
           </div>`;
       });
 
-      // Inline edit/add panel
       const expandPanel = (isExpanded && isAdmin && item._isCustom) ? `
         <div class="inc-expand-panel">
           <div class="inc-expand-tabs">
@@ -1348,25 +1229,21 @@ function renderIncidents(incidents) {
 }
 
 document.getElementById('incident-list').addEventListener('click', function(e) {
-  // Delete
   if (e.target.classList.contains('del-inc-btn')) {
     deleteCustomUpdate(e.target.getAttribute('data-id'));
     return;
   }
-  // Expand/collapse update panel
   if (e.target.classList.contains('inc-action-btn') && e.target.dataset.action === 'expand') {
     const id = String(e.target.getAttribute('data-id'));
     expandedIncidentId = expandedIncidentId === id ? null : id;
     renderIncidents(currentIncidentFeedCache);
     return;
   }
-  // Cancel expand
   if (e.target.classList.contains('inc-cancel-btn')) {
     expandedIncidentId = null;
     renderIncidents(currentIncidentFeedCache);
     return;
   }
-  // Tab switching
   if (e.target.classList.contains('inc-tab')) {
     const id = e.target.dataset.id;
     const tab = e.target.dataset.tab;
@@ -1386,7 +1263,6 @@ async function addChainUpdate(parentId) {
 
   const time = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
   const newId = Date.now();
-
   const parent = customUpdates.find(u => String(u.id) === String(parentId));
   const newUpdate = {
     id: newId, _custom: true,
@@ -1428,7 +1304,6 @@ async function editLatestUpdate(parentId, updateId) {
       body: JSON.stringify({ body })
     });
     if (!res.ok) throw new Error(await res.text());
-    // Update in memory
     const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
     if (idx !== -1) customUpdates[idx].body = body;
     expandedIncidentId = null;
@@ -1465,7 +1340,7 @@ async function postUpdate() {
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
     showToast("Update saved — visible to all visitors!", "success");
-  } catch(e) { /* error toast already shown */ }
+  } catch(e) {}
 }
 
 async function deleteCustomUpdate(id) {
@@ -1477,7 +1352,7 @@ async function deleteCustomUpdate(id) {
     renderIncidents(currentIncidentFeedCache);
     addLog('update', 'Update entry removed.');
     showToast("Update removed for all visitors.", "info");
-  } catch(e) { /* error toast already shown */ }
+  } catch(e) {}
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
@@ -1491,7 +1366,6 @@ async function fetchStatus(force = false) {
   }
   
   try {
-    // Fetch monitors and bot ping in parallel
     const [res] = await Promise.all([
       fetch('/api/monitors', { method: 'GET' }),
       fetch('/api/botping').then(r => r.json()).then(data => {
@@ -1510,7 +1384,6 @@ async function fetchStatus(force = false) {
     const data = await res.json();
     if (!data.monitors) throw new Error('No monitors in response');
 
-    // Map by friendly name to our order
     const nameMap = {};
     data.monitors.forEach(mon => { nameMap[mon.friendly_name] = mon; });
 
@@ -1545,10 +1418,8 @@ async function fetchStatus(force = false) {
 function render(monitors) {
   if (!monitors || !monitors.length) return;
 
-  // Hide splash on first successful data load
   hideSplash();
 
-  // Apply forceStatus overrides
   const effective = monitors.map(m => {
     const override = forceStatus[m.friendly_name];
     if (!override || override === 'auto') return m;
@@ -1556,9 +1427,9 @@ function render(monitors) {
     return { ...m, status: fakeStatus, _forced: override };
   });
 
-  const allUp  = effective.every(m => m.status === 2);
+  const allUp   = effective.every(m => m.status === 2);
   const anyDown = effective.some(m => m.status === 9);
-  const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+  const state   = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
 
   document.getElementById('banner').className = 'banner ' + state;
   document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
@@ -1566,20 +1437,12 @@ function render(monitors) {
   document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
 
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
-    const s  = sc(m.status);
-    // Use _uptime (all_time) if available, else fall back
+    const s = sc(m.status);
     const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
     const upStr = uptime.toFixed(2);
 
-    // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
-    // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
-    const isPaused = m.status === 0 || s === 'paused';
-    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg' || isPaused) ? 50 : uptime;
-
     const warnings = window._serviceWarnings || {};
     const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
-    const effectiveStatus = discordDown ? 'paused' : s;
-    const effectiveRatio  = discordDown ? 75 : displayRatio;
 
     const warnText = (warnings[m.friendly_name] && !m._forced)
       ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
@@ -1625,12 +1488,10 @@ function renderForceStatusRows(monitors) {
 async function setForceStatus(name, value, btn) {
   forceStatus[name] = value;
 
-  // Immediately update button states in the DOM — no full re-render needed
   const row = btn.closest('.force-row');
   row.querySelectorAll('.force-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
-  // Update the bot services display
   if (cache) {
     const effective = cache.map(m => {
       const override = forceStatus[m.friendly_name];
@@ -1638,18 +1499,17 @@ async function setForceStatus(name, value, btn) {
       const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
       return { ...m, status: fakeStatus, _forced: override };
     });
-    const allUp  = effective.every(m => m.status === 2);
+    const allUp   = effective.every(m => m.status === 2);
     const anyDown = effective.some(m => m.status === 9);
-    const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+    const state   = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
     document.getElementById('banner').className = 'banner ' + state;
     document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
     document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
     document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
     document.getElementById('monitor-list').innerHTML = effective.map(m => {
-      const s  = sc(m.status);
+      const s = sc(m.status);
       const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
       const upStr = uptime.toFixed(2);
-      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
       const forcedBadge = m._forced
         ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
         : '';
@@ -1678,7 +1538,6 @@ async function setForceStatus(name, value, btn) {
 
 function resetCountdown() {
   clearInterval(timer);
-  // Don't auto-refresh while admin is active — they may be mid-edit
   if (isAdmin) {
     document.getElementById('countdown').textContent = '—';
     document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
@@ -1697,7 +1556,6 @@ function resetCountdown() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Apply full theme (icons, toggle state) now that DOM is ready
   applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
   await Promise.all([loadUpdates(), loadForceStatus()]);
   checkAdminAuth();
