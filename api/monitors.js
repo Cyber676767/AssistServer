@@ -17,9 +17,7 @@ export default async function handler(req, res) {
         format: 'json',
         all_time_uptime_ratio: '1',
         response_times: '1',
-        response_times_limit: '1',
-        logs: '1',
-        logs_limit: '24'
+        response_times_limit: '24'
       }).toString()
     });
     const data = await response.json();
