@@ -272,8 +272,8 @@
     .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
 
-    .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
-    .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
+    .bars { display: flex; gap: 2px; align-items: center; margin: 0 10px; flex: 1; }
+    .bar { width: 3px; height: 22px; border-radius: 2px; background: var(--border); flex-shrink: 0; }
     .bar.up   { background: var(--green); }
     .bar.down { background: var(--red); }
     .bar.warn { background: var(--yellow); }
@@ -997,9 +997,9 @@ const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
 
-// bars(monitor, forcedOverride) — uses response_times for accurate per-check bars
+// bars(monitor, forcedOverride) — 90 days, each bar = 1 day, like Discord's style
 function bars(monitor, forcedOverride) {
-  const count = 24;
+  const count = 90;
   const status = monitor.status;
 
   // Forced overrides
@@ -1007,35 +1007,48 @@ function bars(monitor, forcedOverride) {
     return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
   if (forcedOverride === 'deg') {
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 60 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
   // Paused — 50% yellow
   if (status === 0) {
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 45 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
-  // Degraded (status 8) — mostly yellow with a few grey
+  // Degraded — mostly yellow
   if (status === 8) {
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 18 ? 'warn' : ''}"></div>`).join('')}</div>`;
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 70 ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
 
-  // Use response_times — each entry = one actual check result
-  const rt = monitor.response_times || [];
-  if (rt.length > 0) {
-    // response_times: value > 0 = up, value = 0 = down/timeout
-    const history = rt.slice(0, count).reverse(); // newest on right
-    const padded = Array(Math.max(0, count - history.length)).fill(null).concat(history);
-    return `<div class="bars">${padded.map(r => {
-      if (!r) return '<div class="bar"></div>';
-      return r.value > 0 ? '<div class="bar up"></div>' : '<div class="bar down"></div>';
-    }).join('')}</div>`;
+  // Use logs — type 1=down, type 2=up, type 98=paused/started
+  // Each log entry covers a duration — build a day-by-day map for last 90 days
+  const logs = monitor.logs || [];
+  const now = Math.floor(Date.now() / 1000);
+  const dayMs = 86400;
+
+  // Build 90 buckets (0 = oldest, 89 = today)
+  const buckets = Array(count).fill('up'); // default green
+
+  if (logs.length > 0) {
+    logs.forEach(log => {
+      if (!log.datetime) return;
+      const logTime = log.datetime;
+      const daysAgo = Math.floor((now - logTime) / dayMs);
+      if (daysAgo >= 0 && daysAgo < count) {
+        const idx = count - 1 - daysAgo;
+        if (log.type === 1) buckets[idx] = 'down';           // outage
+        else if (log.type === 98) buckets[idx] = 'warn';     // paused
+      }
+    });
+  } else {
+    // Fallback: use all_time_uptime_ratio to fill proportionally
+    const uptime = monitor._uptime || 100;
+    const downDays = Math.round(((100 - uptime) / 100) * count);
+    // Scatter the down days across history
+    for (let i = 0; i < downDays; i++) {
+      buckets[Math.floor(i * (count / Math.max(downDays, 1)))] = 'down';
+    }
   }
 
-  // Final fallback: uptime ratio
-  const uptime = monitor._uptime || 100;
-  const filledCount = Math.max(1, Math.round((uptime / 100) * count));
-  return `<div class="bars">${Array(count).fill(0).map((_,i) =>
-    `<div class="bar ${i < filledCount ? 'up' : 'down'}"></div>`
-  ).join('')}</div>`;
+  return `<div class="bars">${buckets.map(b => `<div class="bar ${b === 'up' ? 'up' : b === 'down' ? 'down' : 'warn'}"></div>`).join('')}</div>`;
 }
 
 function addLog(type, text) {
@@ -1436,13 +1449,15 @@ async function fetchStatus(force = false) {
       };
     });
 
-    // Real ping: average_response_time from Assistbot monitor (index 0)
-    const rawPing = m[0]?.average_response_time;
-    const pingVal = rawPing && rawPing > 0 ? Math.round(rawPing) : '—';
-    document.getElementById('ping-val').textContent = pingVal;
-    // Color ping based on latency
-    const pingEl = document.getElementById('ping-val');
-    pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+    // Real ping: fetch from bot directly
+    fetch('/api/botping').then(r => r.json()).then(data => {
+      const pingVal = data.ping !== null && data.ping !== undefined ? Math.round(data.ping) : '—';
+      const pingEl = document.getElementById('ping-val');
+      pingEl.textContent = pingVal;
+      pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+    }).catch(() => {
+      document.getElementById('ping-val').textContent = '—';
+    });
 
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
