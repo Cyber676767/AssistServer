@@ -540,7 +540,7 @@
         </div>
       </div>
       <div class="sb-section">
-        <div class="sb-label">Discord Status</div>
+        <div class="sb-label">Discord Status <a href="https://discordstatus.com/" target="_blank" title="View Discord Status Page" style="color:var(--faint);text-decoration:none;font-size:10px;margin-left:4px;opacity:0.7;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">↗</a></div>
         <div id="discord-nav">
           <div class="nav-item"><div class="ndot unknown"></div>Loading status…</div>
         </div>
@@ -633,7 +633,7 @@
         </div>
 
         <div class="card">
-          <div class="sec-title">Discord Status</div>
+          <div class="sec-title"><a href="https://discordstatus.com/" target="_blank" title="View on discordstatus.com" style="color:inherit;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Discord Status ↗</a></div>
           <div id="discord-list" style="display: flex; flex-direction: column; gap: 10px;">
             <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:80px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
           </div>
@@ -656,7 +656,7 @@
           <!-- Post Important Banner -->
           <div class="sec-subtitle">Post Important Banner</div>
           <div class="update-form">
-            <textarea id="important-text" placeholder="Post an important message shown at the top for all visitors…" style="min-height:60px;"></textarea>
+            <textarea id="important-text" placeholder="Type a custom message, OR use 📌 Pin on any incident below to pin it here…" style="min-height:60px;"></textarea>
             <div class="form-row">
               <button class="post-btn" style="background:var(--red);" onclick="postImportantBanner()">📌 Pin Banner</button>
               <button class="post-btn" style="background:var(--faint);margin-left:8px;" onclick="clearImportantBanner()">Clear Banner</button>
@@ -722,8 +722,8 @@
   </div>
 </div>
 
-<!-- Loading Splash — bouncing dots, theme-aware, only on first visit -->
-<div id="splash">
+<!-- Loading Splash — bouncing dots, theme-aware, only on force reload -->
+<div id="splash" style="display:none;">
   <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
     <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
   </svg>
@@ -732,6 +732,22 @@
     <span></span><span></span><span></span>
   </div>
 </div>
+<script>
+// Show splash ONLY on force-reload (Ctrl+Shift+R / hard refresh)
+(function() {
+  const navType = (performance.getEntriesByType('navigation')[0] || {}).type || performance.navigation?.type;
+  // navType === 'reload' covers normal reload; we want only hard reload
+  // Use sessionStorage flag: if set, this is a soft reload — skip splash
+  // Hard reload clears sessionStorage in most browsers, so absence of flag = hard reload
+  const isHardReload = (navType === 'reload' || navType === 1) && !sessionStorage.getItem('assistbot-soft-reload');
+  if (isHardReload) {
+    const splash = document.getElementById('splash');
+    if (splash) splash.style.display = 'flex';
+  }
+  // Set flag for next reload — if user does soft reload this persists; hard reload clears it
+  sessionStorage.setItem('assistbot-soft-reload', '1');
+})();
+</script>
 <style>
 #splash {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -1023,7 +1039,8 @@ async function submitOAuthHandshake() {
       document.getElementById('oauth-field').value = '';
     }
   } catch(e) {
-    showToast("Could not reach auth server.", "error");
+    showToast("Could not reach auth server — login blocked.", "error");
+    document.getElementById('oauth-field').value = '';
   } finally {
     btn.disabled = false;
     btn.textContent = 'Authorize Session';
@@ -1102,7 +1119,9 @@ function bars(monitor, forcedOverride) {
     return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
   if (forcedOverride === 'deg') {
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+    const pct = window._forcePct?.[monitor.friendly_name] ?? 50;
+    const filledBars = Math.round((pct / 100) * count);
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < filledBars ? 'warn' : ''}"></div>`).join('')}</div>`;
   }
   // Paused — 50% yellow
   if (status === 0) {
@@ -1309,6 +1328,7 @@ function renderIncidents(incidents) {
       const isExpanded = expandedIncidentId === String(item.id);
 
       const adminBtns = (isAdmin && item._isCustom) ? `
+        <button class="inc-pin-btn" title="Pin as Important Banner" onclick="pinIncidentAsBanner(${item.id})" style="background:transparent;border:none;cursor:pointer;font-size:15px;padding:2px 4px;opacity:0.5;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">📌</button>
         <button class="inc-action-btn" data-action="expand" data-id="${item.id}">✏️ Update</button>
         <button class="del-inc-btn visible" data-id="${item.id}">Delete</button>` : '';
 
@@ -1335,7 +1355,7 @@ function renderIncidents(incidents) {
         <div class="inc-expand-panel">
           <div class="inc-expand-tabs">
             <button class="inc-tab active" data-tab="add" data-id="${item.id}">➕ Add Update</button>
-            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Latest</button>
+            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Update</button>
           </div>
           <div class="inc-tab-content" id="tab-add-${item.id}">
             <select class="sel" id="chain-type-${item.id}" style="width:100%;margin-bottom:8px;">
@@ -1351,10 +1371,14 @@ function renderIncidents(incidents) {
             </div>
           </div>
           <div class="inc-tab-content" id="tab-edit-${item.id}" style="display:none;">
-            <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit the latest update message…">${esc(item.updates[item.updates.length-1]?.body || '')}</textarea>
+            <div style="font-size:11px;color:var(--faint);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Select update to edit:</div>
+            <select class="sel" id="edit-select-${item.id}" style="width:100%;margin-bottom:8px;" onchange="onEditSelectChange(${item.id}, this)">
+              ${item.updates.map((u,i) => `<option value="${u.id || item.id}" data-body="${esc(u.body || '')}" data-idx="${i}">${esc(u.status || 'info')} — ${esc((u.body||'').slice(0,40))}${(u.body||'').length>40?'…':''}</option>`).join('')}
+            </select>
+            <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit update message…">${esc(item.updates[0]?.body || '')}</textarea>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
               <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
-              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editLatestUpdate(${item.id}, ${item.updates[item.updates.length-1]?.id || 'null'})">Save Edit</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editSelectedUpdate(${item.id})">Save Edit</button>
             </div>
           </div>
         </div>` : '';
@@ -1504,6 +1528,59 @@ async function postUpdate() {
   } catch(e) { /* error toast already shown */ }
 }
 
+async function pinIncidentAsBanner(incidentId) {
+  if (!isAdmin) return;
+  const parent = customUpdates.find(u => String(u.id) === String(incidentId) && !u.parent_id);
+  if (!parent) { showToast('Could not find incident.', 'error'); return; }
+  // Build summary: title + latest update body
+  const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(incidentId));
+  const allUpdates = [...kids, parent].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  const latest = allUpdates[0];
+  const text = `[${parent.service || 'All Services'}] ${latest.type ? latest.type.charAt(0).toUpperCase()+latest.type.slice(1)+': ' : ''}${latest.body}`;
+  try {
+    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
+    const res = await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ key: 'important_banner', value: text })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showImportantBanner(text);
+    showToast('Incident pinned as Important Banner!', 'success');
+  } catch(e) { showToast('Failed to pin: ' + e.message, 'error'); }
+}
+
+function onEditSelectChange(incidentId, selectEl) {
+  const opt = selectEl.options[selectEl.selectedIndex];
+  const body = opt.getAttribute('data-body') || '';
+  const ta = document.getElementById(`edit-body-${incidentId}`);
+  if (ta) ta.value = body;
+}
+
+async function editSelectedUpdate(parentId) {
+  if (!isAdmin) return;
+  const sel = document.getElementById(`edit-select-${parentId}`);
+  const targetId = sel ? sel.value : parentId;
+  const body = document.getElementById(`edit-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
+      method: 'PATCH',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
+    if (idx !== -1) customUpdates[idx].body = body;
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Edited update #${targetId}`);
+    showToast('Update edited!', 'success');
+  } catch(e) { showToast('Failed to save edit.', 'error'); }
+}
+
 async function deleteCustomUpdate(id) {
   if (!isAdmin) return;
   showToast("Deleting from database…", "info");
@@ -1607,7 +1684,7 @@ function render(monitors) {
     // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
     // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
     const isPaused = m.status === 0 || s === 'paused';
-    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg' || isPaused) ? 50 : uptime;
+    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg') ? (window._forcePct?.[m.friendly_name] ?? 50) : isPaused ? 50 : uptime;
 
     const warnings = window._serviceWarnings || {};
     const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
@@ -1633,7 +1710,21 @@ function render(monitors) {
 
   document.getElementById('nav-items').innerHTML = effective.map(m => {
     const s = sc(m.status);
-    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+    // Find the most recent custom update for this service and color the dot by its status
+    const svcUpdates = customUpdates.filter(u => !u.parent_id && (u.service === m.friendly_name || u.service === 'All Services'));
+    let dotClass = s;
+    if (svcUpdates.length) {
+      const latest = svcUpdates.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
+      // Also check children of this parent
+      const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(latest.id));
+      const allU = [...kids, latest].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+      const latestStatus = (allU[0]?.type || '').toLowerCase();
+      if (latestStatus.includes('resolv')) dotClass = 'up';
+      else if (latestStatus.includes('monitor')) dotClass = 'paused';
+      else if (latestStatus.includes('identif')) dotClass = 'paused';
+      else if (latestStatus.includes('investig')) dotClass = 'down';
+    }
+    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${dotClass}"></div>${esc(m.friendly_name)}</div>`;
   }).join('');
 }
 
@@ -1643,6 +1734,7 @@ function renderForceStatusRows(monitors) {
   const names = monitors ? monitors.map(m => m.friendly_name) : SERVICE_NAMES;
   container.innerHTML = names.map(name => {
     const cur = forceStatus[name] || 'auto';
+    const curPct = window._forcePct?.[name] ?? 50;
     return `<div class="force-row">
       <div class="force-name">${esc(name)}</div>
       <div class="force-btns">
@@ -1650,6 +1742,10 @@ function renderForceStatusRows(monitors) {
         <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
         <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
         <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
+      </div>
+      <div class="force-pct-wrap" style="display:${cur==='deg'?'flex':'none'};align-items:center;gap:4px;margin-top:6px;">
+        <input type="range" min="0" max="100" value="${curPct}" class="force-pct-slider" data-name="${esc(name)}" oninput="updateForcePct('${name}',this.value)" style="width:80px;accent-color:var(--yellow);">
+        <span class="force-pct-label" id="fpct-${esc(name)}">${curPct}%</span>
       </div>
     </div>`;
   }).join('');
@@ -1662,6 +1758,10 @@ async function setForceStatus(name, value, btn) {
   const row = btn.closest('.force-row');
   row.querySelectorAll('.force-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
+  // Show/hide pct slider for degraded
+  const pctWrap = row.querySelector('.force-pct-wrap');
+  if (pctWrap) pctWrap.style.display = value === 'deg' ? 'flex' : 'none';
 
   // Update the bot services display
   if (cache) {
@@ -1682,7 +1782,7 @@ async function setForceStatus(name, value, btn) {
       const s  = sc(m.status);
       const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
       const upStr = uptime.toFixed(2);
-      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? (window._forcePct?.[m.friendly_name] ?? 50) : uptime;
       const forcedBadge = m._forced
         ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
         : '';
@@ -1700,13 +1800,43 @@ async function setForceStatus(name, value, btn) {
     }).join('');
     document.getElementById('nav-items').innerHTML = effective.map(m => {
       const s = sc(m.status);
-      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+      const svcUpdates = customUpdates.filter(u => !u.parent_id && (u.service === m.friendly_name || u.service === 'All Services'));
+      let dotClass = s;
+      if (svcUpdates.length) {
+        const latest = svcUpdates.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
+        const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(latest.id));
+        const allU = [...kids, latest].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        const latestStatus = (allU[0]?.type || '').toLowerCase();
+        if (latestStatus.includes('resolv')) dotClass = 'up';
+        else if (latestStatus.includes('monitor')) dotClass = 'paused';
+        else if (latestStatus.includes('identif')) dotClass = 'paused';
+        else if (latestStatus.includes('investig')) dotClass = 'down';
+      }
+      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${dotClass}"></div>${esc(m.friendly_name)}</div>`;
     }).join('');
   }
 
   await saveForceStatus(name, value);
   addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
   showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
+}
+
+window._forcePct = {};
+
+function updateForcePct(name, val) {
+  window._forcePct[name] = Number(val);
+  const lbl = document.getElementById(`fpct-${name}`);
+  if (lbl) lbl.textContent = val + '%';
+  // Re-render bot services with new pct
+  if (cache) {
+    const effective = cache.map(m => {
+      const override = forceStatus[m.friendly_name];
+      if (!override || override === 'auto') return m;
+      const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+      return { ...m, status: fakeStatus, _forced: override };
+    });
+    render(effective);
+  }
 }
 
 function resetCountdown() {
@@ -1721,6 +1851,7 @@ function resetCountdown() {
   document.getElementById('countdown').textContent = countdown;
   document.getElementById('footer-text').innerHTML = `Refreshes in <span id="countdown">${countdown}</span>s &nbsp;·&nbsp; Powered by AssistBot`;
   timer = setInterval(() => {
+    if (isAdmin) { clearInterval(timer); return; } // guard: stop if admin activated mid-countdown
     countdown--;
     const el = document.getElementById('countdown');
     if (el) el.textContent = countdown;
@@ -1753,6 +1884,7 @@ async function init() {
 
   setInterval(fetchDiscordStatus, 300000);
   setInterval(async () => {
+    if (isAdmin) return; // don't auto-refresh while admin is active
     await loadUpdates();
     renderIncidents(currentIncidentFeedCache);
   }, 60000);
