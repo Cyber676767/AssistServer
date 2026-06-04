@@ -1,327 +1,615 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AssistBot Status</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root[data-theme="dark"] {
-  --bg:#2b2d31;--sidebar:#1e1f22;--main-bg:#313338;--card:#2b2d31;--card-inner:#232428;
-  --border:#1f2023;--text:#f2f3f5;--muted:#949ba4;--faint:#80848e;
-  --green:#23a55a;--gdim:rgba(35,165,90,0.1);--yellow:#f0b232;--ydim:rgba(240,178,50,0.1);
-  --red:#f23f43;--rdim:rgba(242,63,67,0.1);--blurple:#5865f2;--panel-bg:#232428;
-  --scrollbar-thumb:#3f4147;--scrollbar-track:#1e1f22;--timeline-line:#3f4147;
-  --modal-bg:#313338;--footer-bg:#2b2d31;--topbar-border:rgba(0,0,0,0.2);
-}
-:root[data-theme="light"] {
-  --bg:#f2f3f5;--sidebar:#e3e5e8;--main-bg:#ffffff;--card:#f2f3f5;--card-inner:#e3e5e8;
-  --border:#d4d7dc;--text:#060607;--muted:#4e5058;--faint:#6d6f78;
-  --green:#1a8a47;--gdim:rgba(26,138,71,0.1);--yellow:#c87619;--ydim:rgba(200,118,25,0.1);
-  --red:#da373c;--rdim:rgba(218,55,60,0.1);--blurple:#5865f2;--panel-bg:#e3e5e8;
-  --scrollbar-thumb:#c4c9d4;--scrollbar-track:#e3e5e8;--timeline-line:#c4c9d4;
-  --modal-bg:#ffffff;--footer-bg:#f2f3f5;--topbar-border:rgba(0,0,0,0.08);
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-*{scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track);}
-*::-webkit-scrollbar{width:6px;height:6px;}
-*::-webkit-scrollbar-track{background:var(--scrollbar-track);}
-*::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px;}
-html,body{height:100%;background:var(--main-bg);transition:background 0.2s,color 0.2s;}
-body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-size:14px;display:flex;}
-.layout{display:flex;width:100%;min-height:100vh;}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AssistBot Status</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── THEME VARIABLES ── */
+    :root[data-theme="dark"] {
+      --bg: #2b2d31;
+      --sidebar: #1e1f22;
+      --main-bg: #313338;
+      --card: #2b2d31;
+      --card-inner: #232428;
+      --border: #1f2023;
+      --text: #f2f3f5;
+      --muted: #949ba4;
+      --faint: #80848e;
+      --green: #23a55a;
+      --gdim: rgba(35, 165, 90, 0.1);
+      --yellow: #f0b232;
+      --ydim: rgba(240, 178, 50, 0.1);
+      --red: #f23f43;
+      --rdim: rgba(242, 63, 67, 0.1);
+      --blurple: #5865f2;
+      --panel-bg: #232428;
+      --scrollbar-thumb: #3f4147;
+      --scrollbar-track: #1e1f22;
+      --timeline-line: #3f4147;
+      --input-bg: #1e1f22;
+      --input-border: #111214;
+      --modal-bg: #313338;
+      --footer-bg: #2b2d31;
+      --sb-footer-hover: #2e3035;
+      --topbar-border: rgba(0,0,0,0.2);
+    }
 
-/* ── SIDEBAR ── */
-.sidebar{width:240px;min-width:240px;background:var(--sidebar);display:flex;flex-direction:column;transition:background 0.2s;}
-.sb-content{flex:1;padding:24px 12px 12px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
-.sb-section{display:flex;flex-direction:column;gap:4px;}
-.sb-label{padding:0 8px 6px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);}
-.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:background 0.15s,color 0.15s;text-decoration:none;margin-bottom:2px;}
-.nav-item:hover{background:rgba(128,128,128,0.08);color:var(--text);}
-.nav-item.active{background:rgba(88,101,242,0.2);color:var(--text);font-weight:600;}
-.ndot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ndot.up{background:var(--green);}.ndot.down{background:var(--red);}.ndot.unknown{background:var(--faint);}.ndot.paused{background:var(--yellow);}
+    :root[data-theme="light"] {
+      --bg: #f2f3f5;
+      --sidebar: #e3e5e8;
+      --main-bg: #ffffff;
+      --card: #f2f3f5;
+      --card-inner: #e3e5e8;
+      --border: #d4d7dc;
+      --text: #060607;
+      --muted: #4e5058;
+      --faint: #6d6f78;
+      --green: #1a8a47;
+      --gdim: rgba(26, 138, 71, 0.1);
+      --yellow: #c87619;
+      --ydim: rgba(200, 118, 25, 0.1);
+      --red: #da373c;
+      --rdim: rgba(218, 55, 60, 0.1);
+      --blurple: #5865f2;
+      --panel-bg: #e3e5e8;
+      --scrollbar-thumb: #c4c9d4;
+      --scrollbar-track: #e3e5e8;
+      --timeline-line: #c4c9d4;
+      --input-bg: #ebedef;
+      --input-border: #d4d7dc;
+      --modal-bg: #ffffff;
+      --footer-bg: #f2f3f5;
+      --sb-footer-hover: #dadeе2;
+      --topbar-border: rgba(0,0,0,0.08);
+    }
 
-/* sidebar buttons */
-.invite-box{padding:0 12px 8px;}
-.website-btn-wrapper{position:relative;margin-bottom:8px;}
-.website-disabled{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(88,101,242,0.15);color:var(--blurple);border:1px solid rgba(88,101,242,0.25);text-decoration:none;padding:10px;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;}
-.website-disabled:hover{background:rgba(242,63,67,0.15);color:var(--red);border-color:rgba(242,63,67,0.3);}
-.website-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#111214;color:#fff;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:500;white-space:normal;max-width:210px;text-align:center;visibility:hidden;opacity:0;transition:opacity 0.15s,visibility 0.15s;z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.05);pointer-events:none;}
-.website-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#111214;}
-.website-btn-wrapper:hover .website-tooltip{visibility:visible;opacity:1;}
-.invite-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--blurple);color:#fff;text-decoration:none;padding:10px;border-radius:6px;font-weight:600;font-size:13px;transition:background 0.15s;}
-.invite-btn:hover{background:#4752c4;}
-.sb-footer{background:var(--panel-bg);padding:16px;display:flex;align-items:center;gap:12px;margin-top:auto;border-top:1px solid rgba(0,0,0,0.1);width:100%;overflow:hidden;cursor:pointer;transition:background 0.15s;flex-shrink:0;}
-.sb-footer:hover{filter:brightness(1.05);}
-.av-wrapper{position:relative;width:40px;height:40px;min-width:40px;flex-shrink:0;}
-.av{width:40px;height:40px;border-radius:50%;background:#36393f;overflow:hidden;border:1px solid rgba(255,255,255,0.08);}
-.av img{width:100%;height:100%;object-fit:cover;display:block;}
-.status-dot{position:absolute;bottom:-1px;right:-1px;width:13px;height:13px;background:var(--green);border-radius:50%;border:2.5px solid var(--panel-bg);}
-.uinfo{display:flex;flex-direction:column;gap:1px;min-width:0;}
-.uname{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ustatus{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── MAIN ── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--main-bg);transition:background 0.2s;}
-.topbar{height:64px;background:var(--main-bg);border-bottom:1px solid var(--topbar-border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;transition:background 0.2s;}
-.tb-title{font-size:18px;font-weight:700;color:var(--text);}
-.tb-div{width:1px;height:24px;background:rgba(128,128,128,0.2);margin:0 4px;}
-.tb-sub{font-size:14px;color:var(--muted);flex:1;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.admin-indicator{font-size:11px;background:var(--rdim);color:var(--red);padding:2px 6px;border-radius:4px;font-weight:600;display:none;flex-shrink:0;}
+    /* Scrollbar theming */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    *::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 
-/* mobile menu btn */
-.mobile-menu-btn{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:4px;flex-shrink:0;}
+    html, body {
+      height: 100%;
+      background: var(--main-bg);
+      transition: background 0.2s, color 0.2s;
+    }
 
-/* theme toggle */
-.theme-toggle{display:flex;align-items:center;gap:6px;background:var(--card-inner);border-radius:20px;padding:4px 10px;cursor:pointer;border:1px solid var(--border);transition:background 0.15s;user-select:none;flex-shrink:0;}
-.theme-toggle:hover{background:var(--card);}
-.theme-toggle svg{width:14px;height:14px;color:var(--muted);flex-shrink:0;}
-.toggle-track{width:28px;height:16px;background:var(--border);border-radius:8px;position:relative;transition:background 0.2s;flex-shrink:0;}
-.toggle-track.on{background:var(--blurple);}
-.toggle-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;background:#fff;border-radius:50%;transition:transform 0.2s;}
-.toggle-track.on .toggle-thumb{transform:translateX(12px);}
+    body { font-family: 'Noto Sans', sans-serif; color: var(--text); min-height: 100vh; font-size: 14px; display: flex; }
+    
+    .layout { display: flex; width: 100%; min-height: 100vh; }
 
-.ping-wrapper{position:relative;display:inline-block;}
-.ping-pill{font-size:13px;font-weight:500;color:var(--muted);padding:4px 10px;border-radius:6px;background:rgba(128,128,128,0.08);cursor:help;white-space:nowrap;}
-.ping-tooltip{position:absolute;top:100%;right:0;margin-top:8px;background:#111214;color:#fff;padding:6px 12px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;visibility:hidden;opacity:0;transition:opacity 0.15s,visibility 0.15s;z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,0.4);}
-.ping-tooltip::before{content:'';position:absolute;bottom:100%;right:16px;border:5px solid transparent;border-bottom-color:#111214;}
-.ping-wrapper:hover .ping-tooltip{visibility:visible;opacity:1;}
-.live-indicator{font-size:13px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px;flex-shrink:0;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-.ldot{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+    /* ── SIDEBAR ── */
+    .sidebar { width: 240px; min-width: 240px; background: var(--sidebar); display: flex; flex-direction: column; position: relative; transition: background 0.2s; }
+    .sb-content { flex: 1; padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .sb-section { display: flex; flex-direction: column; gap: 6px; }
+    .sb-label { padding: 0 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
+    
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(128,128,128,0.08); color: var(--text); }
+    .nav-item.active { background: rgba(88, 101, 242, 0.2); color: var(--text); font-weight: 600; }
+    
+    .ndot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .ndot.up { background: var(--green); }
+    .ndot.down { background: var(--red); }
+    .ndot.unknown { background: var(--faint); }
+    .ndot.paused { background: var(--yellow); }
 
-.content{flex:1;padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;width:100%;}
+    /* ── WEBSITE / DASHBOARD BUTTONS ── */
+    .invite-box { padding: 0 12px 8px; }
+    .invite-box-bottom { padding: 0 12px 16px; }
 
-/* ── IMPORTANT BANNER (pinned, like Claude Status) ── */
-.important-banner{border-radius:10px;overflow:hidden;border:1px solid rgba(242,63,67,0.4);display:none;box-shadow:0 0 0 3px rgba(242,63,67,0.08);}
-.important-banner.visible{display:block;animation:bannerPop 0.3s ease;}
-@keyframes bannerPop{0%{opacity:0;transform:translateY(-6px);}100%{opacity:1;transform:translateY(0);}}
-.important-banner-header{background:var(--red);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.important-banner-title{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
-.important-banner-dismiss{background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
-.important-banner-dismiss:hover{background:rgba(255,255,255,0.3);}
-.important-banner-body{background:var(--rdim);padding:14px 18px;font-size:13px;color:var(--text);line-height:1.6;border-top:1px solid rgba(242,63,67,0.15);}
+    .website-btn-wrapper { position: relative; margin-bottom: 8px; }
 
-/* ── STATUS BANNER ── */
-.banner{border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;font-weight:600;font-size:15px;border:1px solid transparent;}
-.banner.operational{background:var(--gdim);border-color:rgba(35,165,90,0.2);color:var(--green);}
-.banner.degraded{background:var(--ydim);border-color:rgba(240,178,50,0.2);color:var(--yellow);}
-.banner.outage{background:var(--rdim);border-color:rgba(242,63,67,0.2);color:var(--red);}
+    .website-disabled {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: rgba(88,101,242,0.15);
+      color: var(--blurple);
+      border: 1px solid rgba(88,101,242,0.25);
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .website-disabled:hover {
+      background: rgba(242, 63, 67, 0.15);
+      color: var(--red);
+      border-color: rgba(242, 63, 67, 0.3);
+    }
 
-/* ── GRID ── */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.full-width{grid-column:span 2;}
-.card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:14px;transition:background 0.2s;}
-.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--faint);display:flex;justify-content:space-between;align-items:center;}
-.sec-subtitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);}
+    .website-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111214;
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      /* Allow wrapping so it doesn't go off screen */
+      white-space: normal;
+      max-width: 200px;
+      text-align: center;
+      width: max-content;
+      max-width: 210px;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s, visibility 0.15s;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .website-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #111214;
+    }
+    .website-btn-wrapper:hover .website-tooltip { visibility: visible; opacity: 1; }
 
-/* ── MONITOR ROWS ── */
-.mrow{display:flex;align-items:center;padding:12px 14px;background:var(--card-inner);border-radius:8px;gap:10px;border:1px solid rgba(0,0,0,0.06);transition:background 0.2s;}
-.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.sdot.up{background:var(--green);box-shadow:0 0 8px rgba(35,165,90,0.4);}
-.sdot.down{background:var(--red);box-shadow:0 0 8px rgba(242,63,67,0.4);}
-.sdot.paused{background:var(--yellow);box-shadow:0 0 8px rgba(240,177,50,0.4);}
-.sdot.unknown{background:var(--faint);}
-.mname{font-weight:600;font-size:14px;flex:1;color:var(--text);display:flex;flex-direction:column;gap:2px;min-width:0;}
-.warn-inline{font-size:11px;font-weight:400;color:var(--yellow);}
-.mup{font-size:13px;color:var(--muted);font-weight:500;min-width:48px;text-align:right;flex-shrink:0;}
-.bars{display:flex;gap:2px;align-items:center;flex:1;min-width:0;overflow:hidden;}
-.bar{width:3px;height:22px;border-radius:2px;background:var(--border);flex-shrink:0;}
-.bar.up{background:var(--green);}
-.bar.down{background:var(--red);}
-.bar.warn{background:var(--yellow);}
-.badge{font-size:12px;font-weight:600;text-transform:capitalize;white-space:nowrap;flex-shrink:0;margin-left:6px;}
-.badge.up{color:var(--green);}.badge.down{color:var(--red);}.badge.paused{color:var(--yellow);}.badge.unknown{color:var(--faint);}
+    .invite-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--blurple); color: #fff; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.15s; box-shadow: 0 4px 12px rgba(88,101,242,0.15); }
+    .invite-btn:hover { background: #4752c4; }
 
-/* ── INCIDENT TIMELINE ── */
-.inc-date-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:12px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
-.inc-date-header:first-child{border-top:none;padding-top:0;}
-.inc-item{display:flex;gap:0;}
-.inc-spine{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0;}
-.inc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;z-index:1;}
-.inc-dot.resolved{background:var(--green);box-shadow:0 0 6px rgba(35,165,90,0.4);}
-.inc-dot.monitoring{background:var(--blurple);}
-.inc-dot.identified{background:var(--yellow);}
-.inc-dot.investigating{background:var(--red);}
-.inc-dot.info{background:var(--faint);}
-.inc-line{width:2px;flex:1;background:var(--timeline-line);min-height:12px;}
-.inc-body-wrap{flex:1;padding:0 0 16px 8px;min-width:0;}
-.inc-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;}
-.inc-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;}
-.inc-origin-badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
-.inc-origin-badge.assistbot{background:rgba(88,101,242,0.15);color:var(--blurple);border:1px solid rgba(88,101,242,0.25);}
-.inc-origin-badge.discord{background:var(--ydim);color:var(--yellow);border:1px solid rgba(240,178,50,0.2);}
-.inc-updates{display:flex;flex-direction:column;gap:0;margin-top:6px;}
-.inc-update-item{display:flex;gap:0;}
-.inc-update-spine{display:flex;flex-direction:column;align-items:center;width:18px;flex-shrink:0;}
-.inc-update-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-.inc-update-dot.resolved{background:var(--green);}
-.inc-update-dot.monitoring{background:var(--blurple);}
-.inc-update-dot.identified{background:var(--yellow);}
-.inc-update-dot.investigating{background:var(--red);}
-.inc-update-dot.info{background:var(--faint);}
-.inc-update-line{width:1px;flex:1;background:var(--timeline-line);min-height:8px;}
-.inc-update-content{flex:1;padding:0 0 10px 8px;min-width:0;}
-.inc-status-label{display:inline-block;font-size:11px;font-weight:700;text-transform:capitalize;margin-right:3px;}
-.inc-status-label.resolved{color:var(--green);}
-.inc-status-label.monitoring{color:var(--blurple);}
-.inc-status-label.identified{color:var(--yellow);}
-.inc-status-label.investigating{color:var(--red);}
-.inc-status-label.info{color:var(--faint);}
-.inc-update-body{font-size:13px;color:var(--muted);line-height:1.5;display:inline;word-break:break-word;}
-.inc-update-time{font-size:11px;color:var(--faint);margin-top:2px;display:block;}
-.no-incidents{text-align:center;color:var(--faint);font-size:13px;padding:20px 0;}
-.del-inc-btn{background:transparent;border:none;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:4px;display:none;text-transform:uppercase;flex-shrink:0;}
-.del-inc-btn:hover{background:var(--rdim);}
-.del-inc-btn.visible{display:block;}
-.inc-action-btn{background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25);color:var(--blurple);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:inherit;}
-.inc-action-btn:hover{background:rgba(88,101,242,0.22);}
-.inc-expand-panel{margin-top:8px;background:var(--card-inner);border-radius:8px;border:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:8px;}
-.inc-expand-tabs{display:flex;gap:6px;}
-.inc-tab{font-size:12px;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
-.inc-tab.active{background:var(--blurple);color:#fff;border-color:var(--blurple);}
-.inc-tab-content{display:flex;flex-direction:column;gap:6px;}
-.inc-expand-ta{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:13px;padding:10px;resize:vertical;min-height:70px;outline:none;}
-.inc-expand-ta:focus{border-color:var(--blurple);}
-.inc-expand-ta::placeholder{color:var(--faint);}
-.inc-cancel-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit;}
+    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); width: 100%; overflow: hidden; cursor: pointer; transition: background 0.15s; }
+    .sb-footer:hover { background: var(--sb-footer-hover); }
+    .av-wrapper { position: relative; width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; }
+    .av { width: 40px; height: 40px; border-radius: 50%; background: #36393f; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+    .av img { width: 100%; height: 100%; object-fit: cover; display: block; min-width: 100%; min-height: 100%; }
+    .status-dot { position: absolute; bottom: -1px; right: -1px; width: 13px; height: 13px; background: var(--green); border-radius: 50%; border: 2.5px solid var(--panel-bg); }
+    
+    .uinfo { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .uname { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ustatus { font-size: 12px; color: var(--muted); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ── FORCE STATUS ── */
-.force-status-section{display:flex;flex-direction:column;gap:10px;}
-.force-status-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);}
-.force-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card-inner);border-radius:8px;border:1px solid rgba(0,0,0,0.06);flex-wrap:wrap;}
-.force-name{font-size:14px;font-weight:600;color:var(--text);flex:1;min-width:80px;}
-.force-btns{display:flex;gap:5px;flex-wrap:wrap;}
-.force-btn{font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;border:1px solid transparent;cursor:pointer;font-family:inherit;opacity:0.45;background:transparent;transition:opacity 0.15s;}
-.force-btn:hover{opacity:0.75;}
-.force-btn.active{opacity:1;}
-.force-btn.op{color:var(--green);border-color:rgba(35,165,90,0.35);}
-.force-btn.op.active{background:var(--gdim);}
-.force-btn.deg{color:var(--yellow);border-color:rgba(240,178,50,0.35);}
-.force-btn.deg.active{background:var(--ydim);}
-.force-btn.out{color:var(--red);border-color:rgba(242,63,67,0.35);}
-.force-btn.out.active{background:var(--rdim);}
-.force-btn.auto{color:var(--faint);border-color:var(--border);}
-.force-btn.auto.active{background:rgba(128,128,128,0.1);opacity:1;}
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--main-bg); transition: background 0.2s; }
+    
+    .topbar { height: 64px; background: var(--main-bg); border-bottom: 1px solid var(--topbar-border); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; }
+    .tb-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .tb-div { width: 1px; height: 24px; background: rgba(128,128,128,0.2); margin: 0 4px; }
+    .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
+    
+    /* ── THEME TOGGLE ── */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-inner);
+      border-radius: 20px;
+      padding: 4px 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--card); }
+    .theme-toggle svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+    .toggle-track {
+      width: 28px; height: 16px;
+      background: var(--border);
+      border-radius: 8px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--blurple); }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 12px; height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(12px); }
 
-/* ── ADMIN POST FORM ── */
-#admin-panel{display:none;}
-.update-form{display:flex;flex-direction:column;gap:10px;}
-.update-form textarea{width:100%;background:var(--card-inner);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;padding:12px;resize:vertical;min-height:80px;outline:none;transition:border-color 0.15s;}
-.update-form textarea:focus{border-color:var(--blurple);}
-.update-form textarea::placeholder{color:var(--faint);}
-.form-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.sel{background:var(--card-inner);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:13px;padding:8px 10px;outline:none;cursor:pointer;}
-.post-btn{background:var(--blurple);border:none;border-radius:6px;color:white;font-family:inherit;font-size:14px;font-weight:600;padding:9px 20px;cursor:pointer;margin-left:auto;}
-.post-btn:hover{background:#4752c4;}
-.logout-btn{background:transparent;border:1px solid var(--red);color:var(--red);font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;cursor:pointer;text-transform:uppercase;}
-.logout-btn:hover{background:var(--red);color:#fff;}
+    .ping-wrapper { position: relative; display: inline-block; }
+    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(128,128,128,0.08); cursor: help; transition: background 0.15s; }
+    .ping-pill:hover { background: rgba(128,128,128,0.15); color: var(--text); }
+    
+    .ping-tooltip { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #111214; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; visibility: hidden; opacity: 0; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
+    .ping-tooltip::before { content: ''; position: absolute; bottom: 100%; right: 16px; border: 5px solid transparent; border-bottom-color: #111214; }
+    .ping-wrapper:hover .ping-tooltip { visibility: visible; opacity: 1; transform: translateY(0); }
+    
+    .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .ldot { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
 
-/* ── ACTIVITY LOG ── */
-#activity-log-card{display:none;}
-.log-container{display:flex;flex-direction:column;gap:8px;}
-.lrow{display:flex;align-items:center;padding:10px 14px;background:var(--card-inner);border-radius:8px;gap:12px;font-size:13px;}
-.ltype{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);min-width:80px;flex-shrink:0;}
-.lmsg{flex:1;color:var(--muted);word-break:break-word;}
-.lmsg strong{color:var(--text);font-weight:600;}
-.ltime{font-size:12px;color:var(--faint);flex-shrink:0;}
+    .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
-/* ── OAUTH MODAL ── */
-.oauth-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,18,20,0.85);display:flex;align-items:center;justify-content:center;z-index:10000;opacity:0;visibility:hidden;transition:opacity 0.2s,visibility 0.2s;padding:16px;}
-.oauth-modal.open{opacity:1;visibility:visible;}
-.oauth-card{background:var(--modal-bg);width:100%;max-width:420px;padding:32px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;text-align:center;transition:background 0.2s;}
-.oauth-logo{width:56px;height:56px;color:var(--blurple);margin-bottom:16px;}
-.oauth-h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;}
-.oauth-p{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.4;}
-.oauth-input{width:100%;background:var(--card-inner);border:1px solid var(--border);padding:10px;border-radius:4px;color:var(--text);font-family:inherit;font-size:14px;outline:none;margin-bottom:20px;text-align:center;}
-.oauth-input:focus{border-color:var(--blurple);}
-.oauth-submit{width:100%;background:var(--blurple);color:#fff;border:none;padding:12px;border-radius:4px;font-size:14px;font-weight:600;cursor:pointer;}
-.oauth-submit:hover{background:#4752c4;}
-.oauth-cancel{font-size:13px;color:var(--muted);margin-top:14px;cursor:pointer;background:none;border:none;font-family:inherit;}
-.oauth-cancel:hover{color:var(--text);text-decoration:underline;}
+    /* ── IMPORTANT BANNER (admin-pinned, shown at very top) ── */
+    .important-banner {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(242, 63, 67, 0.4);
+      display: none;
+      box-shadow: 0 0 0 3px rgba(242, 63, 67, 0.08);
+    }
+    .important-banner.visible {
+      display: block;
+      animation: bannerPop 0.3s ease;
+    }
+    @keyframes bannerPop {
+      0%   { opacity: 0; transform: translateY(-6px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .important-banner-header {
+      background: var(--red);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .important-banner-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .important-banner-dismiss {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .important-banner-dismiss:hover { background: rgba(255, 255, 255, 0.3); }
+    .important-banner-body {
+      background: var(--rdim);
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+      border-top: 1px solid rgba(242, 63, 67, 0.15);
+    }
 
-/* ── FOOTER ── */
-.footer{padding:16px 24px;border-top:1px solid var(--topbar-border);background:var(--footer-bg);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--faint);transition:background 0.2s;flex-shrink:0;}
+    /* ── BANNER ── */
+    .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid transparent; }
+    .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: var(--green); }
+    .banner.degraded { background: var(--ydim); border-color: rgba(240, 178, 50, 0.2); color: var(--yellow); }
+    .banner.outage { background: var(--rdim); border-color: rgba(242, 63, 67, 0.2); color: var(--red); }
 
-/* ── TOAST ── */
-.toast-container{position:fixed;bottom:20px;left:20px;display:flex;flex-direction:column;gap:10px;z-index:9999;}
-.toast{background:var(--sidebar);border-left:4px solid var(--blurple);color:var(--text);padding:12px 18px;border-radius:6px;box-shadow:0 4px 15px rgba(0,0,0,0.3);font-size:13px;font-weight:500;transform:translateX(-120%);transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275);}
-.toast.show{transform:translateX(0);}
-.toast.success{border-left-color:var(--green);}
-.toast.error{border-left-color:var(--red);}
+    /* ── GRID & CARDS ── */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .full-width { grid-column: span 2; }
 
-/* ── SKELETONS ── */
-.sk{background:linear-gradient(90deg,var(--card-inner) 25%,var(--border) 50%,var(--card-inner) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.sk-row{display:flex;align-items:center;padding:12px 14px;background:var(--card-inner);border-radius:8px;gap:12px;}
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 14px; position: relative; transition: background 0.2s; }
+    .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
+    .badge.up      { color: var(--green); }
+    .badge.down    { color: var(--red); }
+    .badge.paused  { color: var(--yellow); }
+    .badge.unknown { color: var(--faint); }
 
-/* ── MOBILE ── */
-@media(max-width:768px){
-  .sidebar{position:fixed;top:0;left:0;height:100%;z-index:200;transform:translateX(-100%);transition:transform 0.3s ease;width:260px;}
-  .sidebar.open{transform:translateX(0);}
-  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;}
-  .sidebar-overlay.visible{display:block;}
-  .mobile-menu-btn{display:flex;align-items:center;justify-content:center;}
-  .grid2{grid-template-columns:1fr;}
-  .full-width{grid-column:span 1;}
-  .bars{display:none;}
-  .mup{display:none;}
-  .content{padding:16px;}
-  .topbar{padding:0 16px;gap:8px;}
-  .tb-title{font-size:16px;}
-  .ping-pill{font-size:12px;padding:3px 8px;}
-  .theme-toggle{padding:3px 8px;}
-  .footer{padding:12px 16px;flex-direction:column;gap:4px;text-align:center;}
-  .force-row{flex-direction:column;align-items:flex-start;}
-  .form-row{flex-direction:column;}
-  .post-btn{margin-left:0;width:100%;}
-}
-@media(max-width:400px){
-  .tb-sub{display:none;}
-  .tb-div{display:none;}
-}
-</style>
+    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.2s, border-color 0.2s; border: 1px solid rgba(0,0,0,0.06); }
+    .mrow:hover { filter: brightness(0.97); }
+    
+    .sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sdot.up { background: var(--green); box-shadow: 0 0 8px rgba(35,165,90,0.4); }
+    .sdot.down { background: var(--red); box-shadow: 0 0 8px rgba(242,63,67,0.4); }
+    .sdot.paused { background: var(--yellow); box-shadow: 0 0 8px rgba(240,177,50,0.4); }
+    .sdot.unknown { background: var(--faint); }
+    
+    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
+    .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
+
+    .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
+    .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
+    .bar.up   { background: var(--green); }
+    .bar.down { background: var(--red); }
+    .bar.warn { background: var(--yellow); }
+
+    /* ── INCIDENT TIMELINE (Discord-style) ── */
+    .inc-group { display: flex; flex-direction: column; gap: 0; }
+    .inc-date-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--faint); padding: 14px 0 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .inc-date-header:first-child { border-top: none; padding-top: 0; }
+
+    .inc-item {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Timeline spine */
+    .inc-spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 32px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .inc-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+      z-index: 1;
+      position: relative;
+    }
+    .inc-dot.resolved   { background: var(--green); box-shadow: 0 0 6px rgba(35,165,90,0.4); }
+    .inc-dot.monitoring { background: var(--blurple); box-shadow: 0 0 6px rgba(88,101,242,0.4); }
+    .inc-dot.identified { background: var(--yellow); box-shadow: 0 0 6px rgba(240,178,50,0.4); }
+    .inc-dot.investigating { background: var(--red); box-shadow: 0 0 6px rgba(242,63,67,0.4); }
+    .inc-dot.info       { background: var(--faint); }
+
+    .inc-line {
+      width: 2px;
+      flex: 1;
+      background: var(--timeline-line);
+      min-height: 12px;
+    }
+
+    .inc-body-wrap {
+      flex: 1;
+      padding: 0 0 18px 10px;
+    }
+    .inc-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .inc-title {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      line-height: 1.3;
+    }
+    .inc-origin-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+      padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+    }
+    .inc-origin-badge.assistbot { background: rgba(88,101,242,0.15); color: var(--blurple); border: 1px solid rgba(88,101,242,0.25); }
+    .inc-origin-badge.discord   { background: var(--ydim); color: var(--yellow); border: 1px solid rgba(240,178,50,0.2); }
+
+    /* Individual updates within an incident */
+    .inc-updates { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+
+    .inc-update-item { display: flex; gap: 0; }
+    .inc-update-spine {
+      display: flex; flex-direction: column; align-items: center;
+      width: 20px; flex-shrink: 0;
+    }
+    .inc-update-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; z-index: 1;
+    }
+    .inc-update-dot.resolved    { background: var(--green); }
+    .inc-update-dot.monitoring  { background: var(--blurple); }
+    .inc-update-dot.identified  { background: var(--yellow); }
+    .inc-update-dot.investigating { background: var(--red); }
+    .inc-update-dot.info        { background: var(--faint); }
+    .inc-update-line { width: 1px; flex: 1; background: var(--timeline-line); min-height: 8px; }
+
+    .inc-update-content { flex: 1; padding: 0 0 12px 8px; }
+    .inc-status-label {
+      display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize;
+      margin-right: 4px;
+    }
+    .inc-status-label.resolved    { color: var(--green); }
+    .inc-status-label.monitoring  { color: var(--blurple); }
+    .inc-status-label.identified  { color: var(--yellow); }
+    .inc-status-label.investigating { color: var(--red); }
+    .inc-status-label.info        { color: var(--faint); }
+
+    .inc-update-body { font-size: 13px; color: var(--muted); line-height: 1.5; display: inline; }
+    .inc-update-time { font-size: 11px; color: var(--faint); margin-top: 3px; display: block; }
+
+    .del-inc-btn { background: transparent; border: none; color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: none; text-transform: uppercase; flex-shrink: 0; }
+    .del-inc-btn:hover { background: var(--rdim); }
+    .del-inc-btn.visible { display: block; }
+
+    /* ── FORCE STATUS ── */
+    .force-status-section { display: flex; flex-direction: column; gap: 10px; }
+    .force-status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+    .sec-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-bottom: -4px; }
+
+    .force-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+    .force-btns { display: flex; gap: 6px; }
+    .force-btn {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px;
+      border: 1px solid transparent; cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s, transform 0.1s; opacity: 0.45;
+      background: transparent;
+    }
+    .force-btn:hover { opacity: 0.75; }
+    .force-btn.active { opacity: 1; transform: scale(1.05); }
+    .force-btn.op  { color: var(--green); border-color: rgba(35,165,90,0.35); }
+    .force-btn.op.active  { background: var(--gdim); }
+    .force-btn.deg { color: var(--yellow); border-color: rgba(240,178,50,0.35); }
+    .force-btn.deg.active { background: var(--ydim); }
+    .force-btn.out { color: var(--red); border-color: rgba(242,63,67,0.35); }
+    .force-btn.out.active { background: var(--rdim); }
+    .force-btn.auto { color: var(--faint); border-color: var(--border); }
+    .force-btn.auto.active { background: rgba(128,128,128,0.1); opacity: 1; }
+
+    .no-incidents { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
+
+    /* ── INCIDENT EXPAND PANEL ── */
+    .inc-item-clickable .inc-title-row { cursor: default; }
+    .inc-action-btn {
+      background: rgba(88,101,242,0.12); border: 1px solid rgba(88,101,242,0.25);
+      color: var(--blurple); font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .inc-action-btn:hover { background: rgba(88,101,242,0.22); }
+
+    .inc-expand-panel {
+      margin-top: 10px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .inc-expand-tabs { display: flex; gap: 6px; }
+    .inc-tab {
+      font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
+    }
+    .inc-tab:hover { background: rgba(128,128,128,0.1); color: var(--text); }
+    .inc-tab.active { background: var(--blurple); color: #fff; border-color: var(--blurple); }
+    .inc-tab-content { display: flex; flex-direction: column; gap: 6px; }
+    .inc-expand-ta {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 10px;
+      resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s;
+    }
+    .inc-expand-ta:focus { border-color: var(--blurple); }
+    .inc-expand-ta::placeholder { color: var(--faint); }
+    .inc-cancel-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .inc-cancel-btn:hover { background: rgba(128,128,128,0.1); }
+
+    /* ── ADMIN PANEL ── */
+    #admin-panel { display: none; }
+    .update-form { display: flex; flex-direction: column; gap: 12px; }
+    .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s, background 0.2s; }
+    .update-form textarea:focus { border-color: var(--blurple); }
+    .update-form textarea::placeholder { color: var(--faint); }
+    
+    .form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .sel { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; min-width: 130px; transition: background 0.2s; }
+    
+    .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; }
+    .post-btn:hover { background: #4752c4; }
+    
+    .logout-btn { background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: background 0.15s, color 0.15s; text-transform: uppercase; }
+    .logout-btn:hover { background: var(--red); color: #fff; }
+
+    /* ── OAUTH MODAL ── */
+    .oauth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17,18,20,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+    .oauth-modal.open { opacity: 1; visibility: visible; }
+    .oauth-card { background: var(--modal-bg); width: 100%; max-width: 420px; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+    .oauth-logo { width: 56px; height: 56px; color: var(--blurple); margin-bottom: 16px; }
+    .oauth-h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .oauth-p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.4; }
+    .oauth-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 4px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.15s, background 0.2s; text-align: center; }
+    .oauth-input:focus { border-color: var(--blurple); }
+    .oauth-submit { width: 100%; background: var(--blurple); color: #fff; border: none; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .oauth-submit:hover { background: #4752c4; }
+    .oauth-cancel { font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; background: none; border: none; font-family: inherit; }
+    .oauth-cancel:hover { color: var(--text); text-decoration: underline; }
+
+    /* ── ACTIVITY LOG ── */
+    #activity-log-card { display: none; }
+    .log-container { display: flex; flex-direction: column; gap: 8px; }
+    .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
+    .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
+    .lmsg { flex: 1; color: var(--muted); }
+    .lmsg strong { color: var(--text); font-weight: 600; }
+    .ltime { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+    /* ── FOOTER ── */
+    .footer { padding: 18px 24px; border-top: 1px solid var(--topbar-border); background: var(--footer-bg); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; transition: background 0.2s; }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast { background: var(--sidebar); border-left: 4px solid var(--blurple); color: var(--text); padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transform: translateX(-120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+
+    /* ── SKELETONS ── */
+    .sk { background: linear-gradient(90deg, var(--card-inner) 25%, var(--border) 50%, var(--card-inner) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+    .sk-row { display: flex; align-items: center; padding: 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; }
+
+    #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 4px; display: none; }
+
+    @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
+  </style>
 </head>
 <body>
 <div class="layout">
-  <!-- Mobile overlay -->
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-  <div class="sidebar" id="sidebar">
+  <div class="sidebar">
     <div class="sb-content">
       <div class="sb-section">
         <div class="sb-label">Bot Services</div>
-        <div id="nav-items"><div class="nav-item"><div class="ndot unknown"></div>Loading…</div></div>
+        <div id="nav-items">
+          <div class="nav-item"><div class="ndot unknown"></div>Loading services…</div>
+        </div>
       </div>
       <div class="sb-section">
         <div class="sb-label">Discord Status</div>
-        <div id="discord-nav"><div class="nav-item"><div class="ndot unknown"></div>Loading…</div></div>
+        <div id="discord-nav">
+          <div class="nav-item"><div class="ndot unknown"></div>Loading status…</div>
+        </div>
       </div>
     </div>
+    
     <div class="invite-box">
       <div class="website-btn-wrapper">
-        <div class="website-disabled" onclick="handleDisabledClick('website')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'website')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           AssistBot Website
         </div>
         <div class="website-tooltip">⚠️ Website is under development and is very outdated</div>
       </div>
       <div class="website-btn-wrapper">
-        <div class="website-disabled" onclick="handleDisabledClick('dashboard')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
           AssistBot Dashboard
         </div>
         <div class="website-tooltip">⚠️ Dashboard is currently under development</div>
       </div>
+    </div>
+    <div class="invite-box" style="padding-bottom: 12px;">
       <a href="https://discord.com/oauth2/authorize?client_id=1044078182514565210" target="_blank" class="invite-btn">
-        <svg width="15" height="15" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
         Add Bot to Server
       </a>
     </div>
+
     <div class="sb-footer" id="sb-footer">
       <div class="av-wrapper">
-        <div class="av"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAQHCAUJBv/EADIQAAEEAQIEBAMHBQAAAAAAAAECAwQFAAYRBwgSIRMxQVEUQmEJIjJxgYKRFVJioaL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDGWMYwGMYwGMYwGMYwGd/h5pWz1vrWq0rUJBmWMgMpUofdbHmpavolIJP0GcDNbfZxaQRM1TqDW0loCTXMJhRVEeTjvdZH1CUgfvwLR0TyraX07HbaTHg2E1IHi2lqx8SSr18KNuGkD2Ky4fpnYk8qPC2wnOT7hNpOkuAdRQ63FbG39rbDaEj+MvWS+xFjuSZLzbDLSStxxxQSlCR5kk9gMiUd3TXsVUuktoNnHSroU7EkJdSFexKSe+BS8TlT4W1tg1Y0zdlClM79BccbltncbbKbfQtKh39s5+tOV3R+porjEivgVk4g+Fa0zPwpCvTxYxJbUPcoKSfYZfF5d01FFTLu7aDWR1K6Euy5CWklXsCojvkuM+xKjtyIzzbzLqQttxtQUlaT5EEdiMDyQ4n6Ns9Aa7tNJW5SuTXvdHiIBCXUEBSFjf0Ukg/rnzWbD+0h0ghqw03rmM1sZCV10tQHmpP32ifrsXB+0ZjzAZ6M8g1Qit5fYs0JAcs7CRJWffZQaH+m885s27yTcc9IQtDweG+pJbNLOgrcEOTIX0sSkrcUvYrPZCwVEbHsRtsd+2Bc/NRp/UWpeDthXaaaekSg8087GZ/G+0k7qQB6nfZW3r05VXJBo7WNHe3lvcVs+rqnoqWEtS2lNF94LBCglWx2SOob7fN+eXtr2yuNP1UrVtVc1SqyMwX5cazWUslCRuVNvIBUgkehSsE7bAHzpii50OG8pgf1el1BXP8AzJQ02+j9FBQJ/VIyiBzv6P1jd3tFb09ZPtapmKphTURpTpZeKySopTuQFDpG/wDj+WWtysaf1Fprg7X12pWno8ovOvNRnfxsNKVulBHod91benVle3POdwwisKNdV6isHvlT8O20k/mor3H8HLb4eXN1q+pg6vmWtVHpJLQfixa1wuhST6vPrCSSPVCUp2IIJPlij4fnnqUWnLpcvlO666RHloO2+xDgQf8Alw55s5uvnP466PGg7Th5p6ZHu7SyCWpTkdfWzEQlYUd1jspe6dukeXff2OFMgYxjAnC4thWrrBaTRBcIK43jq8JWx3G6d9j3yDjGAycm4t01gq02k5MAEqEYSFBoE+Z6d9sg4wGMYwP/2Q==" alt="AssistBot"></div>
+        <div class="av">
+          <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAQHCAUJBv/EADIQAAEEAQIEBAMHBQAAAAAAAAECAwQFAAYRBwgSIRMxQVEUQmEJIjJxgYKRFVJioaL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDGWMYwGMYwGMYwGMYwGd/h5pWz1vrWq0rUJBmWMgMpUofdbHmpavolIJP0GcDNbfZxaQRM1TqDW0loCTXMJhRVEeTjvdZH1CUgfvwLR0TyraX07HbaTHg2E1IHi2lqx8SSr18KNuGkD2Ky4fpnYk8qPC2wnOT7hNpOkuAdRQ63FbG39rbDaEj+MvWS+xFjuSZLzbDLSStxxxQSlCR5kk9gMiUd3TXsVUuktoNnHSroU7EkJdSFexKSe+BS8TlT4W1tg1Y0zdlClM79BccbltncbbKbfQtKh39s5+tOV3R+porjEivgVk4g+Fa0zPwpCvTxYxJbUPcoKSfYZfF5d01FFTLu7aDWR1K6Euy5CWklXsCojvkuM+xKjtyIzzbzLqQttxtQUlaT5EEdiMDyQ4n6Ns9Aa7tNJW5SuTXvdHiIBCXUEBSFjf0Ukg/rnzWbD+0h0ghqw03rmM1sZCV10tQHmpP32ifrsXB+0ZjzAZ6M8g1Qit5fYs0JAcs7CRJWffZQaH+m885s27yTcc9IQtDweG+pJbNLOgrcEOTIX0sSkrcUvYrPZCwVEbHsRtsd+2Bc/NRp/UWpeDthXaaaekSg8087GZ/G+0k7qQB6nfZW3r05VXJBo7WNHe3lvcVs+rqnoqWEtS2lNF94LBCglWx2SOob7fN+eXtr2yuNP1UrVtVc1SqyMwX5cazWUslCRuVNvIBUgkehSsE7bAHzpii50OG8pgf1el1BXP8AzJQ02+j9FBQJ/VIyiBzv6P1jd3tFb09ZPtapmKphTURpTpZeKySopTuQFDpG/wDj+WWtysaf1Fprg7X12pWno8ovOvNRnfxsNKVulBHod91benVle3POdwwisKNdV6isHvlT8O20k/mor3H8HLb4eXN1q+pg6vmWtVHpJLQfixa1wuhST6vPrCSSPVCUp2IIJPlij4fnnqUWnLpcvlO666RHloO2+xDgQf8Alw55s5uvnP466PGg7Th5p6ZHu7SyCWpTkdfWzEQlYUd1jspe6dukeXff2OFMgYxjAnC4thWrrBaTRBcIK43jq8JWx3G6d9j3yDjGAycm4t01gq02k5MAEqEYSFBoE+Z6d9sg4wGMYwP/2Q==" alt="AssistBot">
+        </div>
         <div class="status-dot"></div>
       </div>
       <div class="uinfo">
@@ -333,30 +621,33 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
 
   <div class="main">
     <div class="topbar">
-      <button class="mobile-menu-btn" onclick="openSidebar()" aria-label="Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
       <div class="tb-title">AssistBot</div>
       <div class="tb-div"></div>
-      <div class="tb-sub" id="tb-sub">Checking statuses…</div>
+      <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
       <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
-      <div class="theme-toggle" onclick="toggleTheme()">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <!-- Moon icon -->
         <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- Sun icon -->
         <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        <div class="toggle-track" id="toggle-track"><div class="toggle-thumb"></div></div>
+        <div class="toggle-track" id="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
       </div>
       <div class="ping-wrapper">
-        <div class="ping-pill">Ping: <span id="ping-val" style="color:var(--green);font-weight:600;">—</span>ms</div>
-        <div class="ping-tooltip">Real Discord bot latency</div>
+        <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
+        <div class="ping-tooltip">Updates every 60 seconds</div>
       </div>
       <div class="live-indicator"><span class="ldot"></span>Live</div>
     </div>
 
     <div class="content">
+
       <!-- Important pinned banner (admin can set) -->
       <div class="important-banner" id="important-banner">
         <div class="important-banner-header">
-          <div class="important-banner-title" id="important-banner-title">📌 Important Update</div>
+          <div class="important-banner-title">📌 Important Update</div>
           <button class="important-banner-dismiss" id="important-dismiss-btn" style="display:none;" onclick="dismissImportantBanner()">✕ Dismiss</button>
         </div>
         <div class="important-banner-body" id="important-banner-body"></div>
@@ -370,30 +661,34 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
       <div class="grid2">
         <div class="card">
           <div class="sec-title">Bot Services</div>
-          <div id="monitor-list" style="display:flex;flex-direction:column;gap:10px;">
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="flex:1;height:12px"></div><div class="sk" style="width:60px;height:12px"></div></div>
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="flex:1;height:12px"></div><div class="sk" style="width:60px;height:12px"></div></div>
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="flex:1;height:12px"></div><div class="sk" style="width:60px;height:12px"></div></div>
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="flex:1;height:12px"></div><div class="sk" style="width:60px;height:12px"></div></div>
+          <div id="monitor-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:120px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:100px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
           </div>
         </div>
+
         <div class="card">
           <div class="sec-title">Discord Status</div>
-          <div id="discord-list" style="display:flex;flex-direction:column;gap:10px;">
-            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="flex:1;height:12px"></div><div class="sk" style="width:60px;height:12px"></div></div>
+          <div id="discord-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:80px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
           </div>
         </div>
+
         <div class="card" id="admin-panel">
           <div class="sec-title">
             <span>Admin Controls</span>
             <button class="logout-btn" onclick="disableAdminUI()">Log Out</button>
           </div>
+
+          <!-- Force Status overrides -->
           <div class="force-status-section">
             <div class="force-status-label">Force Bot Service Status</div>
             <div id="force-status-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
-          <!-- Important Update Post -->
-          <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+          <!-- Post Important Banner -->
           <div class="sec-subtitle">Post Important Banner</div>
           <div class="update-form">
             <textarea id="important-text" placeholder="Post an important message shown at the top for all visitors…" style="min-height:60px;"></textarea>
@@ -402,7 +697,10 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
               <button class="post-btn" style="background:var(--faint);margin-left:8px;" onclick="clearImportantBanner()">Clear Banner</button>
             </div>
           </div>
-          <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+          <!-- Post Update -->
           <div class="sec-subtitle">Post Incident Update</div>
           <div class="update-form">
             <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
@@ -424,9 +722,10 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
             </div>
           </div>
         </div>
+
         <div class="card" id="incidents-card">
           <div class="sec-title">Incidents &amp; Updates</div>
-          <div id="incident-list" style="max-height:420px;overflow-y:auto;padding-right:4px;">
+          <div id="incident-list" style="max-height:420px; overflow-y:auto; padding-right: 4px;">
             <div class="sk-row"><div class="sk" style="width:180px;height:12px"></div></div>
           </div>
         </div>
@@ -435,9 +734,10 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
       <div class="card full-width" id="activity-log-card">
         <div class="sec-title">Activity Log</div>
         <div id="log-list" class="log-container">
-          <div class="sk-row"><div class="sk" style="width:80px;height:14px"></div><div class="sk" style="flex:1;height:12px"></div></div>
+          <div class="sk-row"><div class="sk" style="width:80px;height:14px"></div><div class="sk" style="width:200px;height:12px"></div></div>
         </div>
       </div>
+
     </div>
 
     <div class="footer">
@@ -446,331 +746,951 @@ body{font-family:'Noto Sans',sans-serif;color:var(--text);min-height:100vh;font-
   </div>
 </div>
 
-<!-- Admin Login Modal -->
 <div class="oauth-modal" id="oauth-modal">
   <div class="oauth-card">
     <svg class="oauth-logo" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
     <div class="oauth-h1">Admin Login</div>
     <div class="oauth-p">Enter the admin password to access the control panel.</div>
-    <input type="password" class="oauth-input" id="oauth-field" placeholder="Enter admin password"/>
+    <input type="password" class="oauth-input" id="oauth-field" placeholder="Enter admin password" autofocus />
     <button class="oauth-submit" onclick="submitOAuthHandshake()">Authorize Session</button>
     <button class="oauth-cancel" onclick="closeOAuthModal()">Cancel</button>
   </div>
 </div>
 
-<!-- Splash Screen -->
+<!-- Loading Splash — bouncing dots, theme-aware, only on first visit -->
 <div id="splash">
-  <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
+  <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
+    <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
+  </svg>
   <div class="splash-title">AssistBot Status</div>
-  <div class="splash-dots"><span></span><span></span><span></span></div>
-  <div class="splash-msg" id="splash-msg"></div>
-  <button class="splash-skip" id="splash-skip" onclick="hideSplash()" style="display:none;">Continue anyway →</button>
+  <div class="splash-dots">
+    <span></span><span></span><span></span>
+  </div>
 </div>
 <style>
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:99999;transition:opacity 0.4s ease;}
-[data-theme="dark"] #splash{background:#1e1f22;}
-[data-theme="light"] #splash{background:#e3e5e8;}
-.splash-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:700;}
-[data-theme="dark"] .splash-title{color:#f2f3f5;}
-[data-theme="light"] .splash-title{color:#060607;}
-.splash-dots{display:flex;gap:7px;align-items:center;}
-.splash-dots span{width:9px;height:9px;background:#5865f2;border-radius:50%;animation:splashDot 1.2s infinite;}
-.splash-dots span:nth-child(2){animation-delay:0.2s;}
-.splash-dots span:nth-child(3){animation-delay:0.4s;}
-@keyframes splashDot{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1.2)}}
-.splash-msg{font-family:'Noto Sans',sans-serif;font-size:13px;text-align:center;line-height:1.6;max-width:300px;padding:12px 16px;border-radius:8px;opacity:0;transition:opacity 0.4s ease;display:none;}
-.splash-msg.visible{opacity:1;display:block;}
-.splash-msg.warn{background:rgba(240,178,50,0.12);border:1px solid rgba(240,178,50,0.25);}
-[data-theme="dark"] .splash-msg.warn{color:#f0b232;}
-[data-theme="light"] .splash-msg.warn{color:#c87619;}
-.splash-msg.error{background:rgba(242,63,67,0.1);border:1px solid rgba(242,63,67,0.25);}
-[data-theme="dark"] .splash-msg.error{color:#f23f43;}
-[data-theme="light"] .splash-msg.error{color:#da373c;}
-.splash-skip{font-family:'Noto Sans',sans-serif;font-size:13px;font-weight:600;background:transparent;border:1px solid #5865f2;color:#5865f2;padding:7px 18px;border-radius:6px;cursor:pointer;}
+#splash {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  z-index: 99999; transition: opacity 0.4s ease;
+}
+[data-theme="dark"]  #splash { background: #1e1f22; }
+[data-theme="light"] #splash { background: #e3e5e8; }
+.splash-title {
+  font-family: 'Noto Sans', sans-serif; font-size: 20px; font-weight: 700;
+}
+[data-theme="dark"]  .splash-title { color: #f2f3f5; }
+[data-theme="light"] .splash-title { color: #060607; }
+.splash-dots { display: flex; gap: 7px; align-items: center; }
+.splash-dots span {
+  width: 9px; height: 9px; background: #5865f2; border-radius: 50%;
+  animation: splashDot 1.2s infinite;
+}
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes splashDot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
 </style>
 
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-// ── APPLY THEME INSTANTLY (before JS runs, so splash has right colors) ──
-(function(){
-  const t = localStorage.getItem('assistbot-theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
+const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
+const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
+const SUPABASE_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json'
+};
+
+const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
+const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
+const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
+const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
+const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
+
+let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
+let customUpdates = [];
+let isAdmin = false;
+let discordComponentsCache = null;
+let currentIncidentFeedCache = [];
+
+const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
+let forceStatus = {};
+
+// ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+async function loadForceStatus() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    forceStatus = {};
+    rows.forEach(r => {
+      const name = r.key.replace('force_', '');
+      forceStatus[name] = r.value;
+    });
+  } catch(e) { console.warn('Could not load force status:', e); }
+}
+
+async function saveForceStatus(name, value) {
+  const key = `force_${name}`;
+  try {
+    // DELETE then INSERT is the most reliable upsert for Supabase free tier
+    await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+      headers: SUPABASE_HEADERS
+    });
+    const ins = await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ key, value })
+    });
+    if (!ins.ok) {
+      const err = await ins.text();
+      throw new Error(err);
+    }
+  } catch(e) {
+    console.error('Could not save force status:', e);
+    showToast('Failed to save: ' + e.message, 'error');
+  }
+}
+
+// ── THEME ────────────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('assistbot-theme', theme);
+  const isDark = theme === 'dark';
+  // Show moon in light mode (click to go dark), sun in dark mode (click to go light)
+  document.getElementById('icon-moon').style.display = isDark ? 'none' : 'block';
+  document.getElementById('icon-sun').style.display  = isDark ? 'block' : 'none';
+  const track = document.getElementById('toggle-track');
+  if (isDark) track.classList.add('on'); else track.classList.remove('on');
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Init theme instantly so splash background matches before any JS runs
+(function() {
+  const saved = localStorage.getItem('assistbot-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
 })();
 
-// ── CONFIG ──
-const SUPABASE_URL   = 'https://yjqhythwpxziejetrpyy.supabase.co';
-const SUPABASE_KEY   = 'sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy';
-const SUPABASE_TABLE = `${SUPABASE_URL}/rest/v1/updates`;
-const SUPABASE_CONFIG= `${SUPABASE_URL}/rest/v1/config`;
-const SB = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
-const DISCORD_API  = 'https://discordstatus.com/api/v2/summary.json';
-const INCIDENT_API = 'https://discordstatus.com/api/v2/incidents.json';
-const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
-
-const DISCORD_IMPACT = [
-  {keywords:['api'],         affects:['Assistbot','Assistmusic','Dashboard','AssistServer']},
-  {keywords:['gateway'],     affects:['Assistbot','Assistmusic']},
-  {keywords:['voice'],       affects:['Assistmusic']},
-  {keywords:['media proxy'], affects:['Assistbot','Dashboard']},
-];
-
-let cache=null, lastFetch=0, countdown=60, timer=null;
-let logs=[], customUpdates=[], isAdmin=false;
-let discordComponentsCache=null, currentIncidentFeedCache=[];
-let forceStatus={}, expandedIncidentId=null;
-let serviceWarnings={};
-
-// ── THEME ──
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('assistbot-theme', t);
-  const dark = t==='dark';
-  document.getElementById('icon-moon').style.display = dark?'none':'block';
-  document.getElementById('icon-sun').style.display  = dark?'block':'none';
-  const track = document.getElementById('toggle-track');
-  dark ? track.classList.add('on') : track.classList.remove('on');
-}
-function toggleTheme(){
-  applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+// ── DISABLED BUTTON CLICK ────────────────────────────────────────────────────
+function handleDisabledClick(el, type) {
+  showToast(type === 'website' ? '⚠️ Website is under development and is very outdated.' : '⚠️ Dashboard is currently under development.', 'error');
 }
 
-// ── MOBILE SIDEBAR ──
-function openSidebar(){
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-}
-
-// ── SPLASH ──
-function hideSplash(){
-  if(window._splashTimers) window._splashTimers.forEach(clearTimeout);
-  const s = document.getElementById('splash');
-  if(s && s.style.display!=='none'){
-    s.style.opacity='0';
-    setTimeout(()=>{ s.style.display='none'; },400);
-  }
-}
-function showSplashMsg(text,type){
-  const el = document.getElementById('splash-msg');
-  if(!el) return;
-  el.className = `splash-msg ${type} visible`;
-  el.innerHTML = text;
-}
-window._splashTimers = [
-  setTimeout(()=>{ showSplashMsg('⏳ Still loading… fetching monitor data.','warn'); },3000),
-  setTimeout(()=>{ showSplashMsg('⚠️ Taking longer than usual.<br>Slow network or API warming up.','warn'); const sk=document.getElementById('splash-skip'); if(sk) sk.style.display='block'; },7000),
-  setTimeout(()=>{ showSplashMsg('🔴 Unable to reach the status API.<br><br>Possible causes:<br>• No network connection<br>• Vercel deployment error<br>• UptimeRobot API is down<br><br>Try refreshing the page.','error'); },14000),
-  setTimeout(hideSplash, 20000)
-];
-
-// ── TOAST ──
-function showToast(msg,type='info'){
-  const c=document.getElementById('toast-container');
-  if(!c) return;
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;
-  t.innerHTML=`<span>${msg}</span>`;
-  c.appendChild(t);
-  setTimeout(()=>t.classList.add('show'),50);
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); },4000);
-}
-
-// ── UTILS ──
-const sc  = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown';
-const sl  = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':s===0?'Paused':'Unknown';
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const now12=()=>new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-const dateStr=d=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-const timeStr=d=>new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
-
-function addLog(type,text){ logs.unshift({type,text,time:now12()}); if(logs.length>15) logs.pop(); renderLogs(); }
-function renderLogs(){
-  const el=document.getElementById('log-list'); if(!el||!logs.length) return;
-  el.innerHTML=logs.map(l=>`<div class="lrow"><div class="ltype">${l.type==='check'?'System':'Update'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
-}
-
-// ── BARS ── (90-day, each bar = 1 day like Discord)
-function bars(monitor, forced){
-  const count=90, status=monitor.status;
-  const mk=(cls)=>`<div class="bar ${cls}"></div>`;
-  if(forced==='out') return `<div class="bars">${Array(count).fill(mk('down')).join('')}</div>`;
-  if(forced==='deg') return `<div class="bars">${Array(count).fill(0).map((_,i)=>mk(i<60?'warn':'')).join('')}</div>`;
-  if(status===0)     return `<div class="bars">${Array(count).fill(0).map((_,i)=>mk(i<45?'warn':'')).join('')}</div>`;
-  if(status===8)     return `<div class="bars">${Array(count).fill(0).map((_,i)=>mk(i<70?'warn':'')).join('')}</div>`;
-  // Use log history if available
-  const logs2 = monitor.logs || [];
-  const nowSec = Math.floor(Date.now()/1000);
-  const buckets = Array(count).fill('up');
-  if(logs2.length>0){
-    logs2.forEach(log=>{
-      if(!log.datetime) return;
-      const daysAgo = Math.floor((nowSec - log.datetime)/86400);
-      if(daysAgo>=0 && daysAgo<count){
-        const idx = count-1-daysAgo;
-        if(log.type===1) buckets[idx]='down';
-        else if(log.type===98) buckets[idx]='warn';
-      }
+// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
+async function loadUpdates() {
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.asc&limit=100`, {
+      headers: SUPABASE_HEADERS
     });
-  } else {
-    const uptime = monitor._uptime||100;
-    const downDays = Math.round(((100-uptime)/100)*count);
-    for(let i=0;i<downDays;i++) buckets[Math.floor(i*(count/Math.max(downDays,1)))]='down';
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    customUpdates = rows.map(r => ({
+      id: r.id,
+      _custom: true,
+      title: r.title,
+      type: r.type,
+      body: r.body,
+      service: r.service,
+      date: r.date,
+      parent_id: r.parent_id || null,
+      created_at: r.created_at
+    }));
+  } catch(e) {
+    console.warn('Could not load updates from Supabase:', e);
+    customUpdates = [];
   }
-  return `<div class="bars">${buckets.map(b=>mk(b)).join('')}</div>`;
 }
 
-// ── SUPABASE HELPERS ──
-async function sbGet(url){ const r=await fetch(url,{headers:SB}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
-async function sbPost(url,body){ const r=await fetch(url,{method:'POST',headers:{...SB,'Prefer':'return=minimal'},body:JSON.stringify(body)}); if(!r.ok) throw new Error(await r.text()); }
-async function sbPatch(url,body){ const r=await fetch(url,{method:'PATCH',headers:{...SB,'Prefer':'return=minimal'},body:JSON.stringify(body)}); if(!r.ok) throw new Error(await r.text()); }
-async function sbDelete(url){ const r=await fetch(url,{method:'DELETE',headers:SB}); if(!r.ok) throw new Error(await r.text()); }
-
-// ── LOAD DATA ──
-async function loadUpdates(){
-  try{
-    const rows = await sbGet(`${SUPABASE_TABLE}?order=created_at.asc&limit=200`);
-    customUpdates = rows.map(r=>({...r,_custom:true}));
-  } catch(e){ console.warn('loadUpdates:',e); customUpdates=[]; }
+async function insertUpdate(update) {
+  try {
+    const res = await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        id: update.id,
+        title: update.title,
+        type: update.type,
+        body: update.body,
+        service: update.service,
+        date: update.date
+      })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+  } catch(e) {
+    console.error('Could not insert update:', e);
+    showToast('Failed to save: ' + e.message, 'error');
+    throw e;
+  }
 }
 
-async function loadForceStatus(){
-  try{
-    const rows = await sbGet(`${SUPABASE_CONFIG}?key=like.force_*`);
-    forceStatus={};
-    rows.forEach(r=>{ forceStatus[r.key.replace('force_','')] = r.value; });
-  } catch(e){ console.warn('loadForceStatus:',e); }
+async function deleteUpdate(id) {
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: SUPABASE_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) {
+    console.error('Could not delete update:', e);
+    showToast("Failed to delete update.", "error");
+    throw e;
+  }
 }
 
-async function loadImportantBanner(){
-  try{
-    const rows = await sbGet(`${SUPABASE_CONFIG}?key=eq.important_banner`);
-    if(rows.length && rows[0].value){
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// ── IMPORTANT BANNER ─────────────────────────────────────────────────────────
+async function loadImportantBanner() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (rows.length && rows[0].value) {
       showImportantBanner(rows[0].value);
     }
-  } catch(e){}
+  } catch(e) {}
 }
 
-async function saveForceStatus(name,value){
-  const key=`force_${name}`;
-  try{
-    await sbDelete(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`);
-    await sbPost(SUPABASE_CONFIG,{key,value});
-  } catch(e){ showToast('Failed to save: '+e.message,'error'); }
-}
-
-// ── IMPORTANT BANNER ──
-function showImportantBanner(text){
-  const b=document.getElementById('important-banner');
-  const body=document.getElementById('important-banner-body');
-  const btn=document.getElementById('important-dismiss-btn');
-  if(!b||!body) return;
-  body.textContent=text;
+function showImportantBanner(text) {
+  const b    = document.getElementById('important-banner');
+  const body = document.getElementById('important-banner-body');
+  const btn  = document.getElementById('important-dismiss-btn');
+  if (!b || !body) return;
+  body.textContent = text;
   b.classList.add('visible');
-  if(isAdmin && btn) btn.style.display='block';
+  if (isAdmin && btn) btn.style.display = 'block';
 }
 
-function dismissImportantBanner(){
-  const b=document.getElementById('important-banner');
-  if(b) b.classList.remove('visible');
+function dismissImportantBanner() {
+  const b = document.getElementById('important-banner');
+  if (b) b.classList.remove('visible');
 }
 
-async function postImportantBanner(){
-  if(!isAdmin) return;
-  const text=document.getElementById('important-text')?.value.trim();
-  if(!text){ showToast('Enter a message first.','error'); return; }
-  try{
-    await sbDelete(`${SUPABASE_CONFIG}?key=eq.important_banner`);
-    await sbPost(SUPABASE_CONFIG,{key:'important_banner',value:text});
+async function postImportantBanner() {
+  if (!isAdmin) return;
+  const text = document.getElementById('important-text')?.value.trim();
+  if (!text) { showToast('Enter a message first.', 'error'); return; }
+  try {
+    // Delete then insert (reliable upsert)
+    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
+    const res = await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ key: 'important_banner', value: text })
+    });
+    if (!res.ok) throw new Error(await res.text());
     showImportantBanner(text);
-    document.getElementById('important-text').value='';
-    showToast('Important banner pinned for all visitors!','success');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
+    document.getElementById('important-text').value = '';
+    showToast('Important banner pinned for all visitors!', 'success');
+  } catch(e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
-async function clearImportantBanner(){
-  if(!isAdmin) return;
-  try{
-    await sbDelete(`${SUPABASE_CONFIG}?key=eq.important_banner`);
+async function clearImportantBanner() {
+  if (!isAdmin) return;
+  try {
+    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
     dismissImportantBanner();
-    showToast('Banner cleared.','info');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
+    showToast('Banner cleared.', 'info');
+  } catch(e) { showToast('Failed.', 'error'); }
 }
 
-// ── ADMIN AUTH ──
-function checkAdminAuth(){
-  if(sessionStorage.getItem('assistbot-admin-token')) enableAdminUI(false);
-  else disableAdminUI(false);
+// ── ADMIN AUTH ───────────────────────────────────────────────────────────────
+function checkAdminAuth() {
+  if (sessionStorage.getItem('assistbot-admin-token')) {
+    enableAdminUI(false);
+  } else {
+    disableAdminUI(false);
+  }
 }
-function openOAuthModal(){
-  if(isAdmin) return;
-  document.getElementById('oauth-field').value='';
+
+function openOAuthModal() {
+  if (isAdmin) return;
+  document.getElementById('oauth-field').value = '';
   document.getElementById('oauth-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('oauth-field').focus(),100);
-}
-function closeOAuthModal(){ document.getElementById('oauth-modal').classList.remove('open'); }
-async function submitOAuthHandshake(){
-  const val=document.getElementById('oauth-field').value; if(!val) return;
-  const btn=document.querySelector('.oauth-submit'); btn.disabled=true; btn.textContent='Verifying…';
-  showToast('Verifying…','info');
-  try{
-    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:val})});
-    const data=await res.json();
-    if(res.ok && data.success){ sessionStorage.setItem('assistbot-admin-token',data.token); closeOAuthModal(); enableAdminUI(true); }
-    else{ showToast('Incorrect password.','error'); document.getElementById('oauth-field').value=''; }
-  } catch(e){ showToast('Could not reach auth server.','error'); }
-  finally{ btn.disabled=false; btn.textContent='Authorize Session'; }
-}
-function enableAdminUI(notify=true){
-  isAdmin=true;
-  clearInterval(timer);
-  document.getElementById('countdown').textContent='—';
-  document.getElementById('footer-text').innerHTML='Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
-  document.getElementById('admin-panel').style.display='flex';
-  document.getElementById('admin-indicator').style.display='block';
-  document.getElementById('activity-log-card').style.display='flex';
-  document.getElementById('incidents-card').classList.remove('full-width');
-  // Show dismiss button on banner if visible
-  const btn=document.getElementById('important-dismiss-btn');
-  if(btn) btn.style.display='block';
-  renderForceStatusRows(cache||null);
-  renderIncidents(currentIncidentFeedCache);
-  if(notify){ addLog('check','<strong>Admin access granted.</strong>'); showToast('Logged in! Admin mode active.','success'); }
-}
-function disableAdminUI(logEvent=true){
-  const was=isAdmin; isAdmin=false;
-  sessionStorage.removeItem('assistbot-admin-token');
-  document.getElementById('admin-panel').style.display='none';
-  document.getElementById('admin-indicator').style.display='none';
-  document.getElementById('activity-log-card').style.display='none';
-  document.getElementById('incidents-card').classList.add('full-width');
-  const btn=document.getElementById('important-dismiss-btn');
-  if(btn) btn.style.display='none';
-  renderIncidents(currentIncidentFeedCache);
-  if(cache) render(cache);
-  resetCountdown();
-  if(logEvent&&was){ addLog('check','Admin session ended.'); showToast('Logged out of Admin Mode.','info'); }
+  setTimeout(() => document.getElementById('oauth-field').focus(), 100);
 }
 
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeOAuthModal(); });
-document.getElementById('sb-footer').addEventListener('click',e=>{ if(e.ctrlKey&&e.shiftKey) openOAuthModal(); });
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('oauth-field').addEventListener('keydown',e=>{ if(e.key==='Enter') submitOAuthHandshake(); });
+function closeOAuthModal() {
+  document.getElementById('oauth-modal').classList.remove('open');
+}
+
+async function submitOAuthHandshake() {
+  const inputVal = document.getElementById('oauth-field').value;
+  if (!inputVal) return;
+
+  const btn = document.querySelector('.oauth-submit');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  showToast("Verifying credentials…", "info");
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: inputVal })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      sessionStorage.setItem('assistbot-admin-token', data.token);
+      closeOAuthModal();
+      enableAdminUI(true);
+    } else {
+      showToast("Incorrect password — access denied.", "error");
+      addLog('check', `<span style="color:var(--red);">Failed login attempt.</span>`);
+      document.getElementById('oauth-field').value = '';
+    }
+  } catch(e) {
+    showToast("Could not reach auth server.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Authorize Session';
+  }
+}
+
+function enableAdminUI(notify = true) {
+  isAdmin = true;
+  clearInterval(timer);
+  document.getElementById('countdown').textContent = '—';
+  document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
+  document.getElementById('admin-panel').style.display = 'flex';
+  document.getElementById('admin-indicator').style.display = 'block';
+  document.getElementById('activity-log-card').style.display = 'flex';
+  document.getElementById('incidents-card').classList.remove('full-width');
+  // Show dismiss button on important banner if it's visible
+  const dismissBtn = document.getElementById('important-dismiss-btn');
+  if (dismissBtn) dismissBtn.style.display = 'block';
+  renderIncidents(currentIncidentFeedCache);
+  renderForceStatusRows(cache || null);
+  if (notify) {
+    addLog('check', "<strong>Admin access granted.</strong>");
+    showToast("Logged in! Admin mode active.", "success");
+  }
+}
+
+function disableAdminUI(logEvent = true) {
+  const wasAdmin = isAdmin;
+  isAdmin = false;
+  sessionStorage.removeItem('assistbot-admin-token');
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-indicator').style.display = 'none';
+  document.getElementById('activity-log-card').style.display = 'none';
+  document.getElementById('incidents-card').classList.add('full-width');
+  // Hide dismiss button
+  const dismissBtn = document.getElementById('important-dismiss-btn');
+  if (dismissBtn) dismissBtn.style.display = 'none';
+  renderIncidents(currentIncidentFeedCache);
+  // Re-render bot services to strip any (forced) badges
+  if (cache) render(cache);
+  // Resume auto-refresh
+  resetCountdown();
+  if (logEvent && wasAdmin) {
+    addLog('check', "Admin session ended.");
+    showToast("Logged out of Admin Mode.", "info");
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeOAuthModal();
 });
 
-// ── FORCE STATUS ──
-function renderForceStatusRows(monitors){
-  const c=document.getElementById('force-status-rows'); if(!c) return;
-  const names=monitors?monitors.map(m=>m.friendly_name):SERVICE_NAMES;
-  c.innerHTML=names.map(name=>{
-    const cur=forceStatus[name]||'auto';
+document.getElementById('sb-footer').addEventListener('click', e => {
+  if (e.ctrlKey && e.shiftKey) openOAuthModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('oauth-field').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitOAuthHandshake();
+  });
+});
+
+// ── UTILITIES ────────────────────────────────────────────────────────────────
+const sc   = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown';
+const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':'Paused';
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
+
+// bars(monitor, forcedOverride) — uses response_times for accurate per-check bars
+function bars(monitor, forcedOverride) {
+  const count = 24;
+  const status = monitor.status;
+
+  // Forced overrides
+  if (forcedOverride === 'out') {
+    return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
+  }
+  if (forcedOverride === 'deg') {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+  // Paused — 50% yellow
+  if (status === 0) {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+  // Degraded (status 8) — mostly yellow with a few grey
+  if (status === 8) {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 18 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+
+  // Use response_times — each entry = one actual check result
+  const rt = monitor.response_times || [];
+  if (rt.length > 0) {
+    // response_times: value > 0 = up, value = 0 = down/timeout
+    const history = rt.slice(0, count).reverse(); // newest on right
+    const padded = Array(Math.max(0, count - history.length)).fill(null).concat(history);
+    return `<div class="bars">${padded.map(r => {
+      if (!r) return '<div class="bar"></div>';
+      return r.value > 0 ? '<div class="bar up"></div>' : '<div class="bar down"></div>';
+    }).join('')}</div>`;
+  }
+
+  // Final fallback: uptime ratio
+  const uptime = monitor._uptime || 100;
+  const filledCount = Math.max(1, Math.round((uptime / 100) * count));
+  return `<div class="bars">${Array(count).fill(0).map((_,i) =>
+    `<div class="bar ${i < filledCount ? 'up' : 'down'}"></div>`
+  ).join('')}</div>`;
+}
+
+function addLog(type, text) {
+  logs.unshift({type, text, time: now12()});
+  if (logs.length > 15) logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const el = document.getElementById('log-list');
+  if (!el || !logs.length) return;
+  el.innerHTML = logs.map(l => `<div class="lrow"><div class="ltype">${l.type==='check'?'System Check':'Update Log'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
+}
+
+// ── DISCORD STATUS ───────────────────────────────────────────────────────────
+async function fetchDiscordStatus() {
+  try {
+    const [s, i] = await Promise.all([fetch(DISCORD_API), fetch(INCIDENT_API)]);
+    const sum = await s.json(); const inc = await i.json();
+    currentIncidentFeedCache = inc.incidents || [];
+    discordComponentsCache = sum.components || [];
+    localStorage.setItem('discord-components-cache', JSON.stringify(discordComponentsCache));
+    renderDiscord(sum.components, currentIncidentFeedCache);
+  } catch(e) {
+    const savedComps = localStorage.getItem('discord-components-cache');
+    if (savedComps) {
+      discordComponentsCache = JSON.parse(savedComps);
+      renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    }
+  }
+}
+
+// Maps Discord component keywords → which AssistBot services may be affected
+const DISCORD_IMPACT_MAP = [
+  { keywords: ['api'],         affects: ['Assistbot','Assistmusic','Dashboard','AssistServer'] },
+  { keywords: ['gateway'],     affects: ['Assistbot','Assistmusic'] },
+  { keywords: ['voice'],       affects: ['Assistmusic'] },
+  { keywords: ['media proxy'], affects: ['Assistbot','Dashboard'] },
+];
+
+// Returns list of AssistBot service names impacted by a down Discord component
+function getImpactedServices(compName) {
+  const n = compName.toLowerCase();
+  for (const rule of DISCORD_IMPACT_MAP) {
+    if (rule.keywords.some(k => n.includes(k))) return rule.affects;
+  }
+  return [];
+}
+
+function renderDiscord(components, incidents) {
+  if (!components || !components.length) return;
+  const keys = ['API','Gateway','Media Proxy','Voice'];
+  const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
+
+  // Build a map: serviceName → [affected Discord component names that are down]
+  const serviceWarnings = {};
+  comps.forEach(c => {
+    const isDown = c.status !== 'operational';
+    if (isDown) {
+      getImpactedServices(c.name).forEach(svc => {
+        if (!serviceWarnings[svc]) serviceWarnings[svc] = [];
+        serviceWarnings[svc].push(c.name);
+      });
+    }
+  });
+
+  // Render Discord component rows (no dep warnings here — they show on Bot Services side)
+  document.getElementById('discord-list').innerHTML = comps.map(c => {
+    const s = c.status;
+    const dotClass = s==='operational'?'up':s==='major_outage'?'down':'paused';
+    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${s.replace(/_/g,' ')}</div></div>`;
+  }).join('');
+
+  document.getElementById('discord-nav').innerHTML = comps.slice(0,3).map(c => {
+    const dotClass = c.status==='operational'?'up':'down';
+    return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
+  }).join('');
+
+  // Store warnings globally so render() can use them
+  window._serviceWarnings = serviceWarnings;
+
+  // Re-render bot services with new warnings if we have cache
+  if (cache) render(cache);
+
+  renderIncidents(incidents);
+}
+
+// ── INCIDENTS (Discord-style timeline + click-to-update) ─────────────────────
+function statusDotClass(status) {
+  if (!status) return 'info';
+  const s = status.toLowerCase();
+  if (s.includes('resolv')) return 'resolved';
+  if (s.includes('monitor')) return 'monitoring';
+  if (s.includes('identif')) return 'identified';
+  if (s.includes('investig')) return 'investigating';
+  return 'info';
+}
+
+// Track which incident is expanded for editing
+let expandedIncidentId = null;
+
+function renderIncidents(incidents) {
+  const el = document.getElementById('incident-list');
+  const allItems = [];
+
+  // Group child updates under their parent
+  const parents = customUpdates.filter(u => !u.parent_id);
+  const children = customUpdates.filter(u => u.parent_id);
+
+  // Status priority: resolved always first, then monitoring, identified, investigating
+  function statusPriority(s) {
+    if (!s) return 99;
+    const sl = s.toLowerCase();
+    if (sl.includes('resolv'))   return 0;
+    if (sl.includes('monitor'))  return 1;
+    if (sl.includes('identif'))  return 2;
+    if (sl.includes('investig')) return 3;
+    return 4;
+  }
+
+  parents.forEach(u => {
+    const kids = children
+      .filter(c => String(c.parent_id) === String(u.id))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    // Combine all updates then sort: resolved first, then by status priority
+    const allUpdates = [...kids, u]
+      .map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }))
+      .sort((a, b) => statusPriority(a.status) - statusPriority(b.status));
+
+    allItems.push({
+      _isCustom: true,
+      id: u.id,
+      dateObj: new Date(u.created_at || Date.now()),
+      title: `[${u.service || 'All Services'}]`,
+      updates: allUpdates
+    });
+  });
+
+  (incidents || []).slice(0, 6).forEach(inc => {
+    allItems.push({
+      _isCustom: false,
+      id: inc.id,
+      dateObj: new Date(inc.created_at),
+      title: inc.name,
+      updates: (inc.incident_updates || []).slice()
+        .sort((a, b) => {
+          const sp = statusPriority(a.status) - statusPriority(b.status);
+          // If same priority, newer first
+          return sp !== 0 ? sp : new Date(b.created_at) - new Date(a.created_at);
+        })
+        .map(u => ({
+          status: u.status, body: u.body,
+          time: u.created_at ? timeStr(u.created_at) : ''
+        }))
+    });
+  });
+
+  if (!allItems.length) {
+    el.innerHTML = `<div class="no-incidents">No active incidents currently logged.</div>`;
+    return;
+  }
+
+  allItems.sort((a, b) => b.dateObj - a.dateObj);
+
+  const groups = {};
+  allItems.forEach(item => {
+    const key = dateStr(item.dateObj);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([dateLabel, items]) => {
+    html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
+
+    items.forEach(item => {
+      const topStatus = item.updates.length ? statusDotClass(item.updates[item.updates.length - 1].status) : 'info';
+      const originClass = item._isCustom ? 'assistbot' : 'discord';
+      const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
+      const isExpanded = expandedIncidentId === String(item.id);
+
+      const adminBtns = (isAdmin && item._isCustom) ? `
+        <button class="inc-action-btn" data-action="expand" data-id="${item.id}">✏️ Update</button>
+        <button class="del-inc-btn visible" data-id="${item.id}">Delete</button>` : '';
+
+      let updatesHtml = '';
+      item.updates.forEach((u, idx) => {
+        const uDotClass = statusDotClass(u.status);
+        const isLast = idx === item.updates.length - 1;
+        updatesHtml += `
+          <div class="inc-update-item">
+            <div class="inc-update-spine">
+              <div class="inc-update-dot ${uDotClass}"></div>
+              ${!isLast ? '<div class="inc-update-line"></div>' : ''}
+            </div>
+            <div class="inc-update-content">
+              <span class="inc-status-label ${uDotClass}">${esc(u.status || 'info')}</span>
+              <span class="inc-update-body">— ${esc(u.body)}</span>
+              ${u.time ? `<span class="inc-update-time">${esc(u.time)}</span>` : ''}
+            </div>
+          </div>`;
+      });
+
+      // Inline edit/add panel
+      const expandPanel = (isExpanded && isAdmin && item._isCustom) ? `
+        <div class="inc-expand-panel">
+          <div class="inc-expand-tabs">
+            <button class="inc-tab active" data-tab="add" data-id="${item.id}">➕ Add Update</button>
+            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Latest</button>
+          </div>
+          <div class="inc-tab-content" id="tab-add-${item.id}">
+            <select class="sel" id="chain-type-${item.id}" style="width:100%;margin-bottom:8px;">
+              <option value="investigating">🔍 Investigating</option>
+              <option value="identified">⚠️ Identified</option>
+              <option value="monitoring">👁 Monitoring</option>
+              <option value="resolved" selected>✅ Resolved</option>
+            </select>
+            <textarea class="inc-expand-ta" id="chain-body-${item.id}" placeholder="Describe what changed…"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="addChainUpdate(${item.id})">Post Update</button>
+            </div>
+          </div>
+          <div class="inc-tab-content" id="tab-edit-${item.id}" style="display:none;">
+            <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit the latest update message…">${esc(item.updates[item.updates.length-1]?.body || '')}</textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editLatestUpdate(${item.id}, ${item.updates[item.updates.length-1]?.id || 'null'})">Save Edit</button>
+            </div>
+          </div>
+        </div>` : '';
+
+      html += `
+        <div class="inc-item${isAdmin && item._isCustom ? ' inc-item-clickable' : ''}" data-id="${item.id}">
+          <div class="inc-spine">
+            <div class="inc-dot ${topStatus}"></div>
+            <div class="inc-line"></div>
+          </div>
+          <div class="inc-body-wrap">
+            <div class="inc-title-row">
+              <div class="inc-title">${esc(item.title)}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span class="inc-origin-badge ${originClass}">${originLabel}</span>
+                ${adminBtns}
+              </div>
+            </div>
+            <div class="inc-updates">${updatesHtml}</div>
+            ${expandPanel}
+          </div>
+        </div>`;
+    });
+  });
+
+  el.innerHTML = html;
+}
+
+document.getElementById('incident-list').addEventListener('click', function(e) {
+  // Delete
+  if (e.target.classList.contains('del-inc-btn')) {
+    deleteCustomUpdate(e.target.getAttribute('data-id'));
+    return;
+  }
+  // Expand/collapse update panel
+  if (e.target.classList.contains('inc-action-btn') && e.target.dataset.action === 'expand') {
+    const id = String(e.target.getAttribute('data-id'));
+    expandedIncidentId = expandedIncidentId === id ? null : id;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Cancel expand
+  if (e.target.classList.contains('inc-cancel-btn')) {
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Tab switching
+  if (e.target.classList.contains('inc-tab')) {
+    const id = e.target.dataset.id;
+    const tab = e.target.dataset.tab;
+    document.querySelectorAll(`.inc-tab`).forEach(t => { if (t.dataset.id === id) t.classList.remove('active'); });
+    e.target.classList.add('active');
+    document.getElementById(`tab-add-${id}`).style.display  = tab === 'add'  ? 'flex' : 'none';
+    document.getElementById(`tab-edit-${id}`).style.display = tab === 'edit' ? 'flex' : 'none';
+    return;
+  }
+});
+
+async function addChainUpdate(parentId) {
+  if (!isAdmin) return;
+  const type = document.getElementById(`chain-type-${parentId}`)?.value;
+  const body = document.getElementById(`chain-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const time = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const newId = Date.now();
+
+  const parent = customUpdates.find(u => String(u.id) === String(parentId));
+  const newUpdate = {
+    id: newId, _custom: true,
+    title: parent?.title || '',
+    type, body,
+    service: parent?.service || 'All Services',
+    date: time,
+    parent_id: Number(parentId),
+    created_at: new Date().toISOString()
+  };
+
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ id: newId, title: newUpdate.title, type, body, service: newUpdate.service, date: time, parent_id: Number(parentId) })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    customUpdates.push(newUpdate);
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Chained <strong>${type}</strong> onto incident #${parentId}`);
+    showToast('Update added to incident!', 'success');
+  } catch(e) { showToast('Failed to save.', 'error'); }
+}
+
+async function editLatestUpdate(parentId, updateId) {
+  if (!isAdmin) return;
+  const body = document.getElementById(`edit-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const targetId = updateId || parentId;
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
+      method: 'PATCH',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // Update in memory
+    const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
+    if (idx !== -1) customUpdates[idx].body = body;
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Edited update #${targetId}`);
+    showToast('Update edited!', 'success');
+  } catch(e) { showToast('Failed to save edit.', 'error'); }
+}
+
+async function postUpdate() {
+  if (!isAdmin) return;
+  const text = document.getElementById('update-text').value.trim();
+  if (!text) return;
+  const type    = document.getElementById('update-type').value;
+  const service = document.getElementById('update-service').value;
+  const time    = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+
+  const newUpdate = {
+    id: Date.now(),
+    _custom: true,
+    title: `[${service}]`,
+    type,
+    body: text,
+    service,
+    date: time,
+    created_at: new Date().toISOString()
+  };
+
+  showToast("Saving to database…", "info");
+  try {
+    await insertUpdate(newUpdate);
+    customUpdates.unshift(newUpdate);
+    document.getElementById('update-text').value = '';
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
+    showToast("Update saved — visible to all visitors!", "success");
+  } catch(e) { /* error toast already shown */ }
+}
+
+async function deleteCustomUpdate(id) {
+  if (!isAdmin) return;
+  showToast("Deleting from database…", "info");
+  try {
+    await deleteUpdate(Number(id));
+    customUpdates = customUpdates.filter(u => u.id !== Number(id));
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', 'Update entry removed.');
+    showToast("Update removed for all visitors.", "info");
+  } catch(e) { /* error toast already shown */ }
+}
+
+// ── MONITOR FETCH ─────────────────────────────────────────────────────────────
+async function fetchStatus(force = false) {
+  const now = Date.now();
+  if (!force && cache && (now - lastFetch) < 8000) {
+    render(cache);
+    if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    resetCountdown();
+    return;
+  }
+  
+  try {
+    // Single call through Vercel proxy — avoids CORS and rate limits
+    const res = await fetch('/api/monitors', { method: 'GET' });
+    const data = await res.json();
+    if (!data.monitors) throw new Error('No monitors in response');
+
+    // Map by friendly name to our order
+    const nameMap = {};
+    data.monitors.forEach(mon => { nameMap[mon.friendly_name] = mon; });
+
+    const m = SERVICE_NAMES.map(name => {
+      const mon = nameMap[name] || nameMap[Object.keys(nameMap).find(k => k.toLowerCase().includes(name.toLowerCase()))] || {};
+      return {
+        ...mon,
+        friendly_name: name,
+        _uptime: parseFloat(mon.all_time_uptime_ratio || mon.custom_uptime_ratio || 100)
+      };
+    });
+
+    // Real ping: average_response_time from Assistbot monitor (index 0)
+    const rawPing = m[0]?.average_response_time;
+    const pingVal = rawPing && rawPing > 0 ? Math.round(rawPing) : '—';
+    document.getElementById('ping-val').textContent = pingVal;
+    // Color ping based on latency
+    const pingEl = document.getElementById('ping-val');
+    pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+
+    cache = m; lastFetch = Date.now();
+    localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
+    render(m);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
+    if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+  } catch(err) {
+    const backup = localStorage.getItem('assistbot-cache-monitors');
+    if (backup || cache) {
+      const renderTarget = cache || JSON.parse(backup);
+      render(renderTarget);
+      if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+      addLog('check', 'Serving from cached data.');
+    }
+  }
+  resetCountdown();
+}
+
+function render(monitors) {
+  if (!monitors || !monitors.length) return;
+
+  // Hide splash on first successful data load
+  const splash = document.getElementById('splash');
+  if (splash && splash.style.display !== 'none') {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
+
+  // Apply forceStatus overrides
+  const effective = monitors.map(m => {
+    const override = forceStatus[m.friendly_name];
+    if (!override || override === 'auto') return m;
+    const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+    return { ...m, status: fakeStatus, _forced: override };
+  });
+
+  const allUp  = effective.every(m => m.status === 2);
+  const anyDown = effective.some(m => m.status === 9);
+  const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+
+  document.getElementById('banner').className = 'banner ' + state;
+  document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
+  document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+  document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+
+  document.getElementById('monitor-list').innerHTML = effective.map(m => {
+    const s  = sc(m.status);
+    // Use _uptime (all_time) if available, else fall back
+    const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+    const upStr = uptime.toFixed(2);
+
+    // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
+    // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
+    const isPaused = m.status === 0 || s === 'paused';
+    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg' || isPaused) ? 50 : uptime;
+
+    const warnings = window._serviceWarnings || {};
+    const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
+    const effectiveStatus = discordDown ? 'paused' : s;
+    const effectiveRatio  = discordDown ? 75 : displayRatio;
+
+    const warnText = (warnings[m.friendly_name] && !m._forced)
+      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+      : '';
+
+    const dotClass   = discordDown ? 'paused' : s;
+    const badgeClass = discordDown ? 'paused' : s;
+    const badgeText  = discordDown ? 'Degraded' : sl(m.status);
+
+    return `<div class="mrow">
+      <div class="sdot ${dotClass}"></div>
+      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
+      ${bars(m, m._forced)}
+      <div class="mup">${upStr}%</div>
+      <div class="badge ${badgeClass}">${badgeText}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('nav-items').innerHTML = effective.map(m => {
+    const s = sc(m.status);
+    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+  }).join('');
+}
+
+function renderForceStatusRows(monitors) {
+  const container = document.getElementById('force-status-rows');
+  if (!container) return;
+  const names = monitors ? monitors.map(m => m.friendly_name) : SERVICE_NAMES;
+  container.innerHTML = names.map(name => {
+    const cur = forceStatus[name] || 'auto';
     return `<div class="force-row">
       <div class="force-name">${esc(name)}</div>
       <div class="force-btns">
-        <button class="force-btn op ${cur==='op'?'active':''}" onclick="setForceStatus('${name}','op',this)">Operational</button>
+        <button class="force-btn op  ${cur==='op' ?'active':''}" onclick="setForceStatus('${name}','op',this)">Operational</button>
         <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
         <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
         <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
@@ -779,378 +1699,94 @@ function renderForceStatusRows(monitors){
   }).join('');
 }
 
-async function setForceStatus(name,value,btn){
-  forceStatus[name]=value;
-  btn.closest('.force-row').querySelectorAll('.force-btn').forEach(b=>b.classList.remove('active'));
+async function setForceStatus(name, value, btn) {
+  forceStatus[name] = value;
+
+  // Immediately update button states in the DOM — no full re-render needed
+  const row = btn.closest('.force-row');
+  row.querySelectorAll('.force-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if(cache) renderMonitorList(cache.map(m=>{
-    const ov=forceStatus[m.friendly_name];
-    if(!ov||ov==='auto') return m;
-    return{...m,status:ov==='op'?2:ov==='deg'?8:9,_forced:ov};
-  }));
-  await saveForceStatus(name,value);
-  showToast(`${name} → ${value==='auto'?'Auto':value==='op'?'Operational':value==='deg'?'Degraded':'Outage'}`,value==='op'?'success':value==='out'?'error':'info');
-}
 
-// ── DISCORD STATUS ──
-async function fetchDiscordStatus(){
-  try{
-    const [s,i]=await Promise.all([fetch(DISCORD_API),fetch(INCIDENT_API)]);
-    const sum=await s.json(); const inc=await i.json();
-    currentIncidentFeedCache=inc.incidents||[];
-    discordComponentsCache=sum.components||[];
-    localStorage.setItem('discord-components-cache',JSON.stringify(discordComponentsCache));
-    renderDiscord(sum.components,currentIncidentFeedCache);
-  } catch(e){
-    const saved=localStorage.getItem('discord-components-cache');
-    if(saved){ discordComponentsCache=JSON.parse(saved); renderDiscord(discordComponentsCache,currentIncidentFeedCache); }
-  }
-}
-
-function renderDiscord(components,incidents){
-  if(!components||!components.length) return;
-  const keys=['API','Gateway','Media Proxy','Voice'];
-  const comps=components.filter(c=>keys.some(k=>c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
-
-  // Build serviceWarnings map
-  serviceWarnings={};
-  comps.forEach(c=>{
-    if(c.status!=='operational'){
-      const n=c.name.toLowerCase();
-      DISCORD_IMPACT.forEach(rule=>{
-        if(rule.keywords.some(k=>n.includes(k))){
-          rule.affects.forEach(svc=>{
-            if(!serviceWarnings[svc]) serviceWarnings[svc]=[];
-            serviceWarnings[svc].push(c.name);
-          });
-        }
-      });
-    }
-  });
-
-  document.getElementById('discord-list').innerHTML=comps.map(c=>{
-    const s=c.status; const dot=s==='operational'?'up':s==='major_outage'?'down':'paused';
-    return `<div class="mrow"><div class="sdot ${dot}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dot}">${s.replace(/_/g,' ')}</div></div>`;
-  }).join('');
-
-  document.getElementById('discord-nav').innerHTML=comps.slice(0,3).map(c=>{
-    const dot=c.status==='operational'?'up':'down';
-    return `<div class="nav-item"><div class="ndot ${dot}"></div>${esc(c.name)}</div>`;
-  }).join('');
-
-  if(cache) render(cache);
-  renderIncidents(incidents);
-}
-
-// ── INCIDENTS ──
-function statusDotClass(status){
-  if(!status) return 'info';
-  const s=status.toLowerCase();
-  if(s.includes('resolv')) return 'resolved';
-  if(s.includes('monitor')) return 'monitoring';
-  if(s.includes('identif')) return 'identified';
-  if(s.includes('investig')) return 'investigating';
-  return 'info';
-}
-
-function renderIncidents(incidents){
-  const el=document.getElementById('incident-list');
-  const allItems=[];
-
-  // Custom — group children under parent, newest update on top
-  const parents=customUpdates.filter(u=>!u.parent_id);
-  const children=customUpdates.filter(u=>u.parent_id);
-  // Status priority: resolved first, then monitoring, identified, investigating, others
-  const statusPriority = s => {
-    if(!s) return 99;
-    const sl = s.toLowerCase();
-    if(sl.includes('resolv')) return 0;
-    if(sl.includes('monitor')) return 1;
-    if(sl.includes('identif')) return 2;
-    if(sl.includes('investig')) return 3;
-    return 4;
-  };
-  parents.forEach(u=>{
-    const kids=children.filter(c=>String(c.parent_id)===String(u.id)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-    // Combine all updates (kids + parent), then sort: resolved first, then by recency
-    const allUpdates=[...kids,u].map(x=>({status:x.type,body:x.body,time:x.date,id:x.id}))
-      .sort((a,b)=>statusPriority(a.status)-statusPriority(b.status));
-    allItems.push({_isCustom:true,id:u.id,dateObj:new Date(u.created_at||Date.now()),title:`[${u.service||'All Services'}]`,updates:allUpdates});
-  });
-
-  // Discord — resolved first, then by recency
-  (incidents||[]).slice(0,6).forEach(inc=>{
-    allItems.push({
-      _isCustom:false,id:inc.id,dateObj:new Date(inc.created_at),title:inc.name,
-      updates:(inc.incident_updates||[]).slice()
-        .sort((a,b)=>{ const sp=statusPriority(a.status)-statusPriority(b.status); return sp!==0?sp:new Date(b.created_at)-new Date(a.created_at); })
-        .map(u=>({status:u.status,body:u.body,time:u.created_at?timeStr(u.created_at):''}))
+  // Update the bot services display
+  if (cache) {
+    const effective = cache.map(m => {
+      const override = forceStatus[m.friendly_name];
+      if (!override || override === 'auto') return m;
+      const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+      return { ...m, status: fakeStatus, _forced: override };
     });
-  });
-
-  if(!allItems.length){ el.innerHTML=`<div class="no-incidents">No incidents currently logged.</div>`; return; }
-
-  allItems.sort((a,b)=>b.dateObj-a.dateObj);
-  const groups={};
-  allItems.forEach(item=>{ const k=dateStr(item.dateObj); if(!groups[k]) groups[k]=[]; groups[k].push(item); });
-
-  let html='';
-  Object.entries(groups).forEach(([label,items])=>{
-    html+=`<div class="inc-date-header">${esc(label)}</div>`;
-    items.forEach(item=>{
-      const topStatus=item.updates.length?statusDotClass(item.updates[0].status):'info';
-      const originClass=item._isCustom?'assistbot':'discord';
-      const originLabel=item._isCustom?'Assistbot':'Discord Official';
-      const isExpanded=expandedIncidentId===String(item.id);
-      const adminBtns=(isAdmin&&item._isCustom)?`
-        <button class="inc-action-btn" data-action="expand" data-id="${item.id}">✏️ Update</button>
-        <button class="del-inc-btn visible" data-id="${item.id}">Delete</button>`:'';
-
-      let updHtml='';
-      item.updates.forEach((u,idx)=>{
-        const dc=statusDotClass(u.status); const isLast=idx===item.updates.length-1;
-        updHtml+=`<div class="inc-update-item">
-          <div class="inc-update-spine"><div class="inc-update-dot ${dc}"></div>${!isLast?'<div class="inc-update-line"></div>':''}</div>
-          <div class="inc-update-content">
-            <span class="inc-status-label ${dc}">${esc(u.status||'info')}</span>
-            <span class="inc-update-body">— ${esc(u.body)}</span>
-            ${u.time?`<span class="inc-update-time">${esc(u.time)}</span>`:''}
-          </div>
-        </div>`;
-      });
-
-      const expandPanel=(isExpanded&&isAdmin&&item._isCustom)?`
-        <div class="inc-expand-panel">
-          <div class="inc-expand-tabs">
-            <button class="inc-tab active" data-tab="add" data-id="${item.id}">➕ Add Update</button>
-            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Latest</button>
-          </div>
-          <div class="inc-tab-content" id="tab-add-${item.id}">
-            <select class="sel" id="chain-type-${item.id}" style="width:100%">
-              <option value="investigating">🔍 Investigating</option>
-              <option value="identified">⚠️ Identified</option>
-              <option value="monitoring">👁 Monitoring</option>
-              <option value="resolved" selected>✅ Resolved</option>
-            </select>
-            <textarea class="inc-expand-ta" id="chain-body-${item.id}" placeholder="Describe what changed…"></textarea>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
-              <button class="post-btn" style="padding:6px 14px;font-size:13px;" onclick="addChainUpdate(${item.id})">Post</button>
-            </div>
-          </div>
-          <div class="inc-tab-content" id="tab-edit-${item.id}" style="display:none;">
-            <textarea class="inc-expand-ta" id="edit-body-${item.id}">${esc(item.updates[item.updates.length-1]?.body||'')}</textarea>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
-              <button class="post-btn" style="padding:6px 14px;font-size:13px;" onclick="editLatestUpdate(${item.id},${item.updates[item.updates.length-1]?.id||'null'})">Save</button>
-            </div>
-          </div>
-        </div>`:'';
-
-      html+=`<div class="inc-item" data-id="${item.id}">
-        <div class="inc-spine"><div class="inc-dot ${topStatus}"></div><div class="inc-line"></div></div>
-        <div class="inc-body-wrap">
-          <div class="inc-title-row">
-            <div class="inc-title">${esc(item.title)}</div>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span class="inc-origin-badge ${originClass}">${originLabel}</span>
-              ${adminBtns}
-            </div>
-          </div>
-          <div class="inc-updates">${updHtml}</div>
-          ${expandPanel}
-        </div>
+    const allUp  = effective.every(m => m.status === 2);
+    const anyDown = effective.some(m => m.status === 9);
+    const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+    document.getElementById('banner').className = 'banner ' + state;
+    document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
+    document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+    document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+    document.getElementById('monitor-list').innerHTML = effective.map(m => {
+      const s  = sc(m.status);
+      const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+      const upStr = uptime.toFixed(2);
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
+      const forcedBadge = m._forced
+        ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
+        : '';
+      const warnings = window._serviceWarnings || {};
+      const warnText = warnings[m.friendly_name] && !m._forced
+        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+        : '';
+      return `<div class="mrow">
+        <div class="sdot ${s}"></div>
+        <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
+        ${bars(m, m._forced)}
+        <div class="mup">${upStr}%</div>
+        <div class="badge ${s}">${sl(m.status)}</div>
       </div>`;
-    });
-  });
-  el.innerHTML=html;
-}
-
-document.getElementById('incident-list').addEventListener('click',function(e){
-  if(e.target.classList.contains('del-inc-btn')){ deleteCustomUpdate(e.target.getAttribute('data-id')); return; }
-  if(e.target.classList.contains('inc-action-btn')&&e.target.dataset.action==='expand'){
-    const id=String(e.target.getAttribute('data-id'));
-    expandedIncidentId=expandedIncidentId===id?null:id;
-    renderIncidents(currentIncidentFeedCache); return;
+    }).join('');
+    document.getElementById('nav-items').innerHTML = effective.map(m => {
+      const s = sc(m.status);
+      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+    }).join('');
   }
-  if(e.target.classList.contains('inc-cancel-btn')){ expandedIncidentId=null; renderIncidents(currentIncidentFeedCache); return; }
-  if(e.target.classList.contains('inc-tab')){
-    const id=e.target.dataset.id, tab=e.target.dataset.tab;
-    document.querySelectorAll('.inc-tab').forEach(t=>{ if(t.dataset.id===id) t.classList.remove('active'); });
-    e.target.classList.add('active');
-    const a=document.getElementById(`tab-add-${id}`), b=document.getElementById(`tab-edit-${id}`);
-    if(a) a.style.display=tab==='add'?'flex':'none';
-    if(b) b.style.display=tab==='edit'?'flex':'none';
-  }
-});
 
-async function postUpdate(){
-  if(!isAdmin) return;
-  const text=document.getElementById('update-text').value.trim(); if(!text) return;
-  const type=document.getElementById('update-type').value;
-  const service=document.getElementById('update-service').value;
-  const time=new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
-  const id=Date.now();
-  showToast('Saving…','info');
-  try{
-    await sbPost(SUPABASE_TABLE,{id,title:`[${service}]`,type,body:text,service,date:time});
-    customUpdates.push({id,_custom:true,title:`[${service}]`,type,body:text,service,date:time,created_at:new Date().toISOString()});
-    document.getElementById('update-text').value='';
-    renderIncidents(currentIncidentFeedCache);
-    addLog('update',`<strong>Incident saved</strong> for ${esc(service)}`);
-    showToast('Update saved — visible to all visitors!','success');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
+  await saveForceStatus(name, value);
+  addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
+  showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
 }
 
-async function addChainUpdate(parentId){
-  if(!isAdmin) return;
-  const type=document.getElementById(`chain-type-${parentId}`)?.value;
-  const body=document.getElementById(`chain-body-${parentId}`)?.value.trim();
-  if(!body){ showToast('Enter a message.','error'); return; }
-  const time=new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
-  const id=Date.now();
-  const parent=customUpdates.find(u=>String(u.id)===String(parentId));
-  showToast('Saving…','info');
-  try{
-    await sbPost(SUPABASE_TABLE,{id,title:parent?.title||'',type,body,service:parent?.service||'All Services',date:time,parent_id:Number(parentId)});
-    customUpdates.push({id,_custom:true,title:parent?.title||'',type,body,service:parent?.service||'All Services',date:time,parent_id:Number(parentId),created_at:new Date().toISOString()});
-    expandedIncidentId=null; renderIncidents(currentIncidentFeedCache);
-    showToast('Update chained!','success');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
-}
-
-async function editLatestUpdate(parentId,updateId){
-  if(!isAdmin) return;
-  const body=document.getElementById(`edit-body-${parentId}`)?.value.trim();
-  if(!body){ showToast('Enter a message.','error'); return; }
-  const targetId=updateId||parentId;
-  showToast('Saving…','info');
-  try{
-    await sbPatch(`${SUPABASE_TABLE}?id=eq.${targetId}`,{body});
-    const idx=customUpdates.findIndex(u=>String(u.id)===String(targetId));
-    if(idx!==-1) customUpdates[idx].body=body;
-    expandedIncidentId=null; renderIncidents(currentIncidentFeedCache);
-    showToast('Edit saved!','success');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
-}
-
-async function deleteCustomUpdate(id){
-  if(!isAdmin) return;
-  showToast('Deleting…','info');
-  try{
-    await sbDelete(`${SUPABASE_TABLE}?id=eq.${id}`);
-    customUpdates=customUpdates.filter(u=>String(u.id)!==String(id));
-    renderIncidents(currentIncidentFeedCache);
-    showToast('Update removed.','info');
-  } catch(e){ showToast('Failed: '+e.message,'error'); }
-}
-
-// ── RENDER MONITOR LIST ──
-function renderMonitorList(effective){
-  document.getElementById('monitor-list').innerHTML=effective.map(m=>{
-    const s=sc(m.status);
-    const uptime=m._uptime!==undefined?m._uptime:parseFloat(m.all_time_uptime_ratio||100);
-    const upStr=uptime.toFixed(2);
-    const warn=serviceWarnings[m.friendly_name]&&!m._forced;
-    const dotCls=warn?'paused':s;
-    const badgeCls=warn?'paused':s;
-    const badgeTxt=warn?'Degraded':sl(m.status);
-    const warnTxt=warn?`<span class="warn-inline">⚠ Discord ${esc(serviceWarnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`:'';
-    const forcedBadge=(m._forced&&isAdmin)?`<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`:'';
-    return `<div class="mrow">
-      <div class="sdot ${dotCls}"></div>
-      <div class="mname">${esc(m.friendly_name)}${forcedBadge}${warnTxt}</div>
-      ${bars(m,m._forced)}
-      <div class="mup">${upStr}%</div>
-      <div class="badge ${badgeCls}">${badgeTxt}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('nav-items').innerHTML=effective.map(m=>{
-    const s=sc(m.status);
-    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
-  }).join('');
-}
-
-// ── RENDER ──
-function render(monitors){
-  if(!monitors||!monitors.length) return;
-  hideSplash();
-  const effective=monitors.map(m=>{
-    const ov=forceStatus[m.friendly_name];
-    if(!ov||ov==='auto') return m;
-    return{...m,status:ov==='op'?2:ov==='deg'?8:9,_forced:ov};
-  });
-  const allUp=effective.every(m=>m.status===2), anyDown=effective.some(m=>m.status===9);
-  const state=allUp?'operational':anyDown?'outage':'degraded';
-  document.getElementById('banner').className='banner '+state;
-  document.getElementById('banner-label').textContent=allUp?'All Systems Operational':anyDown?'Service Outage Detected':'Degraded Processing Performance';
-  document.getElementById('banner-icon').textContent=allUp?'✅':anyDown?'🔴':'⚠️';
-  document.getElementById('tb-sub').textContent=allUp?'All Networks Operational':'System anomalies flagged';
-  renderMonitorList(effective);
-  if(isAdmin) renderForceStatusRows(monitors);
-}
-
-// ── FETCH ──
-async function fetchStatus(force=false){
-  const now=Date.now();
-  if(!force&&cache&&(now-lastFetch)<8000){ render(cache); if(discordComponentsCache) renderDiscord(discordComponentsCache,currentIncidentFeedCache); resetCountdown(); return; }
-  try{
-    const [res]=await Promise.all([
-      fetch('/api/monitors',{method:'GET'}),
-      fetch('/api/botping').then(r=>r.json()).then(d=>{
-        const pv=(d.ping!==null&&d.ping!==undefined)?Math.round(d.ping):'—';
-        const el=document.getElementById('ping-val');
-        if(el){ el.textContent=pv; el.style.color=pv==='—'?'var(--faint)':pv<100?'var(--green)':pv<300?'var(--yellow)':'var(--red)'; }
-      }).catch(()=>{ const el=document.getElementById('ping-val'); if(el) el.textContent='—'; })
-    ]);
-    const data=await res.json();
-    if(!data.monitors) throw new Error('No monitors');
-    const nameMap={};
-    data.monitors.forEach(mon=>{ nameMap[mon.friendly_name]=mon; });
-    const m=SERVICE_NAMES.map(name=>{
-      const mon=nameMap[name]||nameMap[Object.keys(nameMap).find(k=>k.toLowerCase().includes(name.toLowerCase()))]||{};
-      return{...mon,friendly_name:name,_uptime:parseFloat(mon.all_time_uptime_ratio||100)};
-    });
-    cache=m; lastFetch=Date.now();
-    localStorage.setItem('assistbot-cache-monitors',JSON.stringify(m));
-    render(m);
-    addLog('check',`Scanned <strong>${m.length} nodes</strong> successfully.`);
-    if(discordComponentsCache) renderDiscord(discordComponentsCache,currentIncidentFeedCache);
-  } catch(err){
-    console.error('fetchStatus:',err);
-    hideSplash();
-    const backup=localStorage.getItem('assistbot-cache-monitors');
-    if(backup||cache){ const rt=cache||JSON.parse(backup); render(rt); if(discordComponentsCache) renderDiscord(discordComponentsCache,currentIncidentFeedCache); addLog('check','Serving from cached data.'); }
-  }
-  resetCountdown();
-}
-
-function resetCountdown(){
+function resetCountdown() {
   clearInterval(timer);
-  if(isAdmin){ document.getElementById('footer-text').innerHTML='Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot'; return; }
-  countdown=60;
-  document.getElementById('footer-text').innerHTML=`Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot`;
-  timer=setInterval(()=>{
+  // Don't auto-refresh while admin is active — they may be mid-edit
+  if (isAdmin) {
+    document.getElementById('countdown').textContent = '—';
+    document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
+    return;
+  }
+  countdown = 60;
+  document.getElementById('countdown').textContent = countdown;
+  document.getElementById('footer-text').innerHTML = `Refreshes in <span id="countdown">${countdown}</span>s &nbsp;·&nbsp; Powered by AssistBot`;
+  timer = setInterval(() => {
     countdown--;
-    const el=document.getElementById('countdown'); if(el) el.textContent=countdown;
-    if(countdown<=0) fetchStatus(true);
-  },1000);
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = countdown;
+    if (countdown <= 0) fetchStatus(true);
+  }, 1000);
 }
 
-function handleDisabledClick(type){
-  showToast(type==='website'?'⚠️ Website is under development.':'⚠️ Dashboard is currently under development.','error');
-}
-
-// ── INIT ──
-async function init(){
-  applyTheme(localStorage.getItem('assistbot-theme')||'dark');
-  await Promise.all([loadUpdates(),loadForceStatus(),loadImportantBanner()]);
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Apply full theme (icons, toggle state) now that DOM is ready
+  applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
+  await Promise.all([loadUpdates(), loadForceStatus(), loadImportantBanner()]);
   checkAdminAuth();
   fetchStatus(true);
   fetchDiscordStatus();
-  setInterval(fetchDiscordStatus,300000);
-  setInterval(async()=>{ await loadUpdates(); renderIncidents(currentIncidentFeedCache); },60000);
+  setInterval(fetchDiscordStatus, 300000);
+  setInterval(async () => {
+    await loadUpdates();
+    renderIncidents(currentIncidentFeedCache);
+  }, 60000);
 }
+
 init();
 </script>
 </body>
