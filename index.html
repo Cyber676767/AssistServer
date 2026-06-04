@@ -242,13 +242,12 @@
 
     /* ── IMPORTANT BANNER ── */
     .important-banner {
-      border-radius: 10px; overflow: hidden;
-      border: 1px solid rgba(242, 63, 67, 0.4);
-      box-shadow: 0 0 0 3px rgba(242, 63, 67, 0.08);
       display: none;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(242, 63, 67, 0.4);
+      box-shadow: 0 2px 8px rgba(242, 63, 67, 0.12);
+      overflow: hidden;
+      flex-shrink: 0;
     }
     .important-banner.visible { display: block; animation: bannerPop 0.3s ease; }
     @keyframes bannerPop { 0% { opacity:0; transform:translateY(-6px); } 100% { opacity:1; transform:translateY(0); } }
@@ -525,7 +524,12 @@
     @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
     .sk-row { display: flex; align-items: center; padding: 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; }
 
-    #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+    #incidents-card { display:flex; flex-direction:column; }
+    /* In admin 2-col mode, match panel height and scroll inside */
+    #incidents-card:not(.full-width) { min-height: 300px; max-height: 600px; }
+    #incidents-card:not(.full-width) #incident-list { max-height: none; }
+    /* In full-width non-admin mode, natural height */
+    #incidents-card.full-width #incident-list { max-height: none; }
     .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 4px; display: none; }
 
     @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
@@ -610,16 +614,16 @@
       <div class="live-indicator"><span class="ldot"></span>Live</div>
     </div>
 
-    <div class="content">
-
-      <!-- Important pinned banner (admin can set) -->
-      <div class="important-banner" id="important-banner">
-        <div class="important-banner-header">
-          <div class="important-banner-title">📌 Important Update</div>
-          <button class="important-banner-dismiss" id="important-dismiss-btn" style="display:none;" onclick="dismissImportantBanner()">✕ Dismiss</button>
-        </div>
-        <div class="important-banner-body" id="important-banner-body"></div>
+    <!-- Important pinned banner — outside scroll container so it's always visible -->
+    <div class="important-banner" id="important-banner">
+      <div class="important-banner-header">
+        <div class="important-banner-title">📌 Important Update</div>
+        <button class="important-banner-dismiss" id="important-dismiss-btn" style="display:none;" onclick="dismissImportantBanner()">✕ Dismiss</button>
       </div>
+      <div class="important-banner-body" id="important-banner-body"></div>
+    </div>
+
+    <div class="content">
 
       <div id="banner" class="banner operational">
         <span id="banner-icon">✅</span>
@@ -691,9 +695,9 @@
           </div>
         </div>
 
-        <div class="card" id="incidents-card">
+        <div class="card" id="incidents-card" style="overflow:hidden;">
           <div class="sec-title">Incidents &amp; Updates</div>
-          <div id="incident-list" style="max-height:420px; overflow-y:auto; padding-right: 4px;">
+          <div id="incident-list" style="overflow-y:auto; padding-right: 4px; flex: 1;">
             <div class="sk-row"><div class="sk" style="width:180px;height:12px"></div></div>
           </div>
         </div>
@@ -760,24 +764,25 @@
   </div>
 </div>
 <script>
-// Show splash ONLY on force-reload (hard refresh clears sessionStorage)
-(function() {
-  const navType = (performance.getEntriesByType('navigation')[0] || {}).type;
-  const isReload = navType === 'reload';
-  const wasSoftReload = sessionStorage.getItem('assistbot-soft-reload') === '1';
-  const isHardReload = isReload && !wasSoftReload;
-  if (isHardReload) {
-    document.getElementById('splash').classList.add('visible');
-  }
-  // Mark as soft for the next navigation — hard reload clears sessionStorage so flag won't exist
-  if (isReload) sessionStorage.setItem('assistbot-soft-reload', '1');
-  else sessionStorage.removeItem('assistbot-soft-reload');
-})();
+// Always show splash on page load — hides only after network data arrives
+document.getElementById('splash').classList.add('visible');
 </script>
 
 <div class="toast-container" id="toast-container"></div>
 
 <script>
+// ── SPLASH ───────────────────────────────────────────────────────────────────
+let _splashHidden = false;
+function hideSplash() {
+  if (_splashHidden) return;
+  _splashHidden = true;
+  const s = document.getElementById('splash');
+  if (!s || !s.classList.contains('visible')) return;
+  s.style.opacity = '0';
+  s.style.pointerEvents = 'none';
+  setTimeout(() => { s.classList.remove('visible'); s.style.opacity = ''; s.style.pointerEvents = ''; }, 400);
+}
+
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
 const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
@@ -1398,7 +1403,8 @@ function renderIncidents(incidents) {
               ${item.updates.map((u,i) => `<option value="${u.id || item.id}" data-body="${esc(u.body || '')}" data-idx="${i}">${esc(u.status || 'info')} — ${esc((u.body||'').slice(0,40))}${(u.body||'').length>40?'…':''}</option>`).join('')}
             </select>
             <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit update message…">${esc(item.updates[0]?.body || '')}</textarea>
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;align-items:center;">
+              <button class="del-inc-btn visible" style="margin-right:auto;" onclick="deleteSelectedUpdate(${item.id})">🗑️ Delete Entry</button>
               <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
               <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editSelectedUpdate(${item.id})">Save Edit</button>
             </div>
@@ -1554,10 +1560,11 @@ async function pinIncidentAsBanner(incidentId) {
   if (!isAdmin) return;
   const parent = customUpdates.find(u => String(u.id) === String(incidentId) && !u.parent_id);
   if (!parent) { showToast('Could not find incident.', 'error'); return; }
-  // Get the chronologically most recent update (child or parent itself)
-  const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(incidentId));
-  const allUpdates = [...kids, parent].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  const latest = allUpdates[0]; // newest first
+  // Pin the latest child update. If no children, pin the parent itself.
+  const kids = customUpdates
+    .filter(u => u.parent_id && String(u.parent_id) === String(incidentId))
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  const latest = kids.length > 0 ? kids[0] : parent;
   const text = `[${parent.service || 'All Services'}] ${latest.type ? latest.type.charAt(0).toUpperCase()+latest.type.slice(1)+': ' : ''}${latest.body}`;
   try {
     await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
@@ -1601,6 +1608,24 @@ async function editSelectedUpdate(parentId) {
     addLog('update', `Edited update #${targetId}`);
     showToast('Update edited!', 'success');
   } catch(e) { showToast('Failed to save edit.', 'error'); }
+}
+
+async function deleteSelectedUpdate(parentId) {
+  if (!isAdmin) return;
+  const sel = document.getElementById(`edit-select-${parentId}`);
+  if (!sel) return;
+  const targetId = sel.value;
+  const label = sel.options[sel.selectedIndex]?.text || 'this entry';
+  if (!confirm(`Delete "${label}"?\nThis cannot be undone.`)) return;
+  showToast('Deleting entry…', 'info');
+  try {
+    await deleteUpdate(Number(targetId));
+    customUpdates = customUpdates.filter(u => String(u.id) !== String(targetId));
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Deleted update entry #${targetId}`);
+    showToast('Update entry deleted.', 'info');
+  } catch(e) { /* error shown by deleteUpdate */ }
 }
 
 async function deleteCustomUpdate(id) {
@@ -1655,9 +1680,11 @@ async function fetchStatus(force = false) {
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
+    hideSplash(); // hide splash after successful network fetch
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
+    hideSplash(); // hide splash even on error — show cached data
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
@@ -1671,14 +1698,6 @@ async function fetchStatus(force = false) {
 
 function render(monitors) {
   if (!monitors || !monitors.length) return;
-
-  // Hide splash the moment we have any data to show
-  const splash = document.getElementById('splash');
-  if (splash && splash.classList.contains('visible')) {
-    splash.style.opacity = '0';
-    splash.style.pointerEvents = 'none';
-    setTimeout(() => { splash.classList.remove('visible'); splash.style.opacity = ''; }, 400);
-  }
 
   // Apply forceStatus overrides
   const effective = monitors.map(m => {
