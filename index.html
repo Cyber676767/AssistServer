@@ -1562,6 +1562,14 @@ async function deleteCustomUpdate(id) {
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (splash && splash.style.display !== 'none') {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
+}
+
 async function fetchStatus(force = false) {
   const now = Date.now();
   if (!force && cache && (now - lastFetch) < 8000) {
@@ -1604,12 +1612,20 @@ async function fetchStatus(force = false) {
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
+    console.error('fetchStatus error:', err);
+    // Always hide splash even on failure — show whatever we have
+    hideSplash();
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
       render(renderTarget);
       if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
       addLog('check', 'Serving from cached data.');
+    } else {
+      // No cache at all — show services as unknown so page isn't blank
+      const fallback = SERVICE_NAMES.map(name => ({ friendly_name: name, status: 0, _uptime: 100 }));
+      render(fallback);
+      addLog('check', '<span style="color:var(--red);">Could not reach monitor API.</span>');
     }
   }
   resetCountdown();
@@ -1619,11 +1635,7 @@ function render(monitors) {
   if (!monitors || !monitors.length) return;
 
   // Hide splash on first successful data load
-  const splash = document.getElementById('splash');
-  if (splash && splash.style.display !== 'none') {
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; }, 400);
-  }
+  hideSplash();
 
   // Apply forceStatus overrides
   const effective = monitors.map(m => {
