@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -23,19 +23,23 @@ export default async function handler(req, res) {
       }).toString()
     });
 
-    const data = await response.json();
-
-    // Log the full response so you can debug in Vercel Function Logs
-    console.log('UptimeRobot response:', JSON.stringify(data).slice(0, 500));
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('UptimeRobot non-JSON response:', text.slice(0, 300));
+      return res.status(502).json({ error: 'UptimeRobot returned non-JSON', raw: text.slice(0, 300) });
+    }
 
     if (data.stat !== 'ok') {
-      console.error('UptimeRobot error:', data);
-      return res.status(502).json({ error: 'UptimeRobot returned an error', detail: data });
+      console.error('UptimeRobot stat fail:', JSON.stringify(data));
+      return res.status(502).json({ error: 'UptimeRobot error', detail: data });
     }
 
     res.status(200).json(data);
   } catch (err) {
-    console.error('monitors handler error:', err.message);
+    console.error('monitors handler threw:', err.message);
     res.status(500).json({ error: err.message });
   }
-}
+};
