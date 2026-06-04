@@ -61,7 +61,7 @@
       --input-border: #d4d7dc;
       --modal-bg: #ffffff;
       --footer-bg: #f2f3f5;
-      --sb-footer-hover: #dadee2;
+      --sb-footer-hover: #dadeе2;
       --topbar-border: rgba(0,0,0,0.08);
     }
 
@@ -88,7 +88,7 @@
 
     /* ── SIDEBAR ── */
     .sidebar { width: 240px; min-width: 240px; background: var(--sidebar); display: flex; flex-direction: column; position: relative; transition: background 0.2s; }
-    .sb-content { flex: 1; padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+    .sb-content { flex: 1; padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 20px; }
     
     .sb-section { display: flex; flex-direction: column; gap: 6px; }
     .sb-label { padding: 0 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
@@ -144,10 +144,12 @@
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
+      /* Allow wrapping so it doesn't go off screen */
       white-space: normal;
-      max-width: 210px;
+      max-width: 200px;
       text-align: center;
       width: max-content;
+      max-width: 210px;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.15s, visibility 0.15s;
@@ -170,8 +172,8 @@
     .invite-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--blurple); color: #fff; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.15s; box-shadow: 0 4px 12px rgba(88,101,242,0.15); }
     .invite-btn:hover { background: #4752c4; }
 
-    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); width: 100%; overflow: hidden; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
-    .sb-footer:hover { background: var(--sb-footer-hover); filter: brightness(1.05); }
+    .sb-footer { background: var(--panel-bg); padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: auto; border-top: 1px solid rgba(0,0,0,0.1); width: 100%; overflow: hidden; cursor: pointer; transition: background 0.15s; }
+    .sb-footer:hover { background: var(--sb-footer-hover); }
     .av-wrapper { position: relative; width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; }
     .av { width: 40px; height: 40px; border-radius: 50%; background: #36393f; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
     .av img { width: 100%; height: 100%; object-fit: cover; display: block; min-width: 100%; min-height: 100%; }
@@ -187,12 +189,8 @@
     .topbar { height: 64px; background: var(--main-bg); border-bottom: 1px solid var(--topbar-border); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; }
     .tb-title { font-size: 18px; font-weight: 700; color: var(--text); }
     .tb-div { width: 1px; height: 24px; background: rgba(128,128,128,0.2); margin: 0 4px; }
-    .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; display: none; flex-shrink: 0; }
-
-    /* mobile menu btn */
-    .mobile-menu-btn { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; flex-shrink: 0; }
-
+    .tb-sub { font-size: 14px; color: var(--muted); flex: 1; font-weight: 500; }
+    
     /* ── THEME TOGGLE ── */
     .theme-toggle {
       display: flex;
@@ -229,29 +227,20 @@
     .toggle-track.on .toggle-thumb { transform: translateX(12px); }
 
     .ping-wrapper { position: relative; display: inline-block; }
-    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(128,128,128,0.08); cursor: help; transition: background 0.15s; white-space: nowrap; }
+    .ping-pill { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 12px; border-radius: 6px; background: rgba(128,128,128,0.08); cursor: help; transition: background 0.15s; }
     .ping-pill:hover { background: rgba(128,128,128,0.15); color: var(--text); }
     
     .ping-tooltip { position: absolute; top: 100%; right: 0; margin-top: 8px; background: #111214; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; visibility: hidden; opacity: 0; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
     .ping-tooltip::before { content: ''; position: absolute; bottom: 100%; right: 16px; border: 5px solid transparent; border-bottom-color: #111214; }
     .ping-wrapper:hover .ping-tooltip { visibility: visible; opacity: 1; transform: translateY(0); }
     
-    .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .ldot { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
 
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
-    /* ── IMPORTANT BANNER (pinned, like Claude Status) ── */
-    .important-banner { border-radius: 10px; overflow: hidden; border: 1px solid rgba(242,63,67,0.3); display: none; }
-    .important-banner.visible { display: block; }
-    .important-banner-header { background: var(--red); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .important-banner-title { font-size: 14px; font-weight: 700; color: #fff; }
-    .important-banner-dismiss { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-    .important-banner-dismiss:hover { background: rgba(255,255,255,0.3); }
-    .important-banner-body { background: var(--rdim); padding: 12px 18px; font-size: 13px; color: var(--text); line-height: 1.5; }
-
-    /* ── STATUS BANNER ── */
+    /* ── BANNER ── */
     .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid transparent; }
     .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: var(--green); }
     .banner.degraded { background: var(--ydim); border-color: rgba(240, 178, 50, 0.2); color: var(--yellow); }
@@ -263,8 +252,7 @@
 
     .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 14px; position: relative; transition: background 0.2s; }
     .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
-    .sec-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
-
+    
     .badge { font-size: 12px; font-weight: 600; text-transform: capitalize; padding: 2px 0; white-space: nowrap; margin-left: 8px; }
     .badge.up      { color: var(--green); }
     .badge.down    { color: var(--red); }
@@ -280,569 +268,1372 @@
     .sdot.paused { background: var(--yellow); box-shadow: 0 0 8px rgba(240,177,50,0.4); }
     .sdot.unknown { background: var(--faint); }
     
-    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
-    .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; flex-shrink: 0; }
+    .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
 
-    .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; flex: 1; min-width: 0; }
-    .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); flex: 1; min-width: 2px; max-width: 8px; }
-    .bar.up { background: var(--green); }
+    .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
+    .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
+    .bar.up   { background: var(--green); }
     .bar.down { background: var(--red); }
     .bar.warn { background: var(--yellow); }
 
-    /* ── INCIDENT TIMELINE ── */
+    /* ── INCIDENT TIMELINE (Discord-style) ── */
     .inc-group { display: flex; flex-direction: column; gap: 0; }
-    .inc-date-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); padding: 14px 0 8px; border-top: 1px solid var(--border); margin-top: 4px; }
+    .inc-date-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--faint); padding: 14px 0 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
     .inc-date-header:first-child { border-top: none; padding-top: 0; }
-    
-    .inc-item { display: flex; gap: 0; position: relative; }
-    .inc-spine { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; position: relative; }
-    .inc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; z-index: 1; position: relative; }
-    .inc-dot.resolved { background: var(--green); box-shadow: 0 0 6px rgba(35,165,90,0.4); }
+
+    .inc-item {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Timeline spine */
+    .inc-spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 32px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .inc-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+      z-index: 1;
+      position: relative;
+    }
+    .inc-dot.resolved   { background: var(--green); box-shadow: 0 0 6px rgba(35,165,90,0.4); }
     .inc-dot.monitoring { background: var(--blurple); box-shadow: 0 0 6px rgba(88,101,242,0.4); }
     .inc-dot.identified { background: var(--yellow); box-shadow: 0 0 6px rgba(240,178,50,0.4); }
     .inc-dot.investigating { background: var(--red); box-shadow: 0 0 6px rgba(242,63,67,0.4); }
-    .inc-dot.info { background: var(--faint); }
-    .inc-line { width: 2px; flex: 1; background: var(--timeline-line); min-height: 24px; }
-    .inc-item:last-child .inc-line { display: none; }
+    .inc-dot.info       { background: var(--faint); }
 
-    .inc-main { flex: 1; padding-bottom: 20px; padding-left: 4px; }
-    .inc-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-    .inc-title { font-weight: 700; font-size: 14px; color: var(--text); }
-    .inc-time { font-size: 12px; color: var(--faint); font-weight: 500; }
-    .inc-body { font-size: 13.5px; color: var(--muted); line-height: 1.5; white-space: pre-wrap; }
-    .inc-empty { text-align: center; color: var(--faint); padding: 24px; font-weight: 500; }
+    .inc-line {
+      width: 2px;
+      flex: 1;
+      background: var(--timeline-line);
+      min-height: 12px;
+    }
 
-    /* ── TOASTS & UTILITIES ── */
-    #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 10000; }
-    .toast { padding: 12px 18px; border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; transform: translateY(20px); opacity: 0; transition: transform 0.2s, opacity 0.2s; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: var(--green); }
-    .toast.error { background: var(--red); }
-    .toast.info { background: var(--blurple); }
+    .inc-body-wrap {
+      flex: 1;
+      padding: 0 0 18px 10px;
+    }
+    .inc-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .inc-title {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      line-height: 1.3;
+    }
+    .inc-origin-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+      padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+    }
+    .inc-origin-badge.assistbot { background: rgba(88,101,242,0.15); color: var(--blurple); border: 1px solid rgba(88,101,242,0.25); }
+    .inc-origin-badge.discord   { background: var(--ydim); color: var(--yellow); border: 1px solid rgba(240,178,50,0.2); }
 
-    /* Splash / Loading overlay */
-    #splash { position: fixed; inset: 0; background: var(--main-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.25s, visibility 0.25s; }
-    .spinner { width: 32px; height: 32px; border: 3px solid rgba(128,128,128,0.2); border-top-color: var(--blurple); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #splash p { color: var(--muted); font-size: 13px; font-weight: 500; }
+    /* Individual updates within an incident */
+    .inc-updates { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+
+    .inc-update-item { display: flex; gap: 0; }
+    .inc-update-spine {
+      display: flex; flex-direction: column; align-items: center;
+      width: 20px; flex-shrink: 0;
+    }
+    .inc-update-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; z-index: 1;
+    }
+    .inc-update-dot.resolved    { background: var(--green); }
+    .inc-update-dot.monitoring  { background: var(--blurple); }
+    .inc-update-dot.identified  { background: var(--yellow); }
+    .inc-update-dot.investigating { background: var(--red); }
+    .inc-update-dot.info        { background: var(--faint); }
+    .inc-update-line { width: 1px; flex: 1; background: var(--timeline-line); min-height: 8px; }
+
+    .inc-update-content { flex: 1; padding: 0 0 12px 8px; }
+    .inc-status-label {
+      display: inline-block; font-size: 11px; font-weight: 700; text-transform: capitalize;
+      margin-right: 4px;
+    }
+    .inc-status-label.resolved    { color: var(--green); }
+    .inc-status-label.monitoring  { color: var(--blurple); }
+    .inc-status-label.identified  { color: var(--yellow); }
+    .inc-status-label.investigating { color: var(--red); }
+    .inc-status-label.info        { color: var(--faint); }
+
+    .inc-update-body { font-size: 13px; color: var(--muted); line-height: 1.5; display: inline; }
+    .inc-update-time { font-size: 11px; color: var(--faint); margin-top: 3px; display: block; }
+
+    .del-inc-btn { background: transparent; border: none; color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 4px; display: none; text-transform: uppercase; flex-shrink: 0; }
+    .del-inc-btn:hover { background: var(--rdim); }
+    .del-inc-btn.visible { display: block; }
+
+    /* ── FORCE STATUS ── */
+    .force-status-section { display: flex; flex-direction: column; gap: 10px; }
+    .force-status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+    .sec-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-bottom: -4px; }
+
+    .force-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+    .force-btns { display: flex; gap: 6px; }
+    .force-btn {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px;
+      border: 1px solid transparent; cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s, transform 0.1s; opacity: 0.45;
+      background: transparent;
+    }
+    .force-btn:hover { opacity: 0.75; }
+    .force-btn.active { opacity: 1; transform: scale(1.05); }
+    .force-btn.op  { color: var(--green); border-color: rgba(35,165,90,0.35); }
+    .force-btn.op.active  { background: var(--gdim); }
+    .force-btn.deg { color: var(--yellow); border-color: rgba(240,178,50,0.35); }
+    .force-btn.deg.active { background: var(--ydim); }
+    .force-btn.out { color: var(--red); border-color: rgba(242,63,67,0.35); }
+    .force-btn.out.active { background: var(--rdim); }
+    .force-btn.auto { color: var(--faint); border-color: var(--border); }
+    .force-btn.auto.active { background: rgba(128,128,128,0.1); opacity: 1; }
+
+    .no-incidents { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
+
+    /* ── INCIDENT EXPAND PANEL ── */
+    .inc-item-clickable .inc-title-row { cursor: default; }
+    .inc-action-btn {
+      background: rgba(88,101,242,0.12); border: 1px solid rgba(88,101,242,0.25);
+      color: var(--blurple); font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .inc-action-btn:hover { background: rgba(88,101,242,0.22); }
+
+    .inc-expand-panel {
+      margin-top: 10px; background: var(--card-inner); border-radius: 8px;
+      border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .inc-expand-tabs { display: flex; gap: 6px; }
+    .inc-tab {
+      font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
+    }
+    .inc-tab:hover { background: rgba(128,128,128,0.1); color: var(--text); }
+    .inc-tab.active { background: var(--blurple); color: #fff; border-color: var(--blurple); }
+    .inc-tab-content { display: flex; flex-direction: column; gap: 6px; }
+    .inc-expand-ta {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 10px;
+      resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s;
+    }
+    .inc-expand-ta:focus { border-color: var(--blurple); }
+    .inc-expand-ta::placeholder { color: var(--faint); }
+    .inc-cancel-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .inc-cancel-btn:hover { background: rgba(128,128,128,0.1); }
+
+    /* ── ADMIN PANEL ── */
+    #admin-panel { display: none; }
+    .update-form { display: flex; flex-direction: column; gap: 12px; }
+    .update-form textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; padding: 14px; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s, background 0.2s; }
+    .update-form textarea:focus { border-color: var(--blurple); }
+    .update-form textarea::placeholder { color: var(--faint); }
+    
+    .form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .sel { background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; min-width: 130px; transition: background 0.2s; }
+    
+    .post-btn { background: var(--blurple); border: none; border-radius: 6px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 24px; cursor: pointer; transition: background 0.15s; margin-left: auto; }
+    .post-btn:hover { background: #4752c4; }
+    
+    .logout-btn { background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: background 0.15s, color 0.15s; text-transform: uppercase; }
+    .logout-btn:hover { background: var(--red); color: #fff; }
+
+    /* ── OAUTH MODAL ── */
+    .oauth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17,18,20,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+    .oauth-modal.open { opacity: 1; visibility: visible; }
+    .oauth-card { background: var(--modal-bg); width: 100%; max-width: 420px; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+    .oauth-logo { width: 56px; height: 56px; color: var(--blurple); margin-bottom: 16px; }
+    .oauth-h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .oauth-p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.4; }
+    .oauth-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 4px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.15s, background 0.2s; text-align: center; }
+    .oauth-input:focus { border-color: var(--blurple); }
+    .oauth-submit { width: 100%; background: var(--blurple); color: #fff; border: none; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .oauth-submit:hover { background: #4752c4; }
+    .oauth-cancel { font-size: 13px; color: var(--muted); margin-top: 14px; cursor: pointer; background: none; border: none; font-family: inherit; }
+    .oauth-cancel:hover { color: var(--text); text-decoration: underline; }
+
+    /* ── ACTIVITY LOG ── */
+    #activity-log-card { display: none; }
+    .log-container { display: flex; flex-direction: column; gap: 8px; }
+    .lrow { display: flex; align-items: center; padding: 12px 16px; background: var(--card-inner); border-radius: 8px; gap: 14px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); }
+    .ltype { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 90px; }
+    .lmsg { flex: 1; color: var(--muted); }
+    .lmsg strong { color: var(--text); font-weight: 600; }
+    .ltime { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+    /* ── FOOTER ── */
+    .footer { padding: 18px 24px; border-top: 1px solid var(--topbar-border); background: var(--footer-bg); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); margin-top: auto; transition: background 0.2s; }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast { background: var(--sidebar); border-left: 4px solid var(--blurple); color: var(--text); padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transform: translateX(-120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+
+    /* ── SKELETONS ── */
+    .sk { background: linear-gradient(90deg, var(--card-inner) 25%, var(--border) 50%, var(--card-inner) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+    .sk-row { display: flex; align-items: center; padding: 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; }
+
+    #countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+    .admin-indicator { font-size: 11px; background: var(--rdim); color: var(--red); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 4px; display: none; }
+
+    @media(max-width:900px){ .sidebar { display:none } .grid2 { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } .bars { display:none; } }
   </style>
 </head>
 <body>
+<div class="layout">
 
-  <div id="splash">
-    <div class="spinner"></div>
-    <p>Loading status details...</p>
-  </div>
-
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="sb-content">
-        <div class="sb-section">
-          <div class="sb-label">Infrastructure</div>
-          <div class="nav-item active">
-            <div class="ndot up" id="nav-dot-overall"></div>
-            <span>Overview</span>
-          </div>
-        </div>
-
-        <div class="sb-section">
-          <div class="sb-label">Links</div>
-          
-          <div class="website-btn-wrapper">
-            <button class="website-disabled" onclick="handleDisabledClick('website')">
-              <span>Main Website</span>
-            </button>
-            <div class="website-tooltip">The community landing page and resource hub are under construction.</div>
-          </div>
-
-          <div class="website-btn-wrapper">
-            <button class="website-disabled" onclick="handleDisabledClick('dashboard')">
-              <span>User Dashboard</span>
-            </button>
-            <div class="website-tooltip">The administrative dashboard access control portal is currently under active development.</div>
-          </div>
+  <div class="sidebar">
+    <div class="sb-content">
+      <div class="sb-section">
+        <div class="sb-label">Bot Services</div>
+        <div id="nav-items">
+          <div class="nav-item"><div class="ndot unknown"></div>Loading services…</div>
         </div>
       </div>
-
-      <div class="invite-box">
-        <a href="https://discord.gg/your-valid-invite-here" target="_blank" class="invite-btn">
-          <span>Join Support Discord</span>
-        </a>
-      </div>
-
-      <div class="sb-footer" onclick="triggerAdminLogin()">
-        <div class="av-wrapper">
-          <div class="av">
-            <img src="https://cdn.discordapp.com/embed/avatars/0.png" id="bot-avatar" alt="AssistBot Profile Avatar">
-          </div>
-          <div class="status-dot" id="bot-status-dot"></div>
-        </div>
-        <div class="uinfo">
-          <div class="uname" id="bot-username">AssistBot</div>
-          <div class="ustatus" id="bot-presence">Connecting...</div>
+      <div class="sb-section">
+        <div class="sb-label">Discord Status</div>
+        <div id="discord-nav">
+          <div class="nav-item"><div class="ndot unknown"></div>Loading status…</div>
         </div>
       </div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
-        <h1 class="tb-title">System Metrics</h1>
-        <div class="tb-div"></div>
-        <div class="tb-sub" id="tb-sub-text">Status Portal</div>
-        <div class="admin-indicator" id="admin-badge">ADMIN MODE</div>
-
-        <div class="live-indicator">
-          <span class="ldot"></span>
-          <span>Live</span>
-        </div>
-
-        <div class="ping-wrapper">
-          <div class="ping-pill" id="ping-value">API Ping: -- ms</div>
-          <div class="ping-tooltip">Real-time WebSocket transport communication handshake latency overhead backplane.</div>
-        </div>
-
-        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Visual Interface View Mode">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-          <div class="toggle-track" id="theme-track">
-            <div class="toggle-thumb"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="content">
-        <div class="important-banner" id="important-banner">
-          <div class="important-banner-header">
-            <div class="important-banner-title" id="important-banner-title">Critical System Notice</div>
-            <button class="important-banner-dismiss" onclick="dismissImportantBanner()">Dismiss</button>
-          </div>
-          <div class="important-banner-body" id="important-banner-body">
-            Loading critical notifications...
-          </div>
-        </div>
-
-        <div class="banner operational" id="overall-banner">
-          <div class="banner-text" id="overall-banner-text">Synchronizing systems metrics configuration states...</div>
-        </div>
-
-        <div class="grid2">
-          <div class="card full-width">
-            <div class="sec-title">
-              <span>Monitored Platforms & Application Infrastructure Nodes</span>
-              <span id="sync-indicator" style="font-size:11px; font-weight:500; color:var(--faint);"></span>
-            </div>
-            <div id="monitors-container" class="sb-section" style="gap:10px;">
-              </div>
-          </div>
-
-          <div class="card full-width">
-            <div class="sec-title">Incident Operational Event Logs & Maintenance History</div>
-            <div id="timeline-container">
-              </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <div id="toast-container"></div>
-
-  <script>
-    let isAdmin = false;
-    let timer = null;
-    let countdown = 60;
+    </div>
     
-    // Core fallback variables tracking memory context frames
-    let currentIncidentFeedCache = [];
-    let currentMonitorsCache = null;
+    <div class="invite-box">
+      <div class="website-btn-wrapper">
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'website')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          AssistBot Website
+        </div>
+        <div class="website-tooltip">⚠️ Website is under development and is very outdated</div>
+      </div>
+      <div class="website-btn-wrapper">
+        <div class="website-disabled" onclick="handleDisabledClick(this, 'dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          AssistBot Dashboard
+        </div>
+        <div class="website-tooltip">⚠️ Dashboard is currently under development</div>
+      </div>
+    </div>
+    <div class="invite-box" style="padding-bottom: 12px;">
+      <a href="https://discord.com/oauth2/authorize?client_id=1044078182514565210" target="_blank" class="invite-btn">
+        <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
+        Add Bot to Server
+      </a>
+    </div>
 
-    // Toast Notification System Engine UI Controller
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerText = message;
-      container.appendChild(toast);
-      
-      // Trigger animations
-      setTimeout(() => toast.classList.add('show'), 10);
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 200);
-      }, 4000);
-    }
+    <div class="sb-footer" id="sb-footer">
+      <div class="av-wrapper">
+        <div class="av">
+          <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAQHCAUJBv/EADIQAAEEAQIEBAMHBQAAAAAAAAECAwQFAAYRBwgSIRMxQVEUQmEJIjJxgYKRFVJioaL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDGWMYwGMYwGMYwGMYwGd/h5pWz1vrWq0rUJBmWMgMpUofdbHmpavolIJP0GcDNbfZxaQRM1TqDW0loCTXMJhRVEeTjvdZH1CUgfvwLR0TyraX07HbaTHg2E1IHi2lqx8SSr18KNuGkD2Ky4fpnYk8qPC2wnOT7hNpOkuAdRQ63FbG39rbDaEj+MvWS+xFjuSZLzbDLSStxxxQSlCR5kk9gMiUd3TXsVUuktoNnHSroU7EkJdSFexKSe+BS8TlT4W1tg1Y0zdlClM79BccbltncbbKbfQtKh39s5+tOV3R+porjEivgVk4g+Fa0zPwpCvTxYxJbUPcoKSfYZfF5d01FFTLu7aDWR1K6Euy5CWklXsCojvkuM+xKjtyIzzbzLqQttxtQUlaT5EEdiMDyQ4n6Ns9Aa7tNJW5SuTXvdHiIBCXUEBSFjf0Ukg/rnzWbD+0h0ghqw03rmM1sZCV10tQHmpP32ifrsXB+0ZjzAZ6M8g1Qit5fYs0JAcs7CRJWffZQaH+m885s27yTcc9IQtDweG+pJbNLOgrcEOTIX0sSkrcUvYrPZCwVEbHsRtsd+2Bc/NRp/UWpeDthXaaaekSg8087GZ/G+0k7qQB6nfZW3r05VXJBo7WNHe3lvcVs+rqnoqWEtS2lNF94LBCglWx2SOob7fN+eXtr2yuNP1UrVtVc1SqyMwX5cazWUslCRuVNvIBUgkehSsE7bAHzpii50OG8pgf1el1BXP8AzJQ02+j9FBQJ/VIyiBzv6P1jd3tFb09ZPtapmKphTURpTpZeKySopTuQFDpG/wDj+WWtysaf1Fprg7X12pWno8ovOvNRnfxsNKVulBHod91benVle3POdwwisKNdV6isHvlT8O20k/mor3H8HLb4eXN1q+pg6vmWtVHpJLQfixa1wuhST6vPrCSSPVCUp2IIJPlij4fnnqUWnLpcvlO666RHloO2+xDgQf8Alw55s5uvnP466PGg7Th5p6ZHu7SyCWpTkdfWzEQlYUd1jspe6dukeXff2OFMgYxjAnC4thWrrBaTRBcIK43jq8JWx3G6d9j3yDjGAycm4t01gq02k5MAEqEYSFBoE+Z6d9sg4wGMYwP/2Q==" alt="AssistBot">
+        </div>
+        <div class="status-dot"></div>
+      </div>
+      <div class="uinfo">
+        <div class="uname">AssistBot</div>
+        <div class="ustatus">#8085 • Online</div>
+      </div>
+    </div>
+  </div>
 
-    function showSplash() {
-      const el = document.getElementById('splash');
-      if (el) { el.style.visibility = 'visible'; el.style.opacity = '1'; }
-    }
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">AssistBot</div>
+      <div class="tb-div"></div>
+      <div class="tb-sub" id="tb-sub">Checking node statuses…</div>
+      <div class="admin-indicator" id="admin-indicator">ADMIN MODE</div>
+      <!-- Theme Toggle -->
+      <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <!-- Moon icon -->
+        <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- Sun icon -->
+        <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <div class="toggle-track" id="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <div class="ping-wrapper">
+        <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
+        <div class="ping-tooltip">Updates every 60 seconds</div>
+      </div>
+      <div class="live-indicator"><span class="ldot"></span>Live</div>
+    </div>
 
-    function hideSplash() {
-      const el = document.getElementById('splash');
-      if (el) { el.style.opacity = '0'; el.style.visibility = 'hidden'; }
-    }
+    <div class="content">
 
-    // Toggle Mobile Navigation Options Viewport Context
-    function toggleSidebar() {
-      const sb = document.querySelector('.sidebar');
-      if (sb) {
-        sb.style.display = (sb.style.display === 'flex' || sb.style.display === '') ? 'none' : 'flex';
-      }
-    }
+      <div id="banner" class="banner operational">
+        <span id="banner-icon">✅</span>
+        <span id="banner-label">Evaluating network integrity…</span>
+      </div>
 
-    // Visual Styling Appearance Scheme Themes Control Manager Block
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('assistbot-theme', theme);
-      const track = document.getElementById('theme-track');
-      if (track) {
-        if (theme === 'dark') track.classList.add('on');
-        else track.classList.remove('on');
-      }
-    }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme') || 'dark';
-      applyTheme(current === 'dark' ? 'light' : 'dark');
-    }
-
-    // Interactive placeholder trigger hooks to preserve dynamic interface logic safely
-    function handleDisabledClick(type) {
-      showToast(type === 'website' ? '⚠️ Website is under development.' : '⚠️ Dashboard is currently under development.', 'error');
-    }
-
-    function addLog(action, summary) {
-      console.log(`[Status Engine Debug Log Node] Action: ${action} | Summary: ${summary}`);
-    }
-
-    // Administrative Authorization Mock Framework
-    function checkAdminAuth() {
-      if (localStorage.getItem('assistbot-admin-auth') === 'true') {
-        setAdminMode(true);
-      }
-    }
-
-    function setAdminMode(active) {
-      isAdmin = active;
-      document.getElementById('admin-badge').style.display = active ? 'block' : 'none';
-      if (active) {
-        localStorage.setItem('assistbot-admin-auth', 'true');
-        addLog('auth', 'Admin operational mode context framework successfully initialized');
-      } else {
-        localStorage.removeItem('assistbot-admin-auth');
-      }
-      resetCountdown();
-    }
-
-    function triggerAdminLogin() {
-      if (isAdmin) {
-        if (confirm("Deactivate secure administrative management token authentication structures?")) {
-          setAdminMode(false);
-          showToast("Admin session cleanly terminated.", "info");
-        }
-        return;
-      }
-      const pass = prompt("Provide secure access controller token authorization credentials:");
-      if (pass === "admin") {
-        setAdminMode(true);
-        showToast("Administrative profile runtime context attached successfully.", "success");
-      } else if (pass !== null) {
-        showToast("Access token validation failed.", "error");
-      }
-    }
-
-    // ── IMPORTANT BANNER DOM MANIPULATION MANAGEMENT ──
-    async function loadImportantBanner() {
-      try {
-        const fallbackBannerData = JSON.parse(localStorage.getItem('assistbot-important-banner') || 'null');
-        if (fallbackBannerData && fallbackBannerData.visible && !localStorage.getItem('dismissed-banner-' + fallbackBannerData.id)) {
-          renderImportantBanner(fallbackBannerData);
-        }
-      } catch (err) {
-        console.error('Error loading important banner context framework data metrics:', err);
-      }
-    }
-
-    function renderImportantBanner(data) {
-      const banner = document.getElementById('important-banner');
-      const titleEl = document.getElementById('important-banner-title');
-      const bodyEl = document.getElementById('important-banner-body');
-      
-      if (!data || !data.visible || localStorage.getItem('dismissed-banner-' + data.id)) {
-        banner.classList.remove('visible');
-        return;
-      }
-      
-      banner.dataset.bannerId = data.id;
-      titleEl.innerText = data.title || 'Critical System Notice';
-      bodyEl.innerHTML = data.content || '';
-      banner.classList.add('visible');
-    }
-
-    function dismissImportantBanner() {
-      const banner = document.getElementById('important-banner');
-      if (banner && banner.dataset.bannerId) {
-        localStorage.setItem('dismissed-banner-' + banner.dataset.bannerId, 'true');
-        banner.classList.remove('visible');
-        showToast('System notice hidden.', 'info');
-      }
-    }
-
-    async function loadForceStatus() {
-      try {
-        addLog('loadForceStatus', 'Querying programmatic configuration overriding frameworks.');
-      } catch(err) {
-        console.error('loadForceStatus configuration intercept error:', err);
-      }
-    }
-
-    async function loadUpdates() {
-      try {
-        addLog('loadUpdates', 'Processing local administrative component states lifecycle feeds.');
-      } catch(err) {
-        console.error('loadUpdates lifecycle capture error:', err);
-      }
-    }
-
-    // ── REALTIME MONITOR DATA TRANSFORMS & RENDERING ENGINE ──
-    function render(data) {
-      if (!data || !data.monitors) return;
-      currentMonitorsCache = data;
-      
-      const container = document.getElementById('monitors-container');
-      container.innerHTML = '';
-
-      let operationalNodes = 0;
-      let issueNodes = 0;
-
-      data.monitors.forEach(m => {
-        let statusClass = 'unknown';
-        let statusLabel = 'Unknown';
-        
-        if (m.status === 2 || m.status === 'auto' || m.status === 'op') { statusClass = 'up'; statusLabel = 'Operational'; operationalNodes++; }
-        else if (m.status === 9 || m.status === 'out') { statusClass = 'down'; statusLabel = 'Outage'; issueNodes++; }
-        else if (m.status === 0 || m.status === 'deg') { statusClass = 'paused'; statusLabel = 'Degraded'; issueNodes++; }
-
-        const row = document.createElement('div');
-        row.className = 'mrow';
-        
-        // Generate simulated grid timeline bars block for metric visualization
-        let barsHtml = '<div class="bars">';
-        for (let i = 0; i < 30; i++) {
-          let barState = 'up';
-          if (statusClass === 'down' && i > 25) barState = 'down';
-          else if (statusClass === 'paused' && i > 23) barState = 'warn';
-          barsHtml += `<div class="bar ${barState}"></div>`;
-        }
-        barsHtml += '</div>';
-
-        row.innerHTML = `
-          <div class="sdot ${statusClass}"></div>
-          <div class="mname">
-            ${m.name} 
-            ${m.warn_inline ? `<span class="warn-inline">${m.warn_inline}</span>` : ''}
+      <div class="grid2">
+        <div class="card">
+          <div class="sec-title">Bot Services</div>
+          <div id="monitor-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:120px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:100px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:50px;height:12px"></div></div>
           </div>
-          ${barsHtml}
-          <div class="mup">${m.uptime || '100.00'}%</div>
-          <div class="badge ${statusClass}">${statusLabel}</div>
-        `;
-        
-        // Injected administrative state manipulation lifecycle listener parameters safely
-        if (isAdmin) {
-          row.style.cursor = 'pointer';
-          row.onclick = () => editMonitorStatusPrompt(m.id || m.name, m.name, m.status);
-        }
+        </div>
 
-        container.appendChild(row);
-      });
+        <div class="card">
+          <div class="sec-title">Discord Status</div>
+          <div id="discord-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="sk-row"><div class="sk" style="width:10px;height:10px;border-radius:50%"></div><div class="sk" style="width:80px;height:12px"></div><div style="flex:1"></div><div class="sk" style="width:60px;height:12px"></div></div>
+          </div>
+        </div>
 
-      // Update structural system banners reflecting composite calculation state configurations
-      const banner = document.getElementById('overall-banner');
-      const bannerText = document.getElementById('overall-banner-text');
-      const navDot = document.getElementById('nav-dot-overall');
+        <div class="card" id="admin-panel">
+          <div class="sec-title">
+            <span>Admin Controls</span>
+            <button class="logout-btn" onclick="disableAdminUI()">Log Out</button>
+          </div>
 
-      banner.className = 'banner';
-      if (issueNodes === 0) {
-        banner.classList.add('operational');
-        bannerText.innerText = 'All monitored secondary integrations platforms and core backplane systems are operational.';
-        if (navDot) { navDot.className = 'ndot up'; }
-      } else if (operationalNodes > 0) {
-        banner.classList.add('degraded');
-        bannerText.innerText = 'System is experiencing minor background service degradation disruptions.';
-        if (navDot) { navDot.className = 'ndot paused'; }
-      } else {
-        banner.classList.add('outage');
-        bannerText.innerText = 'Critical core platform wide service disruption event currently active.';
-        if (navDot) { navDot.className = 'ndot down'; }
-      }
-    }
+          <!-- Force Status overrides -->
+          <div class="force-status-section">
+            <div class="force-status-label">Force Bot Service Status</div>
+            <div id="force-status-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
 
-    function editMonitorStatusPrompt(id, name, currentStatus) {
-      const newValue = prompt(`Modify execution state parameters for ${name}\nOptions: auto, op, deg, out`);
-      if (!newValue) return;
-      const normalized = newValue.toLowerCase().trim();
-      if (['auto', 'op', 'deg', 'out'].includes(normalized)) {
-        showToast(`Updated ${name} → ${normalized === 'auto' ? 'Auto' : normalized === 'op' ? 'Operational' : normalized === 'deg' ? 'Degraded' : 'Outage'}`, normalized === 'op' ? 'success' : normalized === 'out' ? 'error' : 'info');
-        // Runtime update parameters implementation framework hooks hook cleanly right here
-      } else {
-        showToast('Invalid assignment value specified.', 'error');
-      }
-    }
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
-    // Chronological structural data mapping engine interface logs rendering configuration blocks
-    function renderTimeline(incidents) {
-      const container = document.getElementById('timeline-container');
-      container.innerHTML = '';
-      
-      if (!incidents || incidents.length === 0) {
-        container.innerHTML = '<div class="inc-empty">No logged application platform infrastructure issues recorded across trailing 90 days diagnostics tracking loops.</div>';
-        return;
-      }
-
-      // Group incidents by localized system standard timestamp dates cleanly
-      const groups = {};
-      incidents.forEach(inc => {
-        const dateStr = inc.date || new Date(inc.created_at * 1000).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-        if (!groups[dateStr]) groups[dateStr] = [];
-        groups[dateStr].push(inc);
-      });
-
-      Object.keys(groups).forEach(date => {
-        const header = document.createElement('div');
-        header.className = 'inc-date-header';
-        header.innerText = date;
-        container.appendChild(header);
-
-        const groupContainer = document.createElement('div');
-        groupContainer.className = 'inc-group';
-
-        groups[date].forEach(inc => {
-          let dotType = 'info';
-          if (inc.status === 'resolved' || inc.status === 'completed') dotType = 'resolved';
-          else if (inc.status === 'monitoring') dotType = 'monitoring';
-          else if (inc.status === 'identified') dotType = 'identified';
-          else if (inc.status === 'investigating') dotType = 'investigating';
-
-          const item = document.createElement('div');
-          item.className = 'inc-item';
-          item.innerHTML = `
-            <div class="inc-spine">
-              <div class="inc-dot ${dotType}"></div>
-              <div class="inc-line"></div>
+          <!-- Post Update -->
+          <div class="sec-subtitle">Post Incident Update</div>
+          <div class="update-form">
+            <textarea id="update-text" placeholder="Describe system event or current updates for users…"></textarea>
+            <div class="form-row">
+              <select class="sel" id="update-type">
+                <option value="investigating">🔍 Investigating</option>
+                <option value="identified">⚠️ Identified</option>
+                <option value="monitoring">👁 Monitoring</option>
+                <option value="resolved" selected>✅ Resolved</option>
+              </select>
+              <select class="sel" id="update-service">
+                <option value="All Services">All Services</option>
+                <option value="Assistbot">Assistbot</option>
+                <option value="Assistmusic">Assistmusic</option>
+                <option value="Dashboard">Dashboard</option>
+                <option value="AssistServer">AssistServer</option>
+              </select>
+              <button class="post-btn" onclick="postUpdate()">Save Update</button>
             </div>
-            <div class="inc-main">
-              <div class="inc-header">
-                <div class="inc-title">${inc.name || inc.title}</div>
-                <div class="inc-time">${inc.time || new Date(inc.updated_at * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+          </div>
+        </div>
+
+        <div class="card" id="incidents-card">
+          <div class="sec-title">Incidents &amp; Updates</div>
+          <div id="incident-list" style="max-height:420px; overflow-y:auto; padding-right: 4px;">
+            <div class="sk-row"><div class="sk" style="width:180px;height:12px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card full-width" id="activity-log-card">
+        <div class="sec-title">Activity Log</div>
+        <div id="log-list" class="log-container">
+          <div class="sk-row"><div class="sk" style="width:80px;height:14px"></div><div class="sk" style="width:200px;height:12px"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div id="footer-text">Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot</div>
+    </div>
+  </div>
+</div>
+
+<div class="oauth-modal" id="oauth-modal">
+  <div class="oauth-card">
+    <svg class="oauth-logo" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
+    <div class="oauth-h1">Admin Login</div>
+    <div class="oauth-p">Enter the admin password to access the control panel.</div>
+    <input type="password" class="oauth-input" id="oauth-field" placeholder="Enter admin password" autofocus />
+    <button class="oauth-submit" onclick="submitOAuthHandshake()">Authorize Session</button>
+    <button class="oauth-cancel" onclick="closeOAuthModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Loading Splash — bouncing dots, theme-aware, only on first visit -->
+<div id="splash">
+  <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
+    <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
+  </svg>
+  <div class="splash-title">AssistBot Status</div>
+  <div class="splash-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+<style>
+#splash {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  z-index: 99999; transition: opacity 0.4s ease;
+}
+[data-theme="dark"]  #splash { background: #1e1f22; }
+[data-theme="light"] #splash { background: #e3e5e8; }
+.splash-title {
+  font-family: 'Noto Sans', sans-serif; font-size: 20px; font-weight: 700;
+}
+[data-theme="dark"]  .splash-title { color: #f2f3f5; }
+[data-theme="light"] .splash-title { color: #060607; }
+.splash-dots { display: flex; gap: 7px; align-items: center; }
+.splash-dots span {
+  width: 9px; height: 9px; background: #5865f2; border-radius: 50%;
+  animation: splashDot 1.2s infinite;
+}
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes splashDot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
+</style>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
+const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
+const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
+const SUPABASE_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json'
+};
+
+const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
+const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
+const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
+const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
+const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
+
+let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
+let customUpdates = [];
+let isAdmin = false;
+let discordComponentsCache = null;
+let currentIncidentFeedCache = [];
+
+const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
+let forceStatus = {};
+
+// ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+async function loadForceStatus() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    forceStatus = {};
+    rows.forEach(r => {
+      const name = r.key.replace('force_', '');
+      forceStatus[name] = r.value;
+    });
+  } catch(e) { console.warn('Could not load force status:', e); }
+}
+
+async function saveForceStatus(name, value) {
+  const key = `force_${name}`;
+  try {
+    // DELETE then INSERT is the most reliable upsert for Supabase free tier
+    await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+      headers: SUPABASE_HEADERS
+    });
+    const ins = await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ key, value })
+    });
+    if (!ins.ok) {
+      const err = await ins.text();
+      throw new Error(err);
+    }
+  } catch(e) {
+    console.error('Could not save force status:', e);
+    showToast('Failed to save: ' + e.message, 'error');
+  }
+}
+
+// ── THEME ────────────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('assistbot-theme', theme);
+  const isDark = theme === 'dark';
+  // Show moon in light mode (click to go dark), sun in dark mode (click to go light)
+  document.getElementById('icon-moon').style.display = isDark ? 'none' : 'block';
+  document.getElementById('icon-sun').style.display  = isDark ? 'block' : 'none';
+  const track = document.getElementById('toggle-track');
+  if (isDark) track.classList.add('on'); else track.classList.remove('on');
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Init theme instantly so splash background matches before any JS runs
+(function() {
+  const saved = localStorage.getItem('assistbot-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+
+// ── DISABLED BUTTON CLICK ────────────────────────────────────────────────────
+function handleDisabledClick(el, type) {
+  showToast(type === 'website' ? '⚠️ Website is under development and is very outdated.' : '⚠️ Dashboard is currently under development.', 'error');
+}
+
+// ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
+async function loadUpdates() {
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.asc&limit=100`, {
+      headers: SUPABASE_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    customUpdates = rows.map(r => ({
+      id: r.id,
+      _custom: true,
+      title: r.title,
+      type: r.type,
+      body: r.body,
+      service: r.service,
+      date: r.date,
+      parent_id: r.parent_id || null,
+      created_at: r.created_at
+    }));
+  } catch(e) {
+    console.warn('Could not load updates from Supabase:', e);
+    customUpdates = [];
+  }
+}
+
+async function insertUpdate(update) {
+  try {
+    const res = await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        id: update.id,
+        title: update.title,
+        type: update.type,
+        body: update.body,
+        service: update.service,
+        date: update.date
+      })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+  } catch(e) {
+    console.error('Could not insert update:', e);
+    showToast('Failed to save: ' + e.message, 'error');
+    throw e;
+  }
+}
+
+async function deleteUpdate(id) {
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: SUPABASE_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) {
+    console.error('Could not delete update:', e);
+    showToast("Failed to delete update.", "error");
+    throw e;
+  }
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// ── ADMIN AUTH ───────────────────────────────────────────────────────────────
+function checkAdminAuth() {
+  if (sessionStorage.getItem('assistbot-admin-token')) {
+    enableAdminUI(false);
+  } else {
+    disableAdminUI(false);
+  }
+}
+
+function openOAuthModal() {
+  if (isAdmin) return;
+  document.getElementById('oauth-field').value = '';
+  document.getElementById('oauth-modal').classList.add('open');
+  setTimeout(() => document.getElementById('oauth-field').focus(), 100);
+}
+
+function closeOAuthModal() {
+  document.getElementById('oauth-modal').classList.remove('open');
+}
+
+async function submitOAuthHandshake() {
+  const inputVal = document.getElementById('oauth-field').value;
+  if (!inputVal) return;
+
+  const btn = document.querySelector('.oauth-submit');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  showToast("Verifying credentials…", "info");
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: inputVal })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      sessionStorage.setItem('assistbot-admin-token', data.token);
+      closeOAuthModal();
+      enableAdminUI(true);
+    } else {
+      showToast("Incorrect password — access denied.", "error");
+      addLog('check', `<span style="color:var(--red);">Failed login attempt.</span>`);
+      document.getElementById('oauth-field').value = '';
+    }
+  } catch(e) {
+    showToast("Could not reach auth server.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Authorize Session';
+  }
+}
+
+function enableAdminUI(notify = true) {
+  isAdmin = true;
+  clearInterval(timer);
+  document.getElementById('countdown').textContent = '—';
+  document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
+  document.getElementById('admin-panel').style.display = 'flex';
+  document.getElementById('admin-indicator').style.display = 'block';
+  document.getElementById('activity-log-card').style.display = 'flex';
+  document.getElementById('incidents-card').classList.remove('full-width');
+  renderIncidents(currentIncidentFeedCache);
+  renderForceStatusRows(cache || null);
+  if (notify) {
+    addLog('check', "<strong>Admin access granted.</strong>");
+    showToast("Logged in! Admin mode active.", "success");
+  }
+}
+
+function disableAdminUI(logEvent = true) {
+  const wasAdmin = isAdmin;
+  isAdmin = false;
+  sessionStorage.removeItem('assistbot-admin-token');
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-indicator').style.display = 'none';
+  document.getElementById('activity-log-card').style.display = 'none';
+  document.getElementById('incidents-card').classList.add('full-width');
+  renderIncidents(currentIncidentFeedCache);
+  // Re-render bot services to strip any (forced) badges
+  if (cache) render(cache);
+  // Resume auto-refresh
+  resetCountdown();
+  if (logEvent && wasAdmin) {
+    addLog('check', "Admin session ended.");
+    showToast("Logged out of Admin Mode.", "info");
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeOAuthModal();
+});
+
+document.getElementById('sb-footer').addEventListener('click', e => {
+  if (e.ctrlKey && e.shiftKey) openOAuthModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('oauth-field').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitOAuthHandshake();
+  });
+});
+
+// ── UTILITIES ────────────────────────────────────────────────────────────────
+const sc   = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown';
+const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':'Paused';
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const timeStr = d => new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'});
+
+// bars(monitor, forcedOverride) — uses response_times for accurate per-check bars
+function bars(monitor, forcedOverride) {
+  const count = 24;
+  const status = monitor.status;
+
+  // Forced overrides
+  if (forcedOverride === 'out') {
+    return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
+  }
+  if (forcedOverride === 'deg') {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+  // Paused — 50% yellow
+  if (status === 0) {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+  // Degraded (status 8) — mostly yellow with a few grey
+  if (status === 8) {
+    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 18 ? 'warn' : ''}"></div>`).join('')}</div>`;
+  }
+
+  // Use response_times — each entry = one actual check result
+  const rt = monitor.response_times || [];
+  if (rt.length > 0) {
+    // response_times: value > 0 = up, value = 0 = down/timeout
+    const history = rt.slice(0, count).reverse(); // newest on right
+    const padded = Array(Math.max(0, count - history.length)).fill(null).concat(history);
+    return `<div class="bars">${padded.map(r => {
+      if (!r) return '<div class="bar"></div>';
+      return r.value > 0 ? '<div class="bar up"></div>' : '<div class="bar down"></div>';
+    }).join('')}</div>`;
+  }
+
+  // Final fallback: uptime ratio
+  const uptime = monitor._uptime || 100;
+  const filledCount = Math.max(1, Math.round((uptime / 100) * count));
+  return `<div class="bars">${Array(count).fill(0).map((_,i) =>
+    `<div class="bar ${i < filledCount ? 'up' : 'down'}"></div>`
+  ).join('')}</div>`;
+}
+
+function addLog(type, text) {
+  logs.unshift({type, text, time: now12()});
+  if (logs.length > 15) logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const el = document.getElementById('log-list');
+  if (!el || !logs.length) return;
+  el.innerHTML = logs.map(l => `<div class="lrow"><div class="ltype">${l.type==='check'?'System Check':'Update Log'}</div><div class="lmsg">${l.text}</div><div class="ltime">${l.time}</div></div>`).join('');
+}
+
+// ── DISCORD STATUS ───────────────────────────────────────────────────────────
+async function fetchDiscordStatus() {
+  try {
+    const [s, i] = await Promise.all([fetch(DISCORD_API), fetch(INCIDENT_API)]);
+    const sum = await s.json(); const inc = await i.json();
+    currentIncidentFeedCache = inc.incidents || [];
+    discordComponentsCache = sum.components || [];
+    localStorage.setItem('discord-components-cache', JSON.stringify(discordComponentsCache));
+    renderDiscord(sum.components, currentIncidentFeedCache);
+  } catch(e) {
+    const savedComps = localStorage.getItem('discord-components-cache');
+    if (savedComps) {
+      discordComponentsCache = JSON.parse(savedComps);
+      renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    }
+  }
+}
+
+// Maps Discord component keywords → which AssistBot services may be affected
+const DISCORD_IMPACT_MAP = [
+  { keywords: ['api'],         affects: ['Assistbot','Assistmusic','Dashboard','AssistServer'] },
+  { keywords: ['gateway'],     affects: ['Assistbot','Assistmusic'] },
+  { keywords: ['voice'],       affects: ['Assistmusic'] },
+  { keywords: ['media proxy'], affects: ['Assistbot','Dashboard'] },
+];
+
+// Returns list of AssistBot service names impacted by a down Discord component
+function getImpactedServices(compName) {
+  const n = compName.toLowerCase();
+  for (const rule of DISCORD_IMPACT_MAP) {
+    if (rule.keywords.some(k => n.includes(k))) return rule.affects;
+  }
+  return [];
+}
+
+function renderDiscord(components, incidents) {
+  if (!components || !components.length) return;
+  const keys = ['API','Gateway','Media Proxy','Voice'];
+  const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
+
+  // Build a map: serviceName → [affected Discord component names that are down]
+  const serviceWarnings = {};
+  comps.forEach(c => {
+    const isDown = c.status !== 'operational';
+    if (isDown) {
+      getImpactedServices(c.name).forEach(svc => {
+        if (!serviceWarnings[svc]) serviceWarnings[svc] = [];
+        serviceWarnings[svc].push(c.name);
+      });
+    }
+  });
+
+  // Render Discord component rows (no dep warnings here — they show on Bot Services side)
+  document.getElementById('discord-list').innerHTML = comps.map(c => {
+    const s = c.status;
+    const dotClass = s==='operational'?'up':s==='major_outage'?'down':'paused';
+    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${s.replace(/_/g,' ')}</div></div>`;
+  }).join('');
+
+  document.getElementById('discord-nav').innerHTML = comps.slice(0,3).map(c => {
+    const dotClass = c.status==='operational'?'up':'down';
+    return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
+  }).join('');
+
+  // Store warnings globally so render() can use them
+  window._serviceWarnings = serviceWarnings;
+
+  // Re-render bot services with new warnings if we have cache
+  if (cache) render(cache);
+
+  renderIncidents(incidents);
+}
+
+// ── INCIDENTS (Discord-style timeline + click-to-update) ─────────────────────
+function statusDotClass(status) {
+  if (!status) return 'info';
+  const s = status.toLowerCase();
+  if (s.includes('resolv')) return 'resolved';
+  if (s.includes('monitor')) return 'monitoring';
+  if (s.includes('identif')) return 'identified';
+  if (s.includes('investig')) return 'investigating';
+  return 'info';
+}
+
+// Track which incident is expanded for editing
+let expandedIncidentId = null;
+
+function renderIncidents(incidents) {
+  const el = document.getElementById('incident-list');
+  const allItems = [];
+
+  // Group child updates under their parent
+  const parents = customUpdates.filter(u => !u.parent_id);
+  const children = customUpdates.filter(u => u.parent_id);
+
+  parents.forEach(u => {
+    const kids = children
+      .filter(c => String(c.parent_id) === String(u.id))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    // newest update first (Resolved shows at top, like Discord)
+    const allUpdates = [...kids, u].reverse().map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }));
+
+    allItems.push({
+      _isCustom: true,
+      id: u.id,
+      dateObj: new Date(u.created_at || Date.now()),
+      title: `[${u.service || 'All Services'}]`,
+      updates: allUpdates
+    });
+  });
+
+  (incidents || []).slice(0, 6).forEach(inc => {
+    allItems.push({
+      _isCustom: false,
+      id: inc.id,
+      dateObj: new Date(inc.created_at),
+      title: inc.name,
+      updates: (inc.incident_updates || []).slice().sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(u => ({
+        status: u.status, body: u.body,
+        time: u.created_at ? timeStr(u.created_at) : ''
+      }))
+    });
+  });
+
+  if (!allItems.length) {
+    el.innerHTML = `<div class="no-incidents">No active incidents currently logged.</div>`;
+    return;
+  }
+
+  allItems.sort((a, b) => b.dateObj - a.dateObj);
+
+  const groups = {};
+  allItems.forEach(item => {
+    const key = dateStr(item.dateObj);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([dateLabel, items]) => {
+    html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
+
+    items.forEach(item => {
+      const topStatus = item.updates.length ? statusDotClass(item.updates[item.updates.length - 1].status) : 'info';
+      const originClass = item._isCustom ? 'assistbot' : 'discord';
+      const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
+      const isExpanded = expandedIncidentId === String(item.id);
+
+      const adminBtns = (isAdmin && item._isCustom) ? `
+        <button class="inc-action-btn" data-action="expand" data-id="${item.id}">✏️ Update</button>
+        <button class="del-inc-btn visible" data-id="${item.id}">Delete</button>` : '';
+
+      let updatesHtml = '';
+      item.updates.forEach((u, idx) => {
+        const uDotClass = statusDotClass(u.status);
+        const isLast = idx === item.updates.length - 1;
+        updatesHtml += `
+          <div class="inc-update-item">
+            <div class="inc-update-spine">
+              <div class="inc-update-dot ${uDotClass}"></div>
+              ${!isLast ? '<div class="inc-update-line"></div>' : ''}
+            </div>
+            <div class="inc-update-content">
+              <span class="inc-status-label ${uDotClass}">${esc(u.status || 'info')}</span>
+              <span class="inc-update-body">— ${esc(u.body)}</span>
+              ${u.time ? `<span class="inc-update-time">${esc(u.time)}</span>` : ''}
+            </div>
+          </div>`;
+      });
+
+      // Inline edit/add panel
+      const expandPanel = (isExpanded && isAdmin && item._isCustom) ? `
+        <div class="inc-expand-panel">
+          <div class="inc-expand-tabs">
+            <button class="inc-tab active" data-tab="add" data-id="${item.id}">➕ Add Update</button>
+            <button class="inc-tab" data-tab="edit" data-id="${item.id}">✏️ Edit Latest</button>
+          </div>
+          <div class="inc-tab-content" id="tab-add-${item.id}">
+            <select class="sel" id="chain-type-${item.id}" style="width:100%;margin-bottom:8px;">
+              <option value="investigating">🔍 Investigating</option>
+              <option value="identified">⚠️ Identified</option>
+              <option value="monitoring">👁 Monitoring</option>
+              <option value="resolved" selected>✅ Resolved</option>
+            </select>
+            <textarea class="inc-expand-ta" id="chain-body-${item.id}" placeholder="Describe what changed…"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="addChainUpdate(${item.id})">Post Update</button>
+            </div>
+          </div>
+          <div class="inc-tab-content" id="tab-edit-${item.id}" style="display:none;">
+            <textarea class="inc-expand-ta" id="edit-body-${item.id}" placeholder="Edit the latest update message…">${esc(item.updates[item.updates.length-1]?.body || '')}</textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button class="inc-cancel-btn" data-id="${item.id}">Cancel</button>
+              <button class="post-btn" style="padding:6px 16px;font-size:13px;" onclick="editLatestUpdate(${item.id}, ${item.updates[item.updates.length-1]?.id || 'null'})">Save Edit</button>
+            </div>
+          </div>
+        </div>` : '';
+
+      html += `
+        <div class="inc-item${isAdmin && item._isCustom ? ' inc-item-clickable' : ''}" data-id="${item.id}">
+          <div class="inc-spine">
+            <div class="inc-dot ${topStatus}"></div>
+            <div class="inc-line"></div>
+          </div>
+          <div class="inc-body-wrap">
+            <div class="inc-title-row">
+              <div class="inc-title">${esc(item.title)}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span class="inc-origin-badge ${originClass}">${originLabel}</span>
+                ${adminBtns}
               </div>
-              <div class="inc-body">${inc.message || inc.text || ''}</div>
             </div>
-          `;
-          groupContainer.appendChild(item);
-        });
+            <div class="inc-updates">${updatesHtml}</div>
+            ${expandPanel}
+          </div>
+        </div>`;
+    });
+  });
 
-        container.appendChild(groupContainer);
-      });
-    }
+  el.innerHTML = html;
+}
 
-    // ── EXTERNAL REALTIME API BACKEND FETCH HANDLERS ──
-    async function fetchDiscordStatus() {
-      try {
-        const res = await fetch('https://discordstatus.com/api/v2/summary.json');
-        if (!res.ok) throw new Error('API downplane transport code');
-        const d = await res.json();
-        
-        // Update live interface metrics block metrics tracking properties dynamically
-        document.getElementById('bot-presence').innerText = d.status?.description || 'Operational';
-        document.getElementById('ping-value').innerText = `API Ping: ${Math.floor(Math.random() * 15) + 12} ms`;
-        
-        if (d.incidents && d.incidents.length > 0) {
-          currentIncidentFeedCache = d.incidents;
-          renderTimeline(d.incidents);
-        }
-      } catch (err) {
-        console.error('fetchDiscordStatus payload extraction failure:', err);
-        // Fallback interface elements safely maintained
-      }
-    }
+document.getElementById('incident-list').addEventListener('click', function(e) {
+  // Delete
+  if (e.target.classList.contains('del-inc-btn')) {
+    deleteCustomUpdate(e.target.getAttribute('data-id'));
+    return;
+  }
+  // Expand/collapse update panel
+  if (e.target.classList.contains('inc-action-btn') && e.target.dataset.action === 'expand') {
+    const id = String(e.target.getAttribute('data-id'));
+    expandedIncidentId = expandedIncidentId === id ? null : id;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Cancel expand
+  if (e.target.classList.contains('inc-cancel-btn')) {
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    return;
+  }
+  // Tab switching
+  if (e.target.classList.contains('inc-tab')) {
+    const id = e.target.dataset.id;
+    const tab = e.target.dataset.tab;
+    document.querySelectorAll(`.inc-tab`).forEach(t => { if (t.dataset.id === id) t.classList.remove('active'); });
+    e.target.classList.add('active');
+    document.getElementById(`tab-add-${id}`).style.display  = tab === 'add'  ? 'flex' : 'none';
+    document.getElementById(`tab-edit-${id}`).style.display = tab === 'edit' ? 'flex' : 'none';
+    return;
+  }
+});
 
-    async function fetchStatus(showSplashLoading = false) {
-      if (showSplashLoading && !currentMonitorsCache) showSplash();
-      
-      // Inject standard mocked system application runtime operational datasets nodes cleanly
-      const fallbackMockDataset = {
-        monitors: [
-          { name: "Core Application Backplane Integration Routing Node", status: "op", uptime: "99.98" },
-          { name: "Secondary Custom Behaviors Command Logic Processing Thread", status: "op", uptime: "100.00" },
-          { name: "Persistent Game Environment Matrix Realtime Ledger Pipeline", status: "op", uptime: "99.94", warn_inline: "Optimizing Sync Buffers" },
-          { name: "Internal State Tracking Scoreboard Multi-thread Stack", status: "deg", uptime: "98.41" },
-          { name: "Administrative Data Storage Access Verification Infrastructure", status: "op", uptime: "100.00" }
-        ]
+async function addChainUpdate(parentId) {
+  if (!isAdmin) return;
+  const type = document.getElementById(`chain-type-${parentId}`)?.value;
+  const body = document.getElementById(`chain-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const time = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const newId = Date.now();
+
+  const parent = customUpdates.find(u => String(u.id) === String(parentId));
+  const newUpdate = {
+    id: newId, _custom: true,
+    title: parent?.title || '',
+    type, body,
+    service: parent?.service || 'All Services',
+    date: time,
+    parent_id: Number(parentId),
+    created_at: new Date().toISOString()
+  };
+
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(SUPABASE_TABLE, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ id: newId, title: newUpdate.title, type, body, service: newUpdate.service, date: time, parent_id: Number(parentId) })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    customUpdates.push(newUpdate);
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Chained <strong>${type}</strong> onto incident #${parentId}`);
+    showToast('Update added to incident!', 'success');
+  } catch(e) { showToast('Failed to save.', 'error'); }
+}
+
+async function editLatestUpdate(parentId, updateId) {
+  if (!isAdmin) return;
+  const body = document.getElementById(`edit-body-${parentId}`)?.value.trim();
+  if (!body) { showToast('Please enter a message.', 'error'); return; }
+
+  const targetId = updateId || parentId;
+  showToast('Saving…', 'info');
+  try {
+    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
+      method: 'PATCH',
+      headers: SUPABASE_HEADERS,
+      body: JSON.stringify({ body })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // Update in memory
+    const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
+    if (idx !== -1) customUpdates[idx].body = body;
+    expandedIncidentId = null;
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `Edited update #${targetId}`);
+    showToast('Update edited!', 'success');
+  } catch(e) { showToast('Failed to save edit.', 'error'); }
+}
+
+async function postUpdate() {
+  if (!isAdmin) return;
+  const text = document.getElementById('update-text').value.trim();
+  if (!text) return;
+  const type    = document.getElementById('update-type').value;
+  const service = document.getElementById('update-service').value;
+  const time    = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+
+  const newUpdate = {
+    id: Date.now(),
+    _custom: true,
+    title: `[${service}]`,
+    type,
+    body: text,
+    service,
+    date: time,
+    created_at: new Date().toISOString()
+  };
+
+  showToast("Saving to database…", "info");
+  try {
+    await insertUpdate(newUpdate);
+    customUpdates.unshift(newUpdate);
+    document.getElementById('update-text').value = '';
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
+    showToast("Update saved — visible to all visitors!", "success");
+  } catch(e) { /* error toast already shown */ }
+}
+
+async function deleteCustomUpdate(id) {
+  if (!isAdmin) return;
+  showToast("Deleting from database…", "info");
+  try {
+    await deleteUpdate(Number(id));
+    customUpdates = customUpdates.filter(u => u.id !== Number(id));
+    renderIncidents(currentIncidentFeedCache);
+    addLog('update', 'Update entry removed.');
+    showToast("Update removed for all visitors.", "info");
+  } catch(e) { /* error toast already shown */ }
+}
+
+// ── MONITOR FETCH ─────────────────────────────────────────────────────────────
+async function fetchStatus(force = false) {
+  const now = Date.now();
+  if (!force && cache && (now - lastFetch) < 8000) {
+    render(cache);
+    if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    resetCountdown();
+    return;
+  }
+  
+  try {
+    // Single call through Vercel proxy — avoids CORS and rate limits
+    const res = await fetch('/api/monitors', { method: 'GET' });
+    const data = await res.json();
+    if (!data.monitors) throw new Error('No monitors in response');
+
+    // Map by friendly name to our order
+    const nameMap = {};
+    data.monitors.forEach(mon => { nameMap[mon.friendly_name] = mon; });
+
+    const m = SERVICE_NAMES.map(name => {
+      const mon = nameMap[name] || nameMap[Object.keys(nameMap).find(k => k.toLowerCase().includes(name.toLowerCase()))] || {};
+      return {
+        ...mon,
+        friendly_name: name,
+        _uptime: parseFloat(mon.all_time_uptime_ratio || mon.custom_uptime_ratio || 100)
       };
+    });
 
-      try {
-        // Dynamic operational validation processing frameworks map downstream tracking points cleanly here
-        setTimeout(() => {
-          render(fallbackMockDataset);
-          localStorage.setItem('assistbot-cache-monitors', JSON.stringify(fallbackMockDataset));
-          hideSplash();
-        }, 400);
+    // Real ping: average_response_time from Assistbot monitor (index 0)
+    const rawPing = m[0]?.average_response_time;
+    const pingVal = rawPing && rawPing > 0 ? Math.round(rawPing) : '—';
+    document.getElementById('ping-val').textContent = pingVal;
+    // Color ping based on latency
+    const pingEl = document.getElementById('ping-val');
+    pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
 
-      } catch(err) {
-        console.error('fetchStatus lifecycle runtime boundary interception error context:', err);
-        hideSplash();
-        const backup = localStorage.getItem('assistbot-cache-monitors');
-        if (backup) {
-          render(JSON.parse(backup));
-          showToast('Serving telemetry safely out of localized execution buffer caches.', 'info');
-        }
-      }
-      resetCountdown();
+    cache = m; lastFetch = Date.now();
+    localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
+    render(m);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
+    if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+  } catch(err) {
+    const backup = localStorage.getItem('assistbot-cache-monitors');
+    if (backup || cache) {
+      const renderTarget = cache || JSON.parse(backup);
+      render(renderTarget);
+      if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+      addLog('check', 'Serving from cached data.');
     }
+  }
+  resetCountdown();
+}
 
-    // Automatic Tracking Telemetry Sync Execution Loops Logic Refresh Triggers Controls
-    function resetCountdown() {
-      clearInterval(timer);
-      if (isAdmin) {
-        document.getElementById('footer-text-placeholder-el') ? document.getElementById('footer-text-placeholder-el').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot' : null;
-        return;
-      }
-      countdown = 60;
-      timer = setInterval(() => {
-        countdown--;
-        const el = document.getElementById('countdown');
-        if (el) el.textContent = countdown;
-        if (countdown <= 0) fetchStatus(true);
-      }, 1000);
-    }
+function render(monitors) {
+  if (!monitors || !monitors.length) return;
 
-    // ── APPLICATION INITIALIZATION RUNTIME LIFECYCLE ──
-    async function init() {
-      applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
-      
-      // Execute dependent infrastructure component lookups concurrently
-      await Promise.all([
-        loadUpdates(),
-        loadForceStatus(),
-        loadImportantBanner()
-      ]);
-      
-      checkAdminAuth();
-      fetchStatus(true);
-      fetchDiscordStatus();
-      
-      // Setup structural tracking execution lookup refresh intervals cleanly
-      setInterval(fetchDiscordStatus, 300000);
-      resetCountdown();
-    }
+  // Hide splash on first successful data load
+  const splash = document.getElementById('splash');
+  if (splash && splash.style.display !== 'none') {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
 
-    // Trigger application entry point once the DOM is safely loaded and interactive
-    window.addEventListener('DOMContentLoaded', init);
-  </script>
+  // Apply forceStatus overrides
+  const effective = monitors.map(m => {
+    const override = forceStatus[m.friendly_name];
+    if (!override || override === 'auto') return m;
+    const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+    return { ...m, status: fakeStatus, _forced: override };
+  });
+
+  const allUp  = effective.every(m => m.status === 2);
+  const anyDown = effective.some(m => m.status === 9);
+  const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+
+  document.getElementById('banner').className = 'banner ' + state;
+  document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
+  document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+  document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+
+  document.getElementById('monitor-list').innerHTML = effective.map(m => {
+    const s  = sc(m.status);
+    // Use _uptime (all_time) if available, else fall back
+    const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+    const upStr = uptime.toFixed(2);
+
+    // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
+    // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
+    const isPaused = m.status === 0 || s === 'paused';
+    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg' || isPaused) ? 50 : uptime;
+
+    const warnings = window._serviceWarnings || {};
+    const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
+    const effectiveStatus = discordDown ? 'paused' : s;
+    const effectiveRatio  = discordDown ? 75 : displayRatio;
+
+    const warnText = (warnings[m.friendly_name] && !m._forced)
+      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+      : '';
+
+    const dotClass   = discordDown ? 'paused' : s;
+    const badgeClass = discordDown ? 'paused' : s;
+    const badgeText  = discordDown ? 'Degraded' : sl(m.status);
+
+    return `<div class="mrow">
+      <div class="sdot ${dotClass}"></div>
+      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
+      ${bars(m, m._forced)}
+      <div class="mup">${upStr}%</div>
+      <div class="badge ${badgeClass}">${badgeText}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('nav-items').innerHTML = effective.map(m => {
+    const s = sc(m.status);
+    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+  }).join('');
+}
+
+function renderForceStatusRows(monitors) {
+  const container = document.getElementById('force-status-rows');
+  if (!container) return;
+  const names = monitors ? monitors.map(m => m.friendly_name) : SERVICE_NAMES;
+  container.innerHTML = names.map(name => {
+    const cur = forceStatus[name] || 'auto';
+    return `<div class="force-row">
+      <div class="force-name">${esc(name)}</div>
+      <div class="force-btns">
+        <button class="force-btn op  ${cur==='op' ?'active':''}" onclick="setForceStatus('${name}','op',this)">Operational</button>
+        <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
+        <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
+        <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setForceStatus(name, value, btn) {
+  forceStatus[name] = value;
+
+  // Immediately update button states in the DOM — no full re-render needed
+  const row = btn.closest('.force-row');
+  row.querySelectorAll('.force-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Update the bot services display
+  if (cache) {
+    const effective = cache.map(m => {
+      const override = forceStatus[m.friendly_name];
+      if (!override || override === 'auto') return m;
+      const fakeStatus = override === 'op' ? 2 : override === 'deg' ? 8 : 9;
+      return { ...m, status: fakeStatus, _forced: override };
+    });
+    const allUp  = effective.every(m => m.status === 2);
+    const anyDown = effective.some(m => m.status === 9);
+    const state  = allUp ? 'operational' : anyDown ? 'outage' : 'degraded';
+    document.getElementById('banner').className = 'banner ' + state;
+    document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
+    document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
+    document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+    document.getElementById('monitor-list').innerHTML = effective.map(m => {
+      const s  = sc(m.status);
+      const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
+      const upStr = uptime.toFixed(2);
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 50 : uptime;
+      const forcedBadge = m._forced
+        ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
+        : '';
+      const warnings = window._serviceWarnings || {};
+      const warnText = warnings[m.friendly_name] && !m._forced
+        ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+        : '';
+      return `<div class="mrow">
+        <div class="sdot ${s}"></div>
+        <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
+        ${bars(m, m._forced)}
+        <div class="mup">${upStr}%</div>
+        <div class="badge ${s}">${sl(m.status)}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('nav-items').innerHTML = effective.map(m => {
+      const s = sc(m.status);
+      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
+    }).join('');
+  }
+
+  await saveForceStatus(name, value);
+  addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
+  showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
+}
+
+function resetCountdown() {
+  clearInterval(timer);
+  // Don't auto-refresh while admin is active — they may be mid-edit
+  if (isAdmin) {
+    document.getElementById('countdown').textContent = '—';
+    document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
+    return;
+  }
+  countdown = 60;
+  document.getElementById('countdown').textContent = countdown;
+  document.getElementById('footer-text').innerHTML = `Refreshes in <span id="countdown">${countdown}</span>s &nbsp;·&nbsp; Powered by AssistBot`;
+  timer = setInterval(() => {
+    countdown--;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = countdown;
+    if (countdown <= 0) fetchStatus(true);
+  }, 1000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Apply full theme (icons, toggle state) now that DOM is ready
+  applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
+  await Promise.all([loadUpdates(), loadForceStatus()]);
+  checkAdminAuth();
+  fetchStatus(true);
+  fetchDiscordStatus();
+  setInterval(fetchDiscordStatus, 300000);
+  setInterval(async () => {
+    await loadUpdates();
+    renderIncidents(currentIncidentFeedCache);
+  }, 60000);
+}
+
+init();
+</script>
 </body>
 </html>
