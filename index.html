@@ -246,6 +246,9 @@
       border: 1px solid rgba(242, 63, 67, 0.4);
       box-shadow: 0 0 0 3px rgba(242, 63, 67, 0.08);
       display: none;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
     .important-banner.visible { display: block; animation: bannerPop 0.3s ease; }
     @keyframes bannerPop { 0% { opacity:0; transform:translateY(-6px); } 100% { opacity:1; transform:translateY(0); } }
@@ -722,38 +725,13 @@
   </div>
 </div>
 
-<!-- Loading Splash — bouncing dots, theme-aware, only on force reload -->
-<div id="splash" style="display:none;">
-  <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
-    <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
-  </svg>
-  <div class="splash-title">AssistBot Status</div>
-  <div class="splash-dots">
-    <span></span><span></span><span></span>
-  </div>
-</div>
-<script>
-// Show splash ONLY on force-reload (Ctrl+Shift+R / hard refresh)
-(function() {
-  const navType = (performance.getEntriesByType('navigation')[0] || {}).type || performance.navigation?.type;
-  // navType === 'reload' covers normal reload; we want only hard reload
-  // Use sessionStorage flag: if set, this is a soft reload — skip splash
-  // Hard reload clears sessionStorage in most browsers, so absence of flag = hard reload
-  const isHardReload = (navType === 'reload' || navType === 1) && !sessionStorage.getItem('assistbot-soft-reload');
-  if (isHardReload) {
-    const splash = document.getElementById('splash');
-    if (splash) splash.style.display = 'flex';
-  }
-  // Set flag for next reload — if user does soft reload this persists; hard reload clears it
-  sessionStorage.setItem('assistbot-soft-reload', '1');
-})();
-</script>
 <style>
 #splash {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
   z-index: 99999; transition: opacity 0.4s ease;
 }
+#splash.visible { display: flex; }
 [data-theme="dark"]  #splash { background: #1e1f22; }
 [data-theme="light"] #splash { background: #e3e5e8; }
 .splash-title {
@@ -770,6 +748,32 @@
 .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes splashDot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
 </style>
+
+<!-- Loading Splash — bouncing dots, theme-aware, only on force reload -->
+<div id="splash">
+  <svg width="60" height="60" viewBox="0 0 127.14 96.36" fill="#5865f2">
+    <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
+  </svg>
+  <div class="splash-title">AssistBot Status</div>
+  <div class="splash-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+<script>
+// Show splash ONLY on force-reload (hard refresh clears sessionStorage)
+(function() {
+  const navType = (performance.getEntriesByType('navigation')[0] || {}).type;
+  const isReload = navType === 'reload';
+  const wasSoftReload = sessionStorage.getItem('assistbot-soft-reload') === '1';
+  const isHardReload = isReload && !wasSoftReload;
+  if (isHardReload) {
+    document.getElementById('splash').classList.add('visible');
+  }
+  // Mark as soft for the next navigation — hard reload clears sessionStorage so flag won't exist
+  if (isReload) sessionStorage.setItem('assistbot-soft-reload', '1');
+  else sessionStorage.removeItem('assistbot-soft-reload');
+})();
+</script>
 
 <div class="toast-container" id="toast-container"></div>
 
@@ -1021,13 +1025,21 @@ async function submitOAuthHandshake() {
   btn.textContent = 'Verifying…';
   showToast("Verifying credentials…", "info");
 
+  // 8-second timeout so slow Vercel cold starts don't block indefinitely
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
   try {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: inputVal })
+      body: JSON.stringify({ password: inputVal }),
+      signal: controller.signal
     });
-    const data = await res.json();
+    clearTimeout(timeout);
+
+    let data = {};
+    try { data = await res.json(); } catch(_) {}
 
     if (res.ok && data.success) {
       sessionStorage.setItem('assistbot-admin-token', data.token);
@@ -1039,7 +1051,13 @@ async function submitOAuthHandshake() {
       document.getElementById('oauth-field').value = '';
     }
   } catch(e) {
-    showToast("Could not reach auth server — login blocked.", "error");
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') {
+      showToast("Auth server timed out — try again.", "error");
+    } else {
+      showToast("Could not reach auth server.", "error");
+    }
+    // Do NOT keep modal open blocking — let user retry
     document.getElementById('oauth-field').value = '';
   } finally {
     btn.disabled = false;
@@ -1119,9 +1137,7 @@ function bars(monitor, forcedOverride) {
     return `<div class="bars">${Array(count).fill('<div class="bar down"></div>').join('')}</div>`;
   }
   if (forcedOverride === 'deg') {
-    const pct = window._forcePct?.[monitor.friendly_name] ?? 50;
-    const filledBars = Math.round((pct / 100) * count);
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < filledBars ? 'warn' : ''}"></div>`).join('')}</div>`;
+    return `<div class="bars">${Array(count).fill('<div class="bar warn"></div>').join('')}</div>`;
   }
   // Paused — 50% yellow
   if (status === 0) {
@@ -1322,7 +1338,13 @@ function renderIncidents(incidents) {
     html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
 
     items.forEach(item => {
-      const topStatus = item.updates.length ? statusDotClass(item.updates[item.updates.length - 1].status) : 'info';
+      // Top dot = color of the most recently CREATED update (chronological, not priority-sorted)
+      const chronoLatest = [...item.updates].sort((a,b) => {
+        const ta = a.time ? new Date(a.time) : 0;
+        const tb = b.time ? new Date(b.time) : 0;
+        return tb - ta;
+      })[0];
+      const topStatus = chronoLatest ? statusDotClass(chronoLatest.status) : 'info';
       const originClass = item._isCustom ? 'assistbot' : 'discord';
       const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
       const isExpanded = expandedIncidentId === String(item.id);
@@ -1532,10 +1554,10 @@ async function pinIncidentAsBanner(incidentId) {
   if (!isAdmin) return;
   const parent = customUpdates.find(u => String(u.id) === String(incidentId) && !u.parent_id);
   if (!parent) { showToast('Could not find incident.', 'error'); return; }
-  // Build summary: title + latest update body
+  // Get the chronologically most recent update (child or parent itself)
   const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(incidentId));
   const allUpdates = [...kids, parent].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  const latest = allUpdates[0];
+  const latest = allUpdates[0]; // newest first
   const text = `[${parent.service || 'All Services'}] ${latest.type ? latest.type.charAt(0).toUpperCase()+latest.type.slice(1)+': ' : ''}${latest.body}`;
   try {
     await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
@@ -1652,10 +1674,10 @@ function render(monitors) {
 
   // Hide splash the moment we have any data to show
   const splash = document.getElementById('splash');
-  if (splash) {
+  if (splash && splash.classList.contains('visible')) {
     splash.style.opacity = '0';
     splash.style.pointerEvents = 'none';
-    setTimeout(() => { splash.style.display = 'none'; }, 400);
+    setTimeout(() => { splash.classList.remove('visible'); splash.style.opacity = ''; }, 400);
   }
 
   // Apply forceStatus overrides
@@ -1684,7 +1706,7 @@ function render(monitors) {
     // For forced overrides: outage = all red, degraded = 50% yellow, operational = real uptime
     // For paused monitors (status 0): show 50% yellow bars regardless of uptime ratio
     const isPaused = m.status === 0 || s === 'paused';
-    const displayRatio = m._forced === 'out' ? 0 : (m._forced === 'deg') ? (window._forcePct?.[m.friendly_name] ?? 50) : isPaused ? 50 : uptime;
+    const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 100 : isPaused ? 50 : uptime;
 
     const warnings = window._serviceWarnings || {};
     const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
@@ -1734,7 +1756,6 @@ function renderForceStatusRows(monitors) {
   const names = monitors ? monitors.map(m => m.friendly_name) : SERVICE_NAMES;
   container.innerHTML = names.map(name => {
     const cur = forceStatus[name] || 'auto';
-    const curPct = window._forcePct?.[name] ?? 50;
     return `<div class="force-row">
       <div class="force-name">${esc(name)}</div>
       <div class="force-btns">
@@ -1742,10 +1763,6 @@ function renderForceStatusRows(monitors) {
         <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
         <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
         <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
-      </div>
-      <div class="force-pct-wrap" style="display:${cur==='deg'?'flex':'none'};align-items:center;gap:4px;margin-top:6px;">
-        <input type="range" min="0" max="100" value="${curPct}" class="force-pct-slider" data-name="${esc(name)}" oninput="updateForcePct('${name}',this.value)" style="width:80px;accent-color:var(--yellow);">
-        <span class="force-pct-label" id="fpct-${esc(name)}">${curPct}%</span>
       </div>
     </div>`;
   }).join('');
@@ -1782,7 +1799,7 @@ async function setForceStatus(name, value, btn) {
       const s  = sc(m.status);
       const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
       const upStr = uptime.toFixed(2);
-      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? (window._forcePct?.[m.friendly_name] ?? 50) : uptime;
+      const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 100 : uptime;
       const forcedBadge = m._forced
         ? `<span style="font-size:10px;font-weight:700;color:var(--faint);margin-left:6px;text-transform:uppercase;opacity:0.7;">(forced)</span>`
         : '';
