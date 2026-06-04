@@ -240,59 +240,6 @@
 
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
-    /* ── IMPORTANT BANNER (admin-pinned, shown at very top) ── */
-    .important-banner {
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid rgba(242, 63, 67, 0.4);
-      display: none;
-      box-shadow: 0 0 0 3px rgba(242, 63, 67, 0.08);
-    }
-    .important-banner.visible {
-      display: block;
-      animation: bannerPop 0.3s ease;
-    }
-    @keyframes bannerPop {
-      0%   { opacity: 0; transform: translateY(-6px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    .important-banner-header {
-      background: var(--red);
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .important-banner-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .important-banner-dismiss {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-transform: uppercase;
-    }
-    .important-banner-dismiss:hover { background: rgba(255, 255, 255, 0.3); }
-    .important-banner-body {
-      background: var(--rdim);
-      padding: 14px 18px;
-      font-size: 13px;
-      color: var(--text);
-      line-height: 1.6;
-      border-top: 1px solid rgba(242, 63, 67, 0.15);
-    }
-
     /* ── BANNER ── */
     .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid transparent; }
     .banner.operational { background: var(--gdim); border-color: rgba(35, 165, 90, 0.2); color: var(--green); }
@@ -644,15 +591,6 @@
 
     <div class="content">
 
-      <!-- Important pinned banner (admin can set) -->
-      <div class="important-banner" id="important-banner">
-        <div class="important-banner-header">
-          <div class="important-banner-title">📌 Important Update</div>
-          <button class="important-banner-dismiss" id="important-dismiss-btn" style="display:none;" onclick="dismissImportantBanner()">✕ Dismiss</button>
-        </div>
-        <div class="important-banner-body" id="important-banner-body"></div>
-      </div>
-
       <div id="banner" class="banner operational">
         <span id="banner-icon">✅</span>
         <span id="banner-label">Evaluating network integrity…</span>
@@ -684,18 +622,6 @@
           <div class="force-status-section">
             <div class="force-status-label">Force Bot Service Status</div>
             <div id="force-status-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
-          </div>
-
-          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-
-          <!-- Post Important Banner -->
-          <div class="sec-subtitle">Post Important Banner</div>
-          <div class="update-form">
-            <textarea id="important-text" placeholder="Post an important message shown at the top for all visitors…" style="min-height:60px;"></textarea>
-            <div class="form-row">
-              <button class="post-btn" style="background:var(--red);" onclick="postImportantBanner()">📌 Pin Banner</button>
-              <button class="post-btn" style="background:var(--faint);margin-left:8px;" onclick="clearImportantBanner()">Clear Banner</button>
-            </div>
           </div>
 
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
@@ -959,61 +885,6 @@ function showToast(message, type = 'info') {
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
 }
 
-// ── IMPORTANT BANNER ─────────────────────────────────────────────────────────
-async function loadImportantBanner() {
-  try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { headers: SUPABASE_HEADERS });
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (rows.length && rows[0].value) {
-      showImportantBanner(rows[0].value);
-    }
-  } catch(e) {}
-}
-
-function showImportantBanner(text) {
-  const b    = document.getElementById('important-banner');
-  const body = document.getElementById('important-banner-body');
-  const btn  = document.getElementById('important-dismiss-btn');
-  if (!b || !body) return;
-  body.textContent = text;
-  b.classList.add('visible');
-  if (isAdmin && btn) btn.style.display = 'block';
-}
-
-function dismissImportantBanner() {
-  const b = document.getElementById('important-banner');
-  if (b) b.classList.remove('visible');
-}
-
-async function postImportantBanner() {
-  if (!isAdmin) return;
-  const text = document.getElementById('important-text')?.value.trim();
-  if (!text) { showToast('Enter a message first.', 'error'); return; }
-  try {
-    // Delete then insert (reliable upsert)
-    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
-    const res = await fetch(SUPABASE_CONFIG, {
-      method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ key: 'important_banner', value: text })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    showImportantBanner(text);
-    document.getElementById('important-text').value = '';
-    showToast('Important banner pinned for all visitors!', 'success');
-  } catch(e) { showToast('Failed: ' + e.message, 'error'); }
-}
-
-async function clearImportantBanner() {
-  if (!isAdmin) return;
-  try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
-    dismissImportantBanner();
-    showToast('Banner cleared.', 'info');
-  } catch(e) { showToast('Failed.', 'error'); }
-}
-
 // ── ADMIN AUTH ───────────────────────────────────────────────────────────────
 function checkAdminAuth() {
   if (sessionStorage.getItem('assistbot-admin-token')) {
@@ -1077,9 +948,6 @@ function enableAdminUI(notify = true) {
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
   document.getElementById('incidents-card').classList.remove('full-width');
-  // Show dismiss button on important banner if it's visible
-  const dismissBtn = document.getElementById('important-dismiss-btn');
-  if (dismissBtn) dismissBtn.style.display = 'block';
   renderIncidents(currentIncidentFeedCache);
   renderForceStatusRows(cache || null);
   if (notify) {
@@ -1096,9 +964,6 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('admin-indicator').style.display = 'none';
   document.getElementById('activity-log-card').style.display = 'none';
   document.getElementById('incidents-card').classList.add('full-width');
-  // Hide dismiss button
-  const dismissBtn = document.getElementById('important-dismiss-btn');
-  if (dismissBtn) dismissBtn.style.display = 'none';
   renderIncidents(currentIncidentFeedCache);
   // Re-render bot services to strip any (forced) badges
   if (cache) render(cache);
@@ -1280,26 +1145,13 @@ function renderIncidents(incidents) {
   const parents = customUpdates.filter(u => !u.parent_id);
   const children = customUpdates.filter(u => u.parent_id);
 
-  // Status priority: resolved always first, then monitoring, identified, investigating
-  function statusPriority(s) {
-    if (!s) return 99;
-    const sl = s.toLowerCase();
-    if (sl.includes('resolv'))   return 0;
-    if (sl.includes('monitor'))  return 1;
-    if (sl.includes('identif'))  return 2;
-    if (sl.includes('investig')) return 3;
-    return 4;
-  }
-
   parents.forEach(u => {
     const kids = children
       .filter(c => String(c.parent_id) === String(u.id))
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    // Combine all updates then sort: resolved first, then by status priority
-    const allUpdates = [...kids, u]
-      .map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }))
-      .sort((a, b) => statusPriority(a.status) - statusPriority(b.status));
+    // newest update first (Resolved shows at top, like Discord)
+    const allUpdates = [...kids, u].reverse().map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }));
 
     allItems.push({
       _isCustom: true,
@@ -1316,16 +1168,10 @@ function renderIncidents(incidents) {
       id: inc.id,
       dateObj: new Date(inc.created_at),
       title: inc.name,
-      updates: (inc.incident_updates || []).slice()
-        .sort((a, b) => {
-          const sp = statusPriority(a.status) - statusPriority(b.status);
-          // If same priority, newer first
-          return sp !== 0 ? sp : new Date(b.created_at) - new Date(a.created_at);
-        })
-        .map(u => ({
-          status: u.status, body: u.body,
-          time: u.created_at ? timeStr(u.created_at) : ''
-        }))
+      updates: (inc.incident_updates || []).slice().sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(u => ({
+        status: u.status, body: u.body,
+        time: u.created_at ? timeStr(u.created_at) : ''
+      }))
     });
   });
 
@@ -1562,16 +1408,6 @@ async function deleteCustomUpdate(id) {
 }
 
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
-function hideSplash() {
-  const splash = document.getElementById('splash');
-  if (!splash) return;
-  splash.style.opacity = '0';
-  setTimeout(() => { splash.style.display = 'none'; }, 400);
-}
-
-// Guaranteed splash hide — no matter what happens, splash is gone after 5s
-setTimeout(hideSplash, 5000);
-
 async function fetchStatus(force = false) {
   const now = Date.now();
   if (!force && cache && (now - lastFetch) < 8000) {
@@ -1582,13 +1418,8 @@ async function fetchStatus(force = false) {
   }
   
   try {
-    // Timeout after 8s so a hanging request doesn't block the splash forever
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-
     // Single call through Vercel proxy — avoids CORS and rate limits
-    const res = await fetch('/api/monitors', { method: 'GET', signal: controller.signal });
-    clearTimeout(timeout);
+    const res = await fetch('/api/monitors', { method: 'GET' });
     const data = await res.json();
     if (!data.monitors) throw new Error('No monitors in response');
 
@@ -1619,20 +1450,12 @@ async function fetchStatus(force = false) {
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
-    console.error('fetchStatus error:', err);
-    // Always hide splash even on failure — show whatever we have
-    hideSplash();
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
       render(renderTarget);
       if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
       addLog('check', 'Serving from cached data.');
-    } else {
-      // No cache at all — show services as unknown so page isn't blank
-      const fallback = SERVICE_NAMES.map(name => ({ friendly_name: name, status: 0, _uptime: 100 }));
-      render(fallback);
-      addLog('check', '<span style="color:var(--red);">Could not reach monitor API.</span>');
     }
   }
   resetCountdown();
@@ -1641,8 +1464,13 @@ async function fetchStatus(force = false) {
 function render(monitors) {
   if (!monitors || !monitors.length) return;
 
-  // Hide splash on first successful data load
-  hideSplash();
+  // Hide splash the moment we have data
+  const splash = document.getElementById('splash');
+  if (splash) {
+    splash.style.opacity = '0';
+    splash.style.pointerEvents = 'none';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
 
   // Apply forceStatus overrides
   const effective = monitors.map(m => {
@@ -1793,12 +1621,26 @@ function resetCountdown() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Apply full theme (icons, toggle state) now that DOM is ready
+  // Apply full theme instantly
   applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
-  await Promise.all([loadUpdates(), loadForceStatus(), loadImportantBanner()]);
-  checkAdminAuth();
+
+  // Render from localStorage cache immediately — hides splash before any network call
+  const backup = localStorage.getItem('assistbot-cache-monitors');
+  if (backup) {
+    try {
+      const cached = JSON.parse(backup);
+      cache = cached;
+      render(cached);
+    } catch(e) {}
+  }
+
+  // Kick off ALL network calls in parallel — don't block monitor fetch on Supabase
   fetchStatus(true);
   fetchDiscordStatus();
+  loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
+  loadForceStatus().then(() => { if (cache) render(cache); });
+  checkAdminAuth();
+
   setInterval(fetchDiscordStatus, 300000);
   setInterval(async () => {
     await loadUpdates();
