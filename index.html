@@ -1564,11 +1564,13 @@ async function deleteCustomUpdate(id) {
 // ── MONITOR FETCH ─────────────────────────────────────────────────────────────
 function hideSplash() {
   const splash = document.getElementById('splash');
-  if (splash && splash.style.display !== 'none') {
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; }, 400);
-  }
+  if (!splash) return;
+  splash.style.opacity = '0';
+  setTimeout(() => { splash.style.display = 'none'; }, 400);
 }
+
+// Guaranteed splash hide — no matter what happens, splash is gone after 5s
+setTimeout(hideSplash, 5000);
 
 async function fetchStatus(force = false) {
   const now = Date.now();
@@ -1580,8 +1582,13 @@ async function fetchStatus(force = false) {
   }
   
   try {
+    // Timeout after 8s so a hanging request doesn't block the splash forever
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     // Single call through Vercel proxy — avoids CORS and rate limits
-    const res = await fetch('/api/monitors', { method: 'GET' });
+    const res = await fetch('/api/monitors', { method: 'GET', signal: controller.signal });
+    clearTimeout(timeout);
     const data = await res.json();
     if (!data.monitors) throw new Error('No monitors in response');
 
