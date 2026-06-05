@@ -237,7 +237,7 @@
     .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .ldot { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-    .ldot.offline { background: var(--red); animation: none; }
+    .ldot.offline { background: var(--muted); animation: none; opacity: 0.5; }
 
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
@@ -661,6 +661,17 @@
 
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
+          <!-- Broadcast Controls -->
+          <div class="sec-subtitle">Broadcast to All Visitors</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <button class="post-btn" style="background:var(--blue,#5865f2);flex:1;" onclick="forceReloadAll()">🔄 Force Reload</button>
+            <button class="post-btn" style="background:var(--muted);flex:1;" onclick="forceSplashAll()">⏳ Force Loading</button>
+            <button class="post-btn" style="background:var(--red);flex:1;" onclick="activateSafeMode()">🛡️ Safe Mode</button>
+          </div>
+          <div style="font-size:11px;color:var(--faint);margin-bottom:8px;">Force Reload — refreshes all open pages · Force Loading — shows splash for 3s · Safe Mode — resets all forced statuses to Auto</div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
           <!-- Post Important Banner -->
           <div class="sec-subtitle">Post Important Banner</div>
           <div class="update-form">
@@ -810,6 +821,69 @@ async function upsertConfig(key, value) {
       body: JSON.stringify({ key, value: String(value) })
     });
   } catch(e) { /* non-critical */ }
+}
+
+// ── BROADCAST SYSTEM ─────────────────────────────────────────────────────────
+// Admin sends commands to all active visitors via Supabase
+
+async function broadcastCommand(cmd) {
+  await upsertConfig('broadcast', JSON.stringify({ cmd, ts: Date.now() }));
+}
+
+async function forceReloadAll() {
+  if (!confirm('Force reload all visitors now?')) return;
+  await broadcastCommand('reload');
+  showToast('Reload broadcast sent to all visitors!', 'success');
+  addLog('update', 'Force reload broadcast sent to all visitors.');
+}
+
+async function forceSplashAll() {
+  if (!confirm('Show loading screen for all visitors?')) return;
+  await broadcastCommand('splash');
+  showToast('Loading screen broadcast sent!', 'success');
+  addLog('update', 'Force loading broadcast sent to all visitors.');
+}
+
+async function activateSafeMode() {
+  if (!confirm('Safe Mode: Reset ALL forced statuses to Auto for everyone?\nThis cannot be undone.')) return;
+  // Delete all force_* keys from Supabase
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
+    const rows = await res.json();
+    await Promise.all(rows.map(r =>
+      fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(r.key)}`, { method: 'DELETE', headers: SUPABASE_HEADERS })
+    ));
+  } catch(e) {}
+  // Clear locally
+  forceStatus = {};
+  localStorage.removeItem('assistbot-force-status');
+  if (cache) render(cache);
+  renderForceStatusRows(cache);
+  showToast('Safe Mode activated — all services reset to Auto.', 'success');
+  addLog('update', '⚠️ Safe Mode activated — all forced statuses cleared.');
+}
+
+// Poll for broadcast commands every 30s — all visitors receive admin commands
+let _lastBroadcastTs = parseInt(sessionStorage.getItem('last_broadcast_ts') || '0');
+async function checkBroadcast() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.broadcast`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows.length) return;
+    const { cmd, ts } = JSON.parse(rows[0].value);
+    if (ts <= _lastBroadcastTs) return; // already handled
+    _lastBroadcastTs = ts;
+    sessionStorage.setItem('last_broadcast_ts', String(ts));
+    if (cmd === 'reload') {
+      showToast('Page reload incoming...', 'info');
+      setTimeout(() => location.reload(), 1500);
+    } else if (cmd === 'splash') {
+      _splashHidden = false; // allow showing again
+      document.getElementById('splash').classList.add('visible');
+      setTimeout(hideSplash, 3000); // auto-hide after 3s
+    }
+  } catch(e) {}
 }
 
 async function loadBotPingFromSupabase() {
@@ -1005,13 +1079,10 @@ function updateLiveIndicator(isOffline) {
   const text = document.getElementById('live-text');
   if (!dot || !text) return;
   if (isOffline) {
-    dot.className = 'ldot offline';
-    text.textContent = 'Offline';
-    text.style.color = 'var(--red)';
+    dot.className = 'ldot offline'; // gray, no pulse
+    // text stays "Live" but dims — ping already shows "Offline"
   } else {
-    dot.className = 'ldot';
-    text.textContent = 'Live';
-    text.style.color = '';
+    dot.className = 'ldot'; // green, pulsing
   }
 }
 
@@ -2066,6 +2137,10 @@ async function init() {
 
   // Safety net — splash always hides within 4 seconds no matter what
   setTimeout(hideSplash, 4000);
+
+  // Poll for admin broadcast commands (reload/splash/etc) every 30s
+  checkBroadcast();
+  setInterval(checkBroadcast, 30000);
 
   setInterval(fetchDiscordStatus, 300000);
   setInterval(async () => {
