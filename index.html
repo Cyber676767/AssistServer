@@ -972,27 +972,17 @@ function updatePingDisplay() {
   else if (forcedStatus === 'deg') effectiveStatus = 8;
   else if (forcedStatus === 'op') effectiveStatus = 2;
   
-  // Get current ping value
-  let currentPing = document.getElementById('ping-val')?.textContent || '—';
-  
-  // If status is outage, show Offline regardless of ping value
-  const displayPing = effectiveStatus === 9 ? 'Offline' : currentPing;
-  const isPingOffline = effectiveStatus === 9;
-  
   const pingEl = document.getElementById('ping-val');
   const pingUnit = document.getElementById('ping-unit');
   
-  pingEl.textContent = displayPing;
-  pingUnit.style.display = isPingOffline ? 'none' : 'inline';
-  
-  // Update color
-  if (isPingOffline) {
+  // If status is outage, show Offline
+  if (effectiveStatus === 9) {
+    pingEl.textContent = 'Offline';
+    pingUnit.style.display = 'none';
     pingEl.style.color = 'var(--red)';
-  } else if (displayPing === '—') {
-    pingEl.style.color = 'var(--faint)';
   } else {
-    const num = parseInt(displayPing);
-    pingEl.style.color = num < 100 ? 'var(--green)' : num < 300 ? 'var(--yellow)' : 'var(--red)';
+    // Show current ping value (or — if not available)
+    pingUnit.style.display = 'inline';
   }
 }
 
@@ -1728,58 +1718,60 @@ async function fetchStatus(force = false) {
       };
     });
 
-    // Get bot's real ping from Discord bot endpoint (not UptimeRobot)
-    let botPing = null;
-    try {
-      const pingRes = await fetch('/api/botping');
-      const pingData = await pingRes.json();
-      if (pingData?.ping && pingData.ping > 0) botPing = Math.round(pingData.ping);
-    } catch(e) {
-      // Bot ping failed, will use fallback below
-    }
-    
-    // Fallback to UptimeRobot response time if bot ping unavailable
-    if (!botPing) {
-      const utPing = m[0]?.average_response_time;
-      if (utPing && utPing > 0) botPing = Math.round(utPing);
-    }
-    
-    // Check forced status first, then actual status
-    const assistbotName = m[0]?.friendly_name || 'Assistbot';
-    const forcedStatus = forceStatus[assistbotName];
-    let effectiveStatus = m[0]?.status;
-    
-    // If forced: 'out' = 9 (outage), 'deg' = 8 (degraded), 'op' = 2 (operational), 'auto' = use actual status
-    if (forcedStatus === 'out') effectiveStatus = 9;
-    else if (forcedStatus === 'deg') effectiveStatus = 8;
-    else if (forcedStatus === 'op') effectiveStatus = 2;
-    // else if 'auto', keep actual status from m[0].status
-    
-    // Show "Offline" only if effectively in outage (status 9)
-    const displayPing = effectiveStatus === 9 ? 'Offline' : botPing ? `${botPing}` : '—';
-    const isPingOffline = effectiveStatus === 9;
-    
-    const pingEl = document.getElementById('ping-val');
-    const pingUnit = document.getElementById('ping-unit');
-    pingEl.textContent = displayPing;
-    pingUnit.style.display = isPingOffline ? 'none' : 'inline'; // Hide "ms" when offline
-    
-    // Color ping: red if offline, green if <100ms, yellow if <300ms, red otherwise
-    if (isPingOffline) {
-      pingEl.style.color = 'var(--red)';
-    } else if (displayPing === '—') {
-      pingEl.style.color = 'var(--faint)';
-    } else {
-      const num = parseInt(displayPing);
-      pingEl.style.color = num < 100 ? 'var(--green)' : num < 300 ? 'var(--yellow)' : 'var(--red)';
+    // Fallback to UptimeRobot response time if needed
+    const utPing = m[0]?.average_response_time;
+    if (utPing && utPing > 0) {
+      const pingVal = Math.round(utPing);
+      const pingEl = document.getElementById('ping-val');
+      const pingUnit = document.getElementById('ping-unit');
+      pingEl.textContent = pingVal;
+      pingEl.style.color = pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+      pingUnit.style.display = 'inline';
     }
 
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
     hideSplash(); // hide splash after successful network fetch
-    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${displayPing}${isPingOffline ? '' : 'ms'}</strong>`);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> · monitoring active`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    
+    // Fetch bot ping asynchronously in background (don't block page load)
+    // Use 2-second timeout to avoid slow Replit cold starts
+    (async () => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        const pingRes = await fetch('/api/botping', { signal: controller.signal });
+        clearTimeout(timeout);
+        const pingData = await pingRes.json();
+        let botPing = pingData?.ping;
+        
+        // Validate: must be a reasonable number (< 5 seconds)
+        if (botPing && typeof botPing === 'number' && botPing > 0 && botPing < 5000) {
+          botPing = Math.round(botPing);
+          const pingEl = document.getElementById('ping-val');
+          const pingUnit = document.getElementById('ping-unit');
+          
+          // Check current force status to decide if we should show the ping
+          const assistbotName = m[0]?.friendly_name || 'Assistbot';
+          const forcedStatus = forceStatus[assistbotName];
+          let effectiveStatus = m[0]?.status;
+          if (forcedStatus === 'out') effectiveStatus = 9;
+          else if (forcedStatus === 'deg') effectiveStatus = 8;
+          else if (forcedStatus === 'op') effectiveStatus = 2;
+          
+          // Only show bot ping if not forced to outage
+          if (effectiveStatus !== 9) {
+            pingEl.textContent = botPing;
+            pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
+            pingUnit.style.display = 'inline';
+          }
+        }
+      } catch(e) {
+        // Bot ping failed or timed out - already showing UptimeRobot fallback above
+      }
+    })();
   } catch(err) {
     hideSplash(); // hide splash even on error — show cached data
     const backup = localStorage.getItem('assistbot-cache-monitors');
