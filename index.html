@@ -237,6 +237,7 @@
     .live-indicator { font-size: 13px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .ldot { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    .ldot.offline { background: var(--red); animation: none; }
 
     .content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 1300px; width: 100%; margin: 0 auto; }
 
@@ -611,7 +612,7 @@
         <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span><span id="ping-unit">ms</span></div>
         <div class="ping-tooltip">Updates every 60 seconds</div>
       </div>
-      <div class="live-indicator"><span class="ldot"></span>Live</div>
+      <div class="live-indicator" id="live-indicator"><span class="ldot" id="live-dot"></span><span id="live-text">Live</span></div>
     </div>
 
     <!-- Important pinned banner — outside scroll container so it's always visible -->
@@ -843,27 +844,23 @@ let forceStatus = {};
 
 // ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
 async function loadForceStatus() {
-  // Try localStorage first (instant, always works)
+  // Use localStorage for instant first paint only
   try {
     const saved = localStorage.getItem('assistbot-force-status');
-    if (saved) {
-      forceStatus = JSON.parse(saved);
-      return;
-    }
-  } catch(e) { }
-  
-  // Fallback to Supabase
+    if (saved) forceStatus = JSON.parse(saved);
+  } catch(e) {}
+
+  // ALWAYS sync from Supabase — this is what non-admin users depend on
   try {
     const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
     if (!res.ok) return;
     const rows = await res.json();
-    forceStatus = {};
-    rows.forEach(r => {
-      const name = r.key.replace('force_', '');
-      forceStatus[name] = r.value;
-    });
+    const supabaseForce = {};
+    rows.forEach(r => { supabaseForce[r.key.replace('force_', '')] = r.value; });
+    // Supabase is the source of truth — update localStorage with latest
+    forceStatus = supabaseForce;
     localStorage.setItem('assistbot-force-status', JSON.stringify(forceStatus));
-  } catch(e) { console.warn('Could not load force status:', e); }
+  } catch(e) { console.warn('Could not sync force status from Supabase:', e); }
 }
 
 async function saveForceStatus(name, value) {
@@ -1003,30 +1000,38 @@ async function loadImportantBanner() {
   } catch(e) {}
 }
 
+function updateLiveIndicator(isOffline) {
+  const dot  = document.getElementById('live-dot');
+  const text = document.getElementById('live-text');
+  if (!dot || !text) return;
+  if (isOffline) {
+    dot.className = 'ldot offline';
+    text.textContent = 'Offline';
+    text.style.color = 'var(--red)';
+  } else {
+    dot.className = 'ldot';
+    text.textContent = 'Live';
+    text.style.color = '';
+  }
+}
+
 function updatePingDisplay() {
-  // Update ping display to reflect current force status
   if (!cache || !cache[0]) return;
-  
   const assistbotName = cache[0]?.friendly_name || 'Assistbot';
   const forcedStatus = forceStatus[assistbotName];
   let effectiveStatus = cache[0]?.status;
-  
-  // If forced: 'out' = 9, 'deg' = 8, 'op' = 2, 'auto' = actual status
   if (forcedStatus === 'out') effectiveStatus = 9;
   else if (forcedStatus === 'deg') effectiveStatus = 8;
   else if (forcedStatus === 'op') effectiveStatus = 2;
-  
-  const pingEl = document.getElementById('ping-val');
+  const pingEl   = document.getElementById('ping-val');
   const pingUnit = document.getElementById('ping-unit');
-  
-  // If status is outage, show Offline
   if (effectiveStatus === 9) {
-    pingEl.textContent = 'Offline';
-    pingUnit.style.display = 'none';
-    pingEl.style.color = 'var(--red)';
+    if (pingEl) { pingEl.textContent = 'Offline'; pingEl.style.color = 'var(--red)'; }
+    if (pingUnit) pingUnit.style.display = 'none';
+    updateLiveIndicator(true);
   } else {
-    // Show current ping value (or — if not available)
-    pingUnit.style.display = 'inline';
+    if (pingUnit) pingUnit.style.display = 'inline';
+    updateLiveIndicator(false);
   }
 }
 
@@ -1856,6 +1861,7 @@ function render(monitors) {
   document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
   document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
   document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
+  updatePingDisplay();  // sync ping + live indicator with current effective status
 
   document.getElementById('monitor-list').innerHTML = effective.map(m => {
     const s  = sc(m.status);
@@ -1959,27 +1965,14 @@ async function setForceStatus(name, value, btn) {
         <div class="sdot ${s}"></div>
         <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
         ${bars(m, m._forced)}
-        <div class="mup">${upStr}%</div>
         <div class="badge ${s}">${sl(m.status)}</div>
       </div>`;
     }).join('');
     document.getElementById('nav-items').innerHTML = effective.map(m => {
       const s = sc(m.status);
-      const svcUpdates = customUpdates.filter(u => !u.parent_id && (u.service === m.friendly_name || u.service === 'All Services'));
-      let dotClass = s;
-      if (svcUpdates.length) {
-        const latest = svcUpdates.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
-        const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(latest.id));
-        const allU = [...kids, latest].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-        const latestStatus = (allU[0]?.type || '').toLowerCase();
-        if (latestStatus.includes('resolv')) dotClass = 'up';
-        else if (latestStatus.includes('monitor')) dotClass = 'paused';
-        else if (latestStatus.includes('identif')) dotClass = 'paused';
-        else if (latestStatus.includes('investig')) dotClass = 'down';
-      }
-      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${dotClass}"></div>${esc(m.friendly_name)}</div>`;
+      return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
     }).join('');
-  }
+    updatePingDisplay(); // sync ping + live indicator
 
   await saveForceStatus(name, value);
   addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
