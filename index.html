@@ -1718,15 +1718,17 @@ async function fetchStatus(force = false) {
       };
     });
 
-    // Fallback to UptimeRobot response time if needed
-    const utPing = m[0]?.average_response_time;
+    // Use UptimeRobot response time as immediate fallback
+    const utPing = m[0]?.response_times?.[0]?.value;
     if (utPing && utPing > 0) {
       const pingVal = Math.round(utPing);
       const pingEl = document.getElementById('ping-val');
       const pingUnit = document.getElementById('ping-unit');
-      pingEl.textContent = pingVal;
-      pingEl.style.color = pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
-      pingUnit.style.display = 'inline';
+      if (pingEl) {
+        pingEl.textContent = pingVal;
+        pingEl.style.color = pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+      }
+      if (pingUnit) pingUnit.style.display = 'inline';
     }
 
     cache = m; lastFetch = Date.now();
@@ -1762,10 +1764,10 @@ async function fetchStatus(force = false) {
           else if (forcedStatus === 'op') effectiveStatus = 2;
           
           // Only show bot ping if not forced to outage
-          if (effectiveStatus !== 9) {
+          if (effectiveStatus !== 9 && pingEl) {
             pingEl.textContent = botPing;
             pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
-            pingUnit.style.display = 'inline';
+            if (pingUnit) pingUnit.style.display = 'inline';
           }
         }
       } catch(e) {
