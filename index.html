@@ -608,7 +608,7 @@
         </div>
       </div>
       <div class="ping-wrapper">
-        <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span>ms</div>
+        <div class="ping-pill">Ping: <span id="ping-val" style="color: var(--green); font-weight: 600;">—</span><span id="ping-unit">ms</span></div>
         <div class="ping-tooltip">Updates every 60 seconds</div>
       </div>
       <div class="live-indicator"><span class="ldot"></span>Live</div>
@@ -1691,19 +1691,41 @@ async function fetchStatus(force = false) {
       };
     });
 
-    // Real ping: average_response_time from Assistbot monitor (index 0)
-    const rawPing = m[0]?.average_response_time;
-    const pingVal = rawPing && rawPing > 0 ? Math.round(rawPing) : '—';
-    document.getElementById('ping-val').textContent = pingVal;
-    // Color ping based on latency
+    // Get bot's real ping from Discord bot endpoint (not UptimeRobot)
+    let botPing = '—';
+    try {
+      const pingRes = await fetch('/api/botping');
+      const pingData = await pingRes.json();
+      if (pingData?.ping && pingData.ping > 0) botPing = Math.round(pingData.ping);
+    } catch(e) {
+      // Fall back to silent fail, show —
+    }
+    
+    // If AssistBot is in outage (status 9), show "Offline" instead of ping
+    const assistbotStatus = m[0]?.status;
+    const displayPing = assistbotStatus === 9 ? 'Offline' : botPing === '—' ? '—' : `${botPing}`;
+    const isPingOffline = assistbotStatus === 9;
+    
     const pingEl = document.getElementById('ping-val');
-    pingEl.style.color = pingVal === '—' ? 'var(--faint)' : pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
+    const pingUnit = document.getElementById('ping-unit');
+    pingEl.textContent = displayPing;
+    pingUnit.style.display = isPingOffline ? 'none' : 'inline'; // Hide "ms" when offline
+    
+    // Color ping: red if offline, green if <100ms, yellow if <300ms, red otherwise
+    if (isPingOffline) {
+      pingEl.style.color = 'var(--red)';
+    } else if (displayPing === '—') {
+      pingEl.style.color = 'var(--faint)';
+    } else {
+      const num = parseInt(displayPing);
+      pingEl.style.color = num < 100 ? 'var(--green)' : num < 300 ? 'var(--yellow)' : 'var(--red)';
+    }
 
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
     hideSplash(); // hide splash after successful network fetch
-    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${pingVal}ms</strong>`);
+    addLog('check', `Scanned <strong>${m.length} nodes</strong> · ping <strong>${displayPing}${isPingOffline ? '' : 'ms'}</strong>`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
   } catch(err) {
     hideSplash(); // hide splash even on error — show cached data
