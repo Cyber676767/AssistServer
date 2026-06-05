@@ -959,6 +959,43 @@ async function loadImportantBanner() {
   } catch(e) {}
 }
 
+function updatePingDisplay() {
+  // Update ping display to reflect current force status
+  if (!cache || !cache[0]) return;
+  
+  const assistbotName = cache[0]?.friendly_name || 'Assistbot';
+  const forcedStatus = forceStatus[assistbotName];
+  let effectiveStatus = cache[0]?.status;
+  
+  // If forced: 'out' = 9, 'deg' = 8, 'op' = 2, 'auto' = actual status
+  if (forcedStatus === 'out') effectiveStatus = 9;
+  else if (forcedStatus === 'deg') effectiveStatus = 8;
+  else if (forcedStatus === 'op') effectiveStatus = 2;
+  
+  // Get current ping value
+  let currentPing = document.getElementById('ping-val')?.textContent || '—';
+  
+  // If status is outage, show Offline regardless of ping value
+  const displayPing = effectiveStatus === 9 ? 'Offline' : currentPing;
+  const isPingOffline = effectiveStatus === 9;
+  
+  const pingEl = document.getElementById('ping-val');
+  const pingUnit = document.getElementById('ping-unit');
+  
+  pingEl.textContent = displayPing;
+  pingUnit.style.display = isPingOffline ? 'none' : 'inline';
+  
+  // Update color
+  if (isPingOffline) {
+    pingEl.style.color = 'var(--red)';
+  } else if (displayPing === '—') {
+    pingEl.style.color = 'var(--faint)';
+  } else {
+    const num = parseInt(displayPing);
+    pingEl.style.color = num < 100 ? 'var(--green)' : num < 300 ? 'var(--yellow)' : 'var(--red)';
+  }
+}
+
 function showImportantBanner(text) {
   const b    = document.getElementById('important-banner');
   const body = document.getElementById('important-banner-body');
@@ -1707,10 +1744,20 @@ async function fetchStatus(force = false) {
       if (utPing && utPing > 0) botPing = Math.round(utPing);
     }
     
-    // If AssistBot is in outage (status 9), show "Offline" instead of ping
-    const assistbotStatus = m[0]?.status;
-    const displayPing = assistbotStatus === 9 ? 'Offline' : botPing ? `${botPing}` : '—';
-    const isPingOffline = assistbotStatus === 9;
+    // Check forced status first, then actual status
+    const assistbotName = m[0]?.friendly_name || 'Assistbot';
+    const forcedStatus = forceStatus[assistbotName];
+    let effectiveStatus = m[0]?.status;
+    
+    // If forced: 'out' = 9 (outage), 'deg' = 8 (degraded), 'op' = 2 (operational), 'auto' = use actual status
+    if (forcedStatus === 'out') effectiveStatus = 9;
+    else if (forcedStatus === 'deg') effectiveStatus = 8;
+    else if (forcedStatus === 'op') effectiveStatus = 2;
+    // else if 'auto', keep actual status from m[0].status
+    
+    // Show "Offline" only if effectively in outage (status 9)
+    const displayPing = effectiveStatus === 9 ? 'Offline' : botPing ? `${botPing}` : '—';
+    const isPingOffline = effectiveStatus === 9;
     
     const pingEl = document.getElementById('ping-val');
     const pingUnit = document.getElementById('ping-unit');
@@ -1834,6 +1881,9 @@ async function setForceStatus(name, value, btn) {
   // Show/hide pct slider for degraded
   const pctWrap = row.querySelector('.force-pct-wrap');
   if (pctWrap) pctWrap.style.display = value === 'deg' ? 'flex' : 'none';
+
+  // Update ping display to reflect new force status
+  updatePingDisplay();
 
   // Update the bot services display
   if (cache) {
