@@ -773,6 +773,7 @@ document.getElementById('splash').classList.add('visible');
 <script>
 // ── SPLASH ───────────────────────────────────────────────────────────────────
 let _splashHidden = false;
+let lastPingValue = null; // Keep last known ping across reloads
 function hideSplash() {
   if (_splashHidden) return;
   _splashHidden = true;
@@ -810,6 +811,16 @@ let forceStatus = {};
 
 // ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
 async function loadForceStatus() {
+  // Try localStorage first (instant, always works)
+  try {
+    const saved = localStorage.getItem('assistbot-force-status');
+    if (saved) {
+      forceStatus = JSON.parse(saved);
+      return;
+    }
+  } catch(e) { }
+  
+  // Fallback to Supabase
   try {
     const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
     if (!res.ok) return;
@@ -819,13 +830,18 @@ async function loadForceStatus() {
       const name = r.key.replace('force_', '');
       forceStatus[name] = r.value;
     });
+    localStorage.setItem('assistbot-force-status', JSON.stringify(forceStatus));
   } catch(e) { console.warn('Could not load force status:', e); }
 }
 
 async function saveForceStatus(name, value) {
+  // Save to localStorage immediately (always works)
+  forceStatus[name] = value;
+  localStorage.setItem('assistbot-force-status', JSON.stringify(forceStatus));
+  
+  // Also try Supabase (async, non-blocking)
   const key = `force_${name}`;
   try {
-    // DELETE then INSERT is the most reliable upsert for Supabase free tier
     await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
       method: 'DELETE',
       headers: SUPABASE_HEADERS
@@ -835,13 +851,9 @@ async function saveForceStatus(name, value) {
       headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ key, value })
     });
-    if (!ins.ok) {
-      const err = await ins.text();
-      throw new Error(err);
-    }
+    if (!ins.ok) throw new Error('Supabase save failed');
   } catch(e) {
-    console.error('Could not save force status:', e);
-    showToast('Failed to save: ' + e.message, 'error');
+    console.warn('Supabase save failed, using localStorage:', e.message);
   }
 }
 
@@ -1718,19 +1730,6 @@ async function fetchStatus(force = false) {
       };
     });
 
-    // Use UptimeRobot response time as immediate fallback
-    const utPing = m[0]?.response_times?.[0]?.value;
-    if (utPing && utPing > 0) {
-      const pingVal = Math.round(utPing);
-      const pingEl = document.getElementById('ping-val');
-      const pingUnit = document.getElementById('ping-unit');
-      if (pingEl) {
-        pingEl.textContent = pingVal;
-        pingEl.style.color = pingVal < 100 ? 'var(--green)' : pingVal < 300 ? 'var(--yellow)' : 'var(--red)';
-      }
-      if (pingUnit) pingUnit.style.display = 'inline';
-    }
-
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
@@ -1739,18 +1738,18 @@ async function fetchStatus(force = false) {
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     
     // Fetch bot ping asynchronously in background (don't block page load)
-    // Use 2-second timeout to avoid slow Replit cold starts
+    // Use 5-second timeout to allow Replit to wake up if cold
     (async () => {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 2000);
+        const timeout = setTimeout(() => controller.abort(), 5000);
         const pingRes = await fetch('/api/botping', { signal: controller.signal });
         clearTimeout(timeout);
         const pingData = await pingRes.json();
         let botPing = pingData?.ping;
         
-        // Validate: must be a reasonable number (< 5 seconds)
-        if (botPing && typeof botPing === 'number' && botPing > 0 && botPing < 5000) {
+        // Validate: must be a reasonable number (< 10 seconds)
+        if (botPing && typeof botPing === 'number' && botPing > 0 && botPing < 10000) {
           botPing = Math.round(botPing);
           const pingEl = document.getElementById('ping-val');
           const pingUnit = document.getElementById('ping-unit');
@@ -1766,12 +1765,14 @@ async function fetchStatus(force = false) {
           // Only show bot ping if not forced to outage
           if (effectiveStatus !== 9 && pingEl) {
             pingEl.textContent = botPing;
+            lastPingValue = String(botPing);
+            sessionStorage.setItem('assistbot-last-ping', lastPingValue);
             pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
           }
         }
       } catch(e) {
-        // Bot ping failed or timed out - already showing UptimeRobot fallback above
+        // Bot ping failed or timed out - show —
       }
     })();
   } catch(err) {
@@ -1835,7 +1836,6 @@ function render(monitors) {
       <div class="sdot ${dotClass}"></div>
       <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
       ${bars(m, m._forced)}
-      <div class="mup">${upStr}%</div>
       <div class="badge ${badgeClass}">${badgeText}</div>
     </div>`;
   }).join('');
@@ -1981,6 +1981,16 @@ function resetCountdown() {
 async function init() {
   // Apply full theme instantly
   applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
+
+  // Restore last known ping value (don't reset to — on reload)
+  try {
+    const savedPing = sessionStorage.getItem('assistbot-last-ping');
+    if (savedPing) {
+      lastPingValue = savedPing;
+      const pingEl = document.getElementById('ping-val');
+      if (pingEl) pingEl.textContent = savedPing;
+    }
+  } catch(e) { }
 
   // Render from localStorage cache immediately — hides splash before any network call
   const backup = localStorage.getItem('assistbot-cache-monitors');
