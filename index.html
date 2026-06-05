@@ -1692,18 +1692,24 @@ async function fetchStatus(force = false) {
     });
 
     // Get bot's real ping from Discord bot endpoint (not UptimeRobot)
-    let botPing = '—';
+    let botPing = null;
     try {
       const pingRes = await fetch('/api/botping');
       const pingData = await pingRes.json();
       if (pingData?.ping && pingData.ping > 0) botPing = Math.round(pingData.ping);
     } catch(e) {
-      // Fall back to silent fail, show —
+      // Bot ping failed, will use fallback below
+    }
+    
+    // Fallback to UptimeRobot response time if bot ping unavailable
+    if (!botPing) {
+      const utPing = m[0]?.average_response_time;
+      if (utPing && utPing > 0) botPing = Math.round(utPing);
     }
     
     // If AssistBot is in outage (status 9), show "Offline" instead of ping
     const assistbotStatus = m[0]?.status;
-    const displayPing = assistbotStatus === 9 ? 'Offline' : botPing === '—' ? '—' : `${botPing}`;
+    const displayPing = assistbotStatus === 9 ? 'Offline' : botPing ? `${botPing}` : '—';
     const isPingOffline = assistbotStatus === 9;
     
     const pingEl = document.getElementById('ping-val');
