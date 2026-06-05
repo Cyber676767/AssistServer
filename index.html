@@ -1730,6 +1730,22 @@ async function fetchStatus(force = false) {
       };
     });
 
+    // Keep last known good status — prevents "Paused" flash on spam reload
+    // UptimeRobot returns status:0 (paused) when rate-limited or API hiccup
+    const lastGoodStatus = JSON.parse(localStorage.getItem('assistbot-last-good-status') || '{}');
+    m.forEach(mon => {
+      if (mon.status === 0 || mon.status === undefined) {
+        // API returned paused/empty — use last known real status
+        if (lastGoodStatus[mon.friendly_name] !== undefined) {
+          mon.status = lastGoodStatus[mon.friendly_name];
+        }
+      } else {
+        // Real status — save it
+        lastGoodStatus[mon.friendly_name] = mon.status;
+      }
+    });
+    localStorage.setItem('assistbot-last-good-status', JSON.stringify(lastGoodStatus));
+
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
@@ -1766,7 +1782,7 @@ async function fetchStatus(force = false) {
           if (effectiveStatus !== 9 && pingEl) {
             pingEl.textContent = botPing;
             lastPingValue = String(botPing);
-            sessionStorage.setItem('assistbot-last-ping', lastPingValue);
+            localStorage.setItem('assistbot-last-ping', lastPingValue); // localStorage persists across reloads
             pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
           }
@@ -1979,20 +1995,27 @@ function resetCountdown() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Apply full theme instantly
   applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
 
-  // Restore last known ping value (don't reset to — on reload)
+  // Load force status SYNCHRONOUSLY from localStorage BEFORE first render
+  // so force badges/bars are correct on first paint, not on second render
   try {
-    const savedPing = sessionStorage.getItem('assistbot-last-ping');
-    if (savedPing) {
-      lastPingValue = savedPing;
-      const pingEl = document.getElementById('ping-val');
-      if (pingEl) pingEl.textContent = savedPing;
-    }
-  } catch(e) { }
+    const saved = localStorage.getItem('assistbot-force-status');
+    if (saved) forceStatus = JSON.parse(saved);
+  } catch(e) {}
 
-  // Render from localStorage cache immediately — hides splash before any network call
+  // Restore last known ping immediately (show cached value, not —)
+  try {
+    const savedPing = localStorage.getItem('assistbot-last-ping');
+    if (savedPing) {
+      const pingEl = document.getElementById('ping-val');
+      const pingUnit = document.getElementById('ping-unit');
+      if (pingEl) { pingEl.textContent = savedPing; pingEl.style.color = 'var(--green)'; }
+      if (pingUnit) pingUnit.style.display = 'inline';
+    }
+  } catch(e) {}
+
+  // Render from localStorage cache immediately WITH force status already loaded
   const backup = localStorage.getItem('assistbot-cache-monitors');
   if (backup) {
     try {
@@ -2002,11 +2025,12 @@ async function init() {
     } catch(e) {}
   }
 
-  // Kick off ALL network calls in parallel — don't block monitor fetch on Supabase
+  // Kick off ALL network calls in parallel
   fetchStatus(true);
   fetchDiscordStatus();
   loadImportantBanner();
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
+  // Sync force status from Supabase in background (updates localStorage for next load)
   loadForceStatus().then(() => { if (cache) render(cache); });
   checkAdminAuth();
 
