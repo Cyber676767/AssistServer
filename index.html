@@ -964,7 +964,12 @@ function showImportantBanner(text) {
   const body = document.getElementById('important-banner-body');
   const btn  = document.getElementById('important-dismiss-btn');
   if (!b || !body) return;
-  body.textContent = text;
+  // Support multi-line text by safely escaping HTML and converting \n to <br>
+  const safeText = String(text)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+  body.innerHTML = safeText.replace(/\n/g, '<br>');
   b.classList.add('visible');
   if (isAdmin && btn) btn.style.display = 'block';
 }
@@ -1092,6 +1097,7 @@ function enableAdminUI(notify = true) {
 function disableAdminUI(logEvent = true) {
   const wasAdmin = isAdmin;
   isAdmin = false;
+  clearInterval(timer); // immediately stop any running timer
   sessionStorage.removeItem('assistbot-admin-token');
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-indicator').style.display = 'none';
@@ -1099,10 +1105,12 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('incidents-card').classList.add('full-width');
   const dismissBtn = document.getElementById('important-dismiss-btn');
   if (dismissBtn) dismissBtn.style.display = 'none';
+  // IMMEDIATELY reset footer text to show countdown is resuming
+  document.getElementById('footer-text').innerHTML = 'Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot';
   renderIncidents(currentIncidentFeedCache);
   // Re-render bot services to strip any (forced) badges
   if (cache) render(cache);
-  // Resume auto-refresh
+  // Resume auto-refresh with fresh countdown
   resetCountdown();
   if (logEvent && wasAdmin) {
     addLog('check', "Admin session ended.");
@@ -1560,12 +1568,26 @@ async function pinIncidentAsBanner(incidentId) {
   if (!isAdmin) return;
   const parent = customUpdates.find(u => String(u.id) === String(incidentId) && !u.parent_id);
   if (!parent) { showToast('Could not find incident.', 'error'); return; }
-  // Pin the latest child update. If no children, pin the parent itself.
-  const kids = customUpdates
-    .filter(u => u.parent_id && String(u.parent_id) === String(incidentId))
-    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  const latest = kids.length > 0 ? kids[0] : parent;
-  const text = `[${parent.service || 'All Services'}] ${latest.type ? latest.type.charAt(0).toUpperCase()+latest.type.slice(1)+': ' : ''}${latest.body}`;
+  
+  // Include ALL updates (children + parent), sorted chronologically newest first
+  const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(incidentId));
+  const allUpdates = [...kids, parent].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  
+  // Format: emoji + status + message (with date)
+  const statusEmoji = type => {
+    if (!type) return 'ℹ️';
+    const t = type.toLowerCase();
+    return t.includes('resolv') ? '✅' : t.includes('monitor') ? '👁️' : t.includes('identif') ? '⚠️' : t.includes('investig') ? '🔍' : 'ℹ️';
+  };
+  
+  const header = `[${parent.service || 'All Services'}]`;
+  const updateLines = allUpdates.map(u => {
+    const status = u.type ? u.type.charAt(0).toUpperCase() + u.type.slice(1) : 'Update';
+    const dateStr = u.date ? ` (${u.date})` : '';
+    return `${statusEmoji(u.type)} ${status}: ${u.body}${dateStr}`;
+  });
+  const text = header + '\n' + updateLines.join('\n');
+  
   try {
     await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
     const res = await fetch(SUPABASE_CONFIG, {
@@ -1575,7 +1597,7 @@ async function pinIncidentAsBanner(incidentId) {
     });
     if (!res.ok) throw new Error(await res.text());
     showImportantBanner(text);
-    showToast('Incident pinned as Important Banner!', 'success');
+    showToast('All incident updates pinned as Important Banner!', 'success');
   } catch(e) { showToast('Failed to pin: ' + e.message, 'error'); }
 }
 
@@ -1751,21 +1773,7 @@ function render(monitors) {
 
   document.getElementById('nav-items').innerHTML = effective.map(m => {
     const s = sc(m.status);
-    // Find the most recent custom update for this service and color the dot by its status
-    const svcUpdates = customUpdates.filter(u => !u.parent_id && (u.service === m.friendly_name || u.service === 'All Services'));
-    let dotClass = s;
-    if (svcUpdates.length) {
-      const latest = svcUpdates.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
-      // Also check children of this parent
-      const kids = customUpdates.filter(u => u.parent_id && String(u.parent_id) === String(latest.id));
-      const allU = [...kids, latest].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-      const latestStatus = (allU[0]?.type || '').toLowerCase();
-      if (latestStatus.includes('resolv')) dotClass = 'up';
-      else if (latestStatus.includes('monitor')) dotClass = 'paused';
-      else if (latestStatus.includes('identif')) dotClass = 'paused';
-      else if (latestStatus.includes('investig')) dotClass = 'down';
-    }
-    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${dotClass}"></div>${esc(m.friendly_name)}</div>`;
+    return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
   }).join('');
 }
 
@@ -1877,8 +1885,10 @@ function updateForcePct(name, val) {
 
 function resetCountdown() {
   clearInterval(timer);
-  // Don't auto-refresh while admin is active — they may be mid-edit
-  if (isAdmin) {
+  // Validate admin state against sessionStorage — double-check we're really admin
+  const isReallyAdmin = isAdmin && !!sessionStorage.getItem('assistbot-admin-token');
+  
+  if (isReallyAdmin) {
     document.getElementById('countdown').textContent = '—';
     document.getElementById('footer-text').innerHTML = 'Auto-refresh paused in admin mode &nbsp;·&nbsp; Powered by AssistBot';
     return;
