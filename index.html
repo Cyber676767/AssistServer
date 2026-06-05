@@ -798,6 +798,38 @@ const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
 const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
 const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
 const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
+
+// ── SUPABASE HELPERS ─────────────────────────────────────────────────────────
+async function upsertConfig(key, value) {
+  try {
+    await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', headers: SUPABASE_HEADERS });
+    await fetch(SUPABASE_CONFIG, {
+      method: 'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ key, value: String(value) })
+    });
+  } catch(e) { /* non-critical */ }
+}
+
+async function loadBotPingFromSupabase() {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.last_bot_ping`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows.length || !rows[0].value) return;
+    const ping = parseInt(rows[0].value);
+    if (!ping || ping <= 0) return;
+    // Only use if we don't already have a better value showing
+    const pingEl = document.getElementById('ping-val');
+    const pingUnit = document.getElementById('ping-unit');
+    if (pingEl && (pingEl.textContent === '—' || !pingEl.textContent)) {
+      pingEl.textContent = ping;
+      pingEl.style.color = ping < 100 ? 'var(--green)' : ping < 300 ? 'var(--yellow)' : 'var(--red)';
+      if (pingUnit) pingUnit.style.display = 'inline';
+      localStorage.setItem('assistbot-last-ping', String(ping));
+    }
+  } catch(e) { /* non-critical */ }
+}
 const INCIDENT_API     = 'https://discordstatus.com/api/v2/incidents.json';
 
 let countdown = 60, timer, lastFetch = 0, cache = null, logs = [];
@@ -1782,7 +1814,8 @@ async function fetchStatus(force = false) {
           if (effectiveStatus !== 9 && pingEl) {
             pingEl.textContent = botPing;
             lastPingValue = String(botPing);
-            localStorage.setItem('assistbot-last-ping', lastPingValue); // localStorage persists across reloads
+            localStorage.setItem('assistbot-last-ping', lastPingValue);
+            upsertConfig('last_bot_ping', botPing); // Sync to Supabase for all visitors
             pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
           }
@@ -2029,6 +2062,7 @@ async function init() {
   fetchStatus(true);
   fetchDiscordStatus();
   loadImportantBanner();
+  loadBotPingFromSupabase(); // Load last known ping from Supabase for all visitors
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
   // Sync force status from Supabase in background (updates localStorage for next load)
   loadForceStatus().then(() => { if (cache) render(cache); });
