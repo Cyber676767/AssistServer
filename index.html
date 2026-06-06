@@ -679,6 +679,22 @@
           <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;"></textarea>
           <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: if ON, auto-disables when you log out</div>
 
+          <!-- Splash Background Color -->
+          <div style="margin-top:10px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:6px;">Splash Screen Background</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <button onclick="setSplashBg('theme')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">Theme Default</button>
+              <button onclick="setSplashBg('#1e1f22')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #1e1f22;background:#1e1f22;color:#fff;cursor:pointer;">Dark</button>
+              <button onclick="setSplashBg('#000000')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #333;background:#000;color:#fff;cursor:pointer;">Black</button>
+              <button onclick="setSplashBg('#5865f2')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #5865f2;background:#5865f2;color:#fff;cursor:pointer;">Blurple</button>
+              <button onclick="setSplashBg('#23a55a')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #23a55a;background:#23a55a;color:#fff;cursor:pointer;">Green</button>
+              <button onclick="setSplashBg('#f23f43')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #f23f43;background:#f23f43;color:#fff;cursor:pointer;">Red</button>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:var(--muted);">
+                Custom: <input type="color" id="splash-bg-custom" value="#1e1f22" oninput="setSplashBg(this.value)" style="width:32px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none;">
+              </label>
+            </div>
+          </div>
+
           <div style="height:1px;background:var(--border);margin:8px 0;"></div>
 
           <!-- Post Important Banner -->
@@ -997,8 +1013,35 @@ let currentIncidentFeedCache = [];
 
 const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
 let forceStatus = {};
+let hiddenServices = JSON.parse(localStorage.getItem('assistbot-hidden-services') || '{}');
+let splashBgColor = localStorage.getItem('assistbot-splash-bg') || '';
 
 // ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+async function loadSplashBg() {
+  try {
+    const res = await fetch('/api/config-get?key=splash_bg');
+    if (!res.ok) return;
+    const { rows } = await res.json();
+    if (rows && rows.length && rows[0].value !== undefined) {
+      splashBgColor = rows[0].value;
+      localStorage.setItem('assistbot-splash-bg', splashBgColor);
+      applySplashBg();
+    }
+  } catch(e) {}
+}
+
+async function loadHiddenServices() {
+  try {
+    const res = await fetch('/api/config-get?key=hidden_services');
+    if (!res.ok) return;
+    const { rows } = await res.json();
+    if (rows && rows.length && rows[0].value) {
+      hiddenServices = JSON.parse(rows[0].value);
+      localStorage.setItem('assistbot-hidden-services', JSON.stringify(hiddenServices));
+    }
+  } catch(e) {}
+}
+
 async function loadForceStatus() {
   // Use localStorage for instant first paint only
   try {
@@ -1339,6 +1382,20 @@ function disableAdminUI(logEvent = true) {
   const wasAdmin = isAdmin;
   isAdmin = false;
   clearInterval(timer); // immediately stop any running timer
+  // 🛡️ Safe Mode — MUST run before removing token so upsertConfig still has auth
+  const forceToggle = document.getElementById('force-loading-toggle');
+  const forceIsOn = forceToggle ? forceToggle.checked : _forceLoadingActive;
+  if (forceIsOn) {
+    // Token still valid here — run async so it fires before session clears
+    fetch('/api/config-set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAdminToken()}` },
+      body: JSON.stringify({ key: 'force_loading', value: JSON.stringify({ active: false, message: '', ts: Date.now() }) })
+    }).catch(() => {});
+    setToggleUI(false);
+    showToast('Safe Mode: Force loading auto-disabled.', 'info');
+    addLog('update', '🛡️ Safe Mode triggered — force loading disabled on logout.');
+  }
   sessionStorage.removeItem('assistbot-admin-token');
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-indicator').style.display = 'none';
@@ -1347,15 +1404,6 @@ function disableAdminUI(logEvent = true) {
   // IMMEDIATELY reset footer text to show countdown is resuming
   document.getElementById('footer-text').innerHTML = 'Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot';
   
-  // 🛡️ Safe Mode — auto-disable force loading if admin forgot to turn it off
-  const forceToggle = document.getElementById('force-loading-toggle');
-  const forceIsOn = forceToggle ? forceToggle.checked : _forceLoadingActive;
-  if (forceIsOn) {
-    upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
-    setToggleUI(false);
-    showToast('Safe Mode: Force loading auto-disabled.', 'info');
-    addLog('update', '🛡️ Safe Mode triggered — force loading disabled on logout.');
-  }
   // Banner buttons: restore Dismiss for visitors, hide Delete Live
   const dismissBtn = document.getElementById('important-dismiss-btn');
   const deleteBtn  = document.getElementById('important-delete-btn');
@@ -1386,8 +1434,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── UTILITIES ────────────────────────────────────────────────────────────────
-const sc   = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown';
-const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':'Paused';
+const sc   = s => s===2?'up':s===9?'down':s===8?'paused':s===0?'paused':'unknown'; // paused shows as yellow
+const sl   = s => s===2?'Operational':s===9?'Major Outage':s===8?'Degraded Performance':s===0?'Degraded Performance':'Unknown';
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const now12= () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 const dateStr = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -1405,9 +1453,9 @@ function bars(monitor, forcedOverride) {
   if (forcedOverride === 'deg') {
     return `<div class="bars">${Array(count).fill('<div class="bar warn"></div>').join('')}</div>`;
   }
-  // Paused — 50% yellow
+  // Paused (UptimeRobot status 0) — show as degraded: full yellow bars
   if (status === 0) {
-    return `<div class="bars">${Array(count).fill(0).map((_,i) => `<div class="bar ${i < 12 ? 'warn' : ''}"></div>`).join('')}</div>`;
+    return `<div class="bars">${Array(count).fill('<div class="bar warn"></div>').join('')}</div>`;
   }
   // Degraded (status 8) — mostly yellow with a few grey
   if (status === 8) {
@@ -1766,19 +1814,26 @@ async function editLatestUpdate(parentId, updateId) {
   const targetId = updateId || parentId;
   showToast('Saving…', 'info');
   try {
-    const res = await fetch(`/api/updates-set?id=${targetId}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
+    const existing = customUpdates.find(u => String(u.id) === String(targetId));
+    if (!existing) throw new Error('Could not find record');
+
+    const delRes = await fetch(`/api/updates-set?id=${targetId}`, { method: 'DELETE', headers: adminHeaders() });
+    if (!delRes.ok) throw new Error(await delRes.text());
+
+    const insRes = await fetch('/api/updates-set', {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ id: existing.id, title: existing.title, type: existing.type, body, service: existing.service, date: existing.date, parent_id: existing.parent_id || null })
     });
-    if (!res.ok) throw new Error(await res.text());
-    // Update in memory
+    if (!insRes.ok) throw new Error(await insRes.text());
+
     const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
     if (idx !== -1) customUpdates[idx].body = body;
     expandedIncidentId = null;
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `Edited update #${targetId}`);
     showToast('Update edited!', 'success');
-  } catch(e) { showToast('Failed to save edit.', 'error'); }
+  } catch(e) { showToast('Failed to save edit: ' + e.message, 'error'); }
 }
 
 async function postUpdate() {
@@ -1863,18 +1918,41 @@ async function editSelectedUpdate(parentId) {
 
   showToast('Saving…', 'info');
   try {
-    const res = await fetch(`/api/updates-set?id=${targetId}`, {
+    // Find the existing record so we can re-insert with updated body
+    const existing = customUpdates.find(u => String(u.id) === String(targetId));
+    if (!existing) throw new Error('Could not find update record');
+
+    // Delete old record
+    const delRes = await fetch(`/api/updates-set?id=${targetId}`, {
       method: 'DELETE',
       headers: adminHeaders()
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!delRes.ok) throw new Error(await delRes.text());
+
+    // Re-insert with same id and updated body
+    const insRes = await fetch('/api/updates-set', {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({
+        id: existing.id,
+        title: existing.title,
+        type: existing.type,
+        body: body,
+        service: existing.service,
+        date: existing.date,
+        parent_id: existing.parent_id || null
+      })
+    });
+    if (!insRes.ok) throw new Error(await insRes.text());
+
+    // Update in memory
     const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
     if (idx !== -1) customUpdates[idx].body = body;
     expandedIncidentId = null;
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `Edited update #${targetId}`);
     showToast('Update edited!', 'success');
-  } catch(e) { showToast('Failed to save edit.', 'error'); }
+  } catch(e) { showToast('Failed to save edit: ' + e.message, 'error'); }
 }
 
 async function deleteSelectedUpdate(parentId) {
@@ -1989,7 +2067,7 @@ async function fetchStatus(force = false) {
             pingEl.textContent = botPing;
             lastPingValue = String(botPing);
             localStorage.setItem('assistbot-last-ping', lastPingValue);
-            upsertConfig('last_bot_ping', botPing); // Sync to Supabase for all visitors
+            if (isAdmin) upsertConfig('last_bot_ping', botPing); // Only admin can write to Supabase
             pingEl.style.color = botPing <= 60 ? 'var(--green)' : botPing <= 90 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
           }
@@ -2034,7 +2112,7 @@ function render(monitors) {
   document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
   updatePingDisplay();  // sync ping + live indicator with current effective status
 
-  document.getElementById('monitor-list').innerHTML = effective.map(m => {
+  document.getElementById('monitor-list').innerHTML = effective.filter(m => !hiddenServices[m.friendly_name] || isAdmin).map(m => {
     const s  = sc(m.status);
     // Use _uptime (all_time) if available, else fall back
     const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
@@ -2066,7 +2144,7 @@ function render(monitors) {
     </div>`;
   }).join('');
 
-  document.getElementById('nav-items').innerHTML = effective.map(m => {
+  document.getElementById('nav-items').innerHTML = effective.filter(m => !hiddenServices[m.friendly_name] || isAdmin).map(m => {
     const s = sc(m.status);
     return `<div class="nav-item ${s==='up'?'active':''}"><div class="ndot ${s}"></div>${esc(m.friendly_name)}</div>`;
   }).join('');
@@ -2085,9 +2163,39 @@ function renderForceStatusRows(monitors) {
         <button class="force-btn deg ${cur==='deg'?'active':''}" onclick="setForceStatus('${name}','deg',this)">Degraded</button>
         <button class="force-btn out ${cur==='out'?'active':''}" onclick="setForceStatus('${name}','out',this)">Outage</button>
         <button class="force-btn auto ${cur==='auto'?'active':''}" onclick="setForceStatus('${name}','auto',this)">Auto</button>
+        <button class="force-btn" onclick="toggleServiceVisibility('${name}')" style="color:var(--faint);border-color:var(--border);margin-left:4px;" title="Show/hide from visitors">${hiddenServices[name] ? '👁️ Show' : '🚫 Hide'}</button>
       </div>
     </div>`;
   }).join('');
+}
+
+async function setSplashBg(color) {
+  splashBgColor = color;
+  localStorage.setItem('assistbot-splash-bg', color);
+  applySplashBg();
+  await upsertConfig('splash_bg', color);
+  showToast('Splash background updated!', 'success');
+}
+
+function applySplashBg() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  if (splashBgColor && splashBgColor !== 'theme') {
+    splash.style.background = splashBgColor;
+  } else {
+    splash.style.background = ''; // fallback to CSS theme vars
+  }
+}
+
+function toggleServiceVisibility(name) {
+  hiddenServices[name] = !hiddenServices[name];
+  localStorage.setItem('assistbot-hidden-services', JSON.stringify(hiddenServices));
+  if (cache) render(cache);
+  renderForceStatusRows(cache || null);
+  showToast(`${name} ${hiddenServices[name] ? 'hidden from visitors' : 'visible to visitors'}`, 'info');
+  addLog('update', `${name} → ${hiddenServices[name] ? 'Hidden' : 'Visible'} for visitors`);
+  // Save to Supabase so visitors see the change
+  upsertConfig('hidden_services', JSON.stringify(hiddenServices));
 }
 
 async function setForceStatus(name, value, btn) {
@@ -2120,7 +2228,7 @@ async function setForceStatus(name, value, btn) {
     document.getElementById('banner-label').textContent = allUp ? 'All Systems Operational' : anyDown ? 'Service Outage Detected' : 'Degraded Processing Performance';
     document.getElementById('banner-icon').textContent  = allUp ? '✅' : anyDown ? '🔴' : '⚠️';
     document.getElementById('tb-sub').textContent = allUp ? 'All Networks Operational' : 'System anomalies flagged';
-    document.getElementById('monitor-list').innerHTML = effective.map(m => {
+    document.getElementById('monitor-list').innerHTML = effective.filter(m => !hiddenServices[m.friendly_name] || isAdmin).map(m => {
       const s  = sc(m.status);
       const uptime = m._uptime !== undefined ? m._uptime : parseFloat(m.all_time_uptime_ratio || m.custom_uptime_ratio || 100);
       const upStr = uptime.toFixed(2);
@@ -2187,7 +2295,13 @@ function resetCountdown() {
     countdown--;
     const el = document.getElementById('countdown');
     if (el) el.textContent = countdown;
-    if (countdown <= 0) fetchStatus(true);
+    if (countdown <= 0) {
+      fetchStatus(true);
+      fetchDiscordStatus();
+      loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
+      loadBotPingFromSupabase();
+      loadImportantBanner();
+    }
   }, 1000);
 }
 
@@ -2201,7 +2315,8 @@ async function init() {
   await checkForceLoading();
   if (_forceLoadingActive) {
     // Toggle is ON — just poll and wait. Don't render anything.
-    setInterval(checkForceLoading, 3000);
+    loadSplashBg();
+  setInterval(checkForceLoading, 3000);
     return;
   }
 
@@ -2244,12 +2359,14 @@ async function init() {
   loadBotPingFromSupabase();
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
   loadForceStatus().then(() => { if (cache) render(cache); });
+  loadHiddenServices().then(() => { if (cache) render(cache); });
   checkAdminAuth();
 
   // Safety net — splash always hides within 4 seconds (force loading already cleared above)
   setTimeout(() => { if (!_forceLoadingActive) hideSplash(); }, 4000);
 
   // Poll force loading every 3s so it locks visitors fast if admin turns it on mid-session
+  loadSplashBg();
   setInterval(checkForceLoading, 3000);
   checkBroadcast();
   setInterval(checkBroadcast, 30000);
