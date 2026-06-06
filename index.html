@@ -679,19 +679,16 @@
           <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;"></textarea>
           <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: if ON, auto-disables when you log out</div>
 
-          <!-- Splash Background Color -->
+          <!-- Splash Message Style -->
           <div style="margin-top:10px;">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:6px;">Splash Screen Background</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:6px;">Message Badge Style</div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-              <button onclick="setSplashBg('theme')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">Theme Default</button>
-              <button onclick="setSplashBg('#1e1f22')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #1e1f22;background:#1e1f22;color:#fff;cursor:pointer;">Dark</button>
-              <button onclick="setSplashBg('#000000')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #333;background:#000;color:#fff;cursor:pointer;">Black</button>
-              <button onclick="setSplashBg('#5865f2')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #5865f2;background:#5865f2;color:#fff;cursor:pointer;">Blurple</button>
-              <button onclick="setSplashBg('#23a55a')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #23a55a;background:#23a55a;color:#fff;cursor:pointer;">Green</button>
-              <button onclick="setSplashBg('#f23f43')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid #f23f43;background:#f23f43;color:#fff;cursor:pointer;">Red</button>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:var(--muted);">
-                Custom: <input type="color" id="splash-bg-custom" value="#1e1f22" oninput="setSplashBg(this.value)" style="width:32px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none;">
-              </label>
+              <button onclick="setSplashMsgStyle('none')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">None</button>
+              <button onclick="setSplashMsgStyle('dark')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.4);color:#ccc;cursor:pointer;">Dark Pill</button>
+              <button onclick="setSplashMsgStyle('blurple')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(88,101,242,0.5);background:rgba(88,101,242,0.2);color:#a5b0ff;cursor:pointer;">Blurple</button>
+              <button onclick="setSplashMsgStyle('yellow')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(240,178,50,0.5);background:rgba(240,178,50,0.15);color:#f0b232;cursor:pointer;">Warning</button>
+              <button onclick="setSplashMsgStyle('red')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(242,63,67,0.5);background:rgba(242,63,67,0.15);color:#f23f43;cursor:pointer;">Alert</button>
+              <button onclick="setSplashMsgStyle('green')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(35,165,90,0.5);background:rgba(35,165,90,0.15);color:#23a55a;cursor:pointer;">Success</button>
             </div>
           </div>
 
@@ -1014,7 +1011,7 @@ let currentIncidentFeedCache = [];
 const SERVICE_NAMES = ['Assistbot','Assistmusic','Dashboard','AssistServer'];
 let forceStatus = {};
 let hiddenServices = JSON.parse(localStorage.getItem('assistbot-hidden-services') || '{}');
-let splashBgColor = localStorage.getItem('assistbot-splash-bg') || '';
+let splashBgColor = localStorage.getItem('assistbot-splash-bg') || 'none'; // message badge style
 
 // ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
 async function loadSplashBg() {
@@ -1512,58 +1509,115 @@ async function fetchDiscordStatus() {
   }
 }
 
-// Maps Discord component keywords → which AssistBot services may be affected
+// ── DISCORD IMPACT ENGINE ───────────────────────────────────────────────────
+// Maps each Discord component to which AssistBot services it affects and how
 const DISCORD_IMPACT_MAP = [
-  { keywords: ['api'],         affects: ['Assistbot','Assistmusic','Dashboard','AssistServer'] },
-  { keywords: ['gateway'],     affects: ['Assistbot','Assistmusic'] },
-  { keywords: ['voice'],       affects: ['Assistmusic'] },
-  { keywords: ['media proxy'], affects: ['Assistbot','Dashboard'] },
+  {
+    keywords: ['api'],
+    affects: {
+      'Assistbot':    { severity: 'high',   reason: 'Commands & interactions require Discord API' },
+      'Assistmusic':  { severity: 'high',   reason: 'Music commands require Discord API' },
+      'Dashboard':    { severity: 'medium', reason: 'Dashboard data depends on Discord API' },
+      'AssistServer': { severity: 'medium', reason: 'Server management requires Discord API' },
+    }
+  },
+  {
+    keywords: ['gateway'],
+    affects: {
+      'Assistbot':   { severity: 'high', reason: 'Bot connection requires Discord Gateway' },
+      'Assistmusic': { severity: 'high', reason: 'Music bot requires Discord Gateway' },
+    }
+  },
+  {
+    keywords: ['voice'],
+    affects: {
+      'Assistmusic': { severity: 'high', reason: 'Voice/music playback requires Discord Voice servers' },
+    }
+  },
+  {
+    keywords: ['media proxy', 'media'],
+    affects: {
+      'Assistbot':   { severity: 'low',  reason: 'Embeds & media may be affected' },
+      'Dashboard':   { severity: 'low',  reason: 'Media previews may be affected' },
+    }
+  },
+  {
+    keywords: ['push notifications', 'notifications', 'push'],
+    affects: {
+      'Assistbot': { severity: 'low', reason: 'Notifications may be delayed' },
+    }
+  },
 ];
 
-// Returns list of AssistBot service names impacted by a down Discord component
-function getImpactedServices(compName) {
+// severity → what badge/dot to show
+const DISCORD_SEVERITY = {
+  high:   { dot: 'paused', badge: 'paused',  label: 'Discord Impact',   color: 'var(--yellow)' },
+  medium: { dot: 'paused', badge: 'paused',  label: 'Possible Impact',  color: 'var(--yellow)' },
+  low:    { dot: 'up',     badge: 'up',      label: 'Minor Impact',     color: 'var(--faint)'  },
+};
+
+// Returns impact info for a service given a discord component name and its status
+function getDiscordImpact(compName, compStatus) {
   const n = compName.toLowerCase();
+  const isOutage  = compStatus === 'major_outage';
+  const isDegraded = compStatus !== 'operational';
+  if (!isDegraded) return null;
+
+  const results = {};
   for (const rule of DISCORD_IMPACT_MAP) {
-    if (rule.keywords.some(k => n.includes(k))) return rule.affects;
+    if (rule.keywords.some(k => n.includes(k))) {
+      for (const [svc, info] of Object.entries(rule.affects)) {
+        // Major outage bumps severity one level
+        const effectiveSev = isOutage && info.severity === 'medium' ? 'high'
+          : isOutage && info.severity === 'low' ? 'medium' : info.severity;
+        if (!results[svc] || ['high','medium','low'].indexOf(effectiveSev) < ['high','medium','low'].indexOf(results[svc].severity)) {
+          results[svc] = { severity: effectiveSev, reason: info.reason, component: compName, compStatus };
+        }
+      }
+    }
   }
-  return [];
+  return results;
 }
 
 function renderDiscord(components, incidents) {
   if (!components || !components.length) return;
-  const keys = ['API','Gateway','Media Proxy','Voice'];
-  const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0,4);
+  const keys = ['API','Gateway','Media Proxy','Voice','Notifications','Push'];
+  const comps = components.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0, 6);
 
-  // Build a map: serviceName → [affected Discord component names that are down]
-  const serviceWarnings = {};
+  // Build merged impact map: serviceName → worst impact across all affected components
+  const serviceImpacts = {};
   comps.forEach(c => {
-    const isDown = c.status !== 'operational';
-    if (isDown) {
-      getImpactedServices(c.name).forEach(svc => {
-        if (!serviceWarnings[svc]) serviceWarnings[svc] = [];
-        serviceWarnings[svc].push(c.name);
-      });
+    const impacts = getDiscordImpact(c.name, c.status);
+    if (!impacts) return;
+    for (const [svc, info] of Object.entries(impacts)) {
+      const sevOrder = ['high','medium','low'];
+      if (!serviceImpacts[svc] || sevOrder.indexOf(info.severity) < sevOrder.indexOf(serviceImpacts[svc].severity)) {
+        serviceImpacts[svc] = { ...info, components: [...(serviceImpacts[svc]?.components || []), c.name] };
+      }
     }
   });
 
-  // Render Discord component rows (no dep warnings here — they show on Bot Services side)
+  // Render Discord component rows
   document.getElementById('discord-list').innerHTML = comps.map(c => {
     const s = c.status;
-    const dotClass = s==='operational'?'up':s==='major_outage'?'down':'paused';
-    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${s.replace(/_/g,' ')}</div></div>`;
+    const dotClass = s === 'operational' ? 'up' : s === 'major_outage' ? 'down' : 'paused';
+    const label = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+    return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${label}</div></div>`;
   }).join('');
 
-  document.getElementById('discord-nav').innerHTML = comps.slice(0,3).map(c => {
-    const dotClass = c.status==='operational'?'up':'down';
+  document.getElementById('discord-nav').innerHTML = comps.slice(0, 3).map(c => {
+    const dotClass = c.status === 'operational' ? 'up' : c.status === 'major_outage' ? 'down' : 'paused';
     return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
   }).join('');
 
-  // Store warnings globally so render() can use them
-  window._serviceWarnings = serviceWarnings;
+  // Store globally so render() can apply impact badges
+  window._serviceImpacts = serviceImpacts;
+  // Legacy compatibility
+  window._serviceWarnings = Object.fromEntries(
+    Object.entries(serviceImpacts).map(([svc, info]) => [svc, info.components || [info.component]])
+  );
 
-  // Re-render bot services with new warnings if we have cache
   if (cache) render(cache);
-
   renderIncidents(incidents);
 }
 
@@ -2037,43 +2091,34 @@ async function fetchStatus(force = false) {
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · monitoring active`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     
-    // Fetch bot ping asynchronously in background (don't block page load)
-    // Use 5-second timeout to allow Replit to wake up if cold
+    // Fetch bot ping live from /api/botping (proxies to Replit)
     (async () => {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
+        const timeout = setTimeout(() => controller.abort(), 6000);
         const pingRes = await fetch('/api/botping', { signal: controller.signal });
         clearTimeout(timeout);
         const pingData = await pingRes.json();
         let botPing = pingData?.ping;
-        
-        // Validate: must be a reasonable number (< 10 seconds)
         if (botPing && typeof botPing === 'number' && botPing > 0 && botPing < 10000) {
           botPing = Math.round(botPing);
-          const pingEl = document.getElementById('ping-val');
+          const pingEl   = document.getElementById('ping-val');
           const pingUnit = document.getElementById('ping-unit');
-          
-          // Check current force status to decide if we should show the ping
           const assistbotName = m[0]?.friendly_name || 'Assistbot';
-          const forcedStatus = forceStatus[assistbotName];
+          const forcedStatus  = forceStatus[assistbotName];
           let effectiveStatus = m[0]?.status;
           if (forcedStatus === 'out') effectiveStatus = 9;
           else if (forcedStatus === 'deg') effectiveStatus = 8;
           else if (forcedStatus === 'op') effectiveStatus = 2;
-          
-          // Only show bot ping if not forced to outage
           if (effectiveStatus !== 9 && pingEl) {
             pingEl.textContent = botPing;
-            lastPingValue = String(botPing);
-            localStorage.setItem('assistbot-last-ping', lastPingValue);
-            if (isAdmin) upsertConfig('last_bot_ping', botPing); // Only admin can write to Supabase
             pingEl.style.color = botPing <= 60 ? 'var(--green)' : botPing <= 90 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
+            localStorage.setItem('assistbot-last-ping', String(botPing));
           }
         }
       } catch(e) {
-        // Bot ping failed or timed out - show —
+        // Replit cold start or offline — leave ping as-is
       }
     })();
   } catch(err) {
@@ -2123,18 +2168,18 @@ function render(monitors) {
     const isPaused = m.status === 0 || s === 'paused';
     const displayRatio = m._forced === 'out' ? 0 : m._forced === 'deg' ? 100 : isPaused ? 50 : uptime;
 
-    const warnings = window._serviceWarnings || {};
-    const discordDown = warnings[m.friendly_name] && !m._forced && m.status === 2;
-    const effectiveStatus = discordDown ? 'paused' : s;
-    const effectiveRatio  = discordDown ? 75 : displayRatio;
+    const impacts  = window._serviceImpacts || {};
+    const impact   = impacts[m.friendly_name];
+    const discordAffected = impact && !m._forced && m.status === 2;
+    const sevInfo  = discordAffected ? (DISCORD_SEVERITY[impact.severity] || DISCORD_SEVERITY.low) : null;
 
-    const warnText = (warnings[m.friendly_name] && !m._forced)
-      ? `<span style="font-size:11px;font-weight:400;color:var(--yellow);display:block;margin-top:2px;">⚠ Discord ${esc(warnings[m.friendly_name].join(' & '))} issues — may affect this service</span>`
+    const warnText = discordAffected
+      ? `<span style="font-size:11px;font-weight:400;color:${sevInfo.color};display:block;margin-top:2px;">⚠ Discord ${esc((impact.components || [impact.component]).join(' & '))} ${impact.compStatus === 'major_outage' ? 'outage' : 'issues'} — ${esc(impact.reason)}</span>`
       : '';
 
-    const dotClass   = discordDown ? 'paused' : s;
-    const badgeClass = discordDown ? 'paused' : s;
-    const badgeText  = discordDown ? 'Degraded' : sl(m.status);
+    const dotClass   = discordAffected ? sevInfo.dot   : s;
+    const badgeClass = discordAffected ? sevInfo.badge  : s;
+    const badgeText  = discordAffected ? sevInfo.label  : sl(m.status);
 
     return `<div class="mrow">
       <div class="sdot ${dotClass}"></div>
@@ -2169,22 +2214,28 @@ function renderForceStatusRows(monitors) {
   }).join('');
 }
 
-async function setSplashBg(color) {
-  splashBgColor = color;
-  localStorage.setItem('assistbot-splash-bg', color);
+const SPLASH_MSG_STYLES = {
+  none:    { background: 'transparent', border: 'none', borderRadius: '0', color: '#888', padding: '0' },
+  dark:    { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', color: '#ccc', padding: '6px 16px' },
+  blurple: { background: 'rgba(88,101,242,0.2)', border: '1px solid rgba(88,101,242,0.5)', borderRadius: '20px', color: '#a5b0ff', padding: '6px 16px' },
+  yellow:  { background: 'rgba(240,178,50,0.15)', border: '1px solid rgba(240,178,50,0.5)', borderRadius: '20px', color: '#f0b232', padding: '6px 16px' },
+  red:     { background: 'rgba(242,63,67,0.15)', border: '1px solid rgba(242,63,67,0.5)', borderRadius: '20px', color: '#f23f43', padding: '6px 16px' },
+  green:   { background: 'rgba(35,165,90,0.15)', border: '1px solid rgba(35,165,90,0.5)', borderRadius: '20px', color: '#23a55a', padding: '6px 16px' },
+};
+
+async function setSplashMsgStyle(style) {
+  splashBgColor = style; // reuse same var for storage key
+  localStorage.setItem('assistbot-splash-bg', style);
   applySplashBg();
-  await upsertConfig('splash_bg', color);
-  showToast('Splash background updated!', 'success');
+  await upsertConfig('splash_bg', style);
+  showToast('Message style updated!', 'success');
 }
 
 function applySplashBg() {
-  const splash = document.getElementById('splash');
-  if (!splash) return;
-  if (splashBgColor && splashBgColor !== 'theme') {
-    splash.style.background = splashBgColor;
-  } else {
-    splash.style.background = ''; // fallback to CSS theme vars
-  }
+  const msgEl = document.getElementById('splash-message');
+  if (!msgEl) return;
+  const style = SPLASH_MSG_STYLES[splashBgColor] || SPLASH_MSG_STYLES['none'];
+  Object.assign(msgEl.style, style);
 }
 
 function toggleServiceVisibility(name) {
@@ -2299,8 +2350,7 @@ function resetCountdown() {
       fetchStatus(true);
       fetchDiscordStatus();
       loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
-      loadBotPingFromSupabase();
-      loadImportantBanner();
+          loadImportantBanner();
     }
   }, 1000);
 }
@@ -2356,7 +2406,6 @@ async function init() {
   fetchStatus(true);
   fetchDiscordStatus();
   loadImportantBanner();
-  loadBotPingFromSupabase();
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
   loadForceStatus().then(() => { if (cache) render(cache); });
   loadHiddenServices().then(() => { if (cache) render(cache); });
