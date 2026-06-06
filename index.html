@@ -257,9 +257,9 @@
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
     .important-banner-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
-    .important-banner-dismiss { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-    .important-banner-dismiss:hover { background: rgba(255,255,255,0.3); }
-    .important-banner-body { background: var(--rdim); padding: 14px 18px; font-size: 13px; color: var(--text); line-height: 1.6; border-top: 1px solid rgba(242,63,67,0.15); }
+    .important-banner-dismiss { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
+    .important-banner-dismiss:hover { background: rgba(255,255,255,0.35); }
+    .important-banner-body { padding: 14px 18px; font-size: 13px; color: var(--text); line-height: 1.7; border-top: 1px solid rgba(242,63,67,0.15); }
 
     /* ── BANNER ── */
     .banner { border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid transparent; }
@@ -871,13 +871,19 @@ async function checkForceLoading() {
     const data = JSON.parse(rows[0].value || '{}');
     const splash = document.getElementById('splash');
     if (data.active) {
-      // Show splash with custom message for visitors
+      // Keep showing splash as long as toggle is ON — reset hidden flag each poll
       const msgEl = document.getElementById('splash-message');
-      if (msgEl) { msgEl.textContent = data.message || ''; msgEl.style.display = data.message ? 'block' : 'none'; }
-      _splashHidden = false;
-      if (splash) splash.classList.add('visible');
+      if (msgEl) {
+        const hasMsg = data.message && data.message.trim();
+        msgEl.textContent = hasMsg ? data.message.trim() : '';
+        msgEl.style.display = hasMsg ? 'block' : 'none';
+      }
+      _splashHidden = false; // allow re-show each 15s check
+      if (splash && !splash.classList.contains('visible')) {
+        splash.classList.add('visible');
+      }
     } else if (splash && splash.classList.contains('visible')) {
-      // Force loading was turned off — hide splash and reload for fresh data
+      // Force loading turned OFF — hide splash and reload for fresh data
       hideSplash();
       setTimeout(() => location.reload(), 800);
     }
@@ -1146,7 +1152,7 @@ function showImportantBanner(text) {
   
   // Color status words, no emojis
   const STATUS_COLORS = {
-    resolved: 'var(--green)', monitoring: 'var(--yellow)',
+    resolved: 'var(--green)', monitoring: '#5865f2',
     identified: 'var(--yellow)', investigating: 'var(--red)', update: 'var(--muted)'
   };
   const lines = String(text).split('\n').map((line, i) => {
@@ -1292,8 +1298,6 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('admin-indicator').style.display = 'none';
   document.getElementById('activity-log-card').style.display = 'none';
   document.getElementById('incidents-card').classList.add('full-width');
-  const dismissBtn = document.getElementById('important-dismiss-btn');
-  if (dismissBtn) dismissBtn.style.display = 'none';
   // IMMEDIATELY reset footer text to show countdown is resuming
   document.getElementById('footer-text').innerHTML = 'Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot';
   
@@ -2185,8 +2189,11 @@ async function init() {
   loadForceStatus().then(() => { if (cache) render(cache); });
   checkAdminAuth();
 
-  // Safety net — splash always hides within 4 seconds no matter what
-  setTimeout(hideSplash, 4000);
+  // Check force loading immediately on load (visitors stuck on splash if toggle is on)
+  checkForceLoading();
+
+  // Safety net — splash always hides within 4 seconds UNLESS force loading is active
+  setTimeout(() => { if (!_forceLoadingActive) hideSplash(); }, 4000);
 
   // Poll for force loading state (visitors) and broadcast commands every 15s
   checkForceLoading();
