@@ -663,6 +663,20 @@
 
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
+          <!-- Discord Impact Simulator -->
+          <div class="sec-subtitle">Simulate Discord Impact</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+            <button onclick="simulateDiscordImpact('none')" class="force-btn auto active" style="opacity:1;font-size:12px;">Clear</button>
+            <button onclick="simulateDiscordImpact('api_degraded')" class="force-btn deg" style="font-size:12px;">API Degraded</button>
+            <button onclick="simulateDiscordImpact('api_outage')" class="force-btn out" style="font-size:12px;">API Outage</button>
+            <button onclick="simulateDiscordImpact('gateway_outage')" class="force-btn out" style="font-size:12px;">Gateway Down</button>
+            <button onclick="simulateDiscordImpact('voice_outage')" class="force-btn deg" style="font-size:12px;">Voice Down</button>
+            <button onclick="simulateDiscordImpact('media_degraded')" class="force-btn deg" style="font-size:12px;">Media Proxy</button>
+          </div>
+          <div id="discord-sim-label" style="font-size:11px;color:var(--faint);margin-bottom:2px;">No simulation active — showing live Discord data</div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
           <!-- Visitor Loading Screen Toggle -->
           <div class="sec-subtitle">Visitor Loading Screen</div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -969,6 +983,7 @@ async function broadcastCommand(cmd) {
 // Poll for broadcast commands every 30s
 let _lastBroadcastTs = parseInt(sessionStorage.getItem('last_broadcast_ts') || '0');
 async function checkBroadcast() {
+  if (isAdmin) return; // admin triggers broadcasts, doesn't receive them
   try {
     const res = await fetch('/api/config-get?key=broadcast');
     if (!res.ok) return;
@@ -978,7 +993,84 @@ async function checkBroadcast() {
     if (ts <= _lastBroadcastTs) return;
     _lastBroadcastTs = ts;
     sessionStorage.setItem('last_broadcast_ts', String(ts));
+    // Act on command
+    if (cmd === 'refresh') {
+      await fetchStatus(true);
+      await fetchDiscordStatus();
+      await loadUpdates();
+      renderIncidents(currentIncidentFeedCache);
+      await loadImportantBanner();
+      await loadForceStatus();
+      if (cache) render(cache);
+    } else if (cmd === 'reload') {
+      location.reload();
+    }
   } catch(e) {}
+}
+
+// Simulate Discord component outages for testing
+const DISCORD_SIM_SCENARIOS = {
+  none:           [],
+  api_degraded:   [{ name: 'API', status: 'degraded_performance' }],
+  api_outage:     [{ name: 'API', status: 'major_outage' }],
+  gateway_outage: [{ name: 'Gateway', status: 'major_outage' }],
+  voice_outage:   [{ name: 'Voice', status: 'major_outage' }],
+  media_degraded: [{ name: 'Media Proxy', status: 'degraded_performance' }],
+};
+
+let _discordSimActive = false;
+
+function simulateDiscordImpact(scenario) {
+  const label = document.getElementById('discord-sim-label');
+  // Reset button states
+  document.querySelectorAll('[onclick^="simulateDiscordImpact"]').forEach(b => {
+    b.classList.remove('active');
+  });
+
+  if (scenario === 'none') {
+    _discordSimActive = false;
+    window._serviceImpacts = {};
+    window._serviceWarnings = {};
+    if (label) label.textContent = 'No simulation active — showing live Discord data';
+    if (cache) render(cache);
+    // Restore real Discord data
+    if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    return;
+  }
+
+  _discordSimActive = true;
+  const simComps = DISCORD_SIM_SCENARIOS[scenario] || [];
+
+  // Build fake impact from simulated components
+  const fakeImpacts = {};
+  simComps.forEach(c => {
+    const impacts = getDiscordImpact(c.name, c.status);
+    if (!impacts) return;
+    for (const [svc, info] of Object.entries(impacts)) {
+      const sevOrder = ['high','medium','low'];
+      if (!fakeImpacts[svc] || sevOrder.indexOf(info.severity) < sevOrder.indexOf(fakeImpacts[svc].severity)) {
+        fakeImpacts[svc] = { ...info, components: [c.name] };
+      }
+    }
+  });
+
+  window._serviceImpacts = fakeImpacts;
+  window._serviceWarnings = Object.fromEntries(
+    Object.entries(fakeImpacts).map(([svc, info]) => [svc, info.components || [info.component]])
+  );
+
+  const names = { api_degraded:'API Degraded', api_outage:'API Outage', gateway_outage:'Gateway Outage', voice_outage:'Voice Outage', media_degraded:'Media Proxy Degraded' };
+  if (label) label.textContent = `Simulating: ${names[scenario] || scenario} — ${Object.keys(fakeImpacts).length} service(s) affected`;
+
+  // Mark active button
+  document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
+
+  if (cache) render(cache);
+}
+
+async function notifyVisitors() {
+  // Broadcast a refresh command to all visitors
+  await broadcastCommand('refresh');
 }
 
 async function loadBotPingFromSupabase() {
@@ -1265,6 +1357,7 @@ async function postImportantBanner() {
     if (!res.ok) throw new Error(await res.text());
     showImportantBanner(text);
     document.getElementById('important-text').value = '';
+    notifyVisitors();
     showToast('Important banner pinned for all visitors!', 'success');
   } catch(e) { showToast('Failed: ' + e.message, 'error'); }
 }
@@ -1274,6 +1367,7 @@ async function clearImportantBanner() {
   try {
     await fetch('/api/config-set', { method: 'DELETE', headers: adminHeaders(), body: JSON.stringify({ key: 'important_banner' }) });
     dismissImportantBanner();
+    notifyVisitors();
     showToast('Banner cleared.', 'info');
   } catch(e) { showToast('Failed.', 'error'); }
 }
@@ -1916,6 +2010,7 @@ async function postUpdate() {
     document.getElementById('update-text').value = '';
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
+    notifyVisitors();
     showToast("Update saved — visible to all visitors!", "success");
   } catch(e) { /* error toast already shown */ }
 }
@@ -2004,6 +2099,7 @@ async function editSelectedUpdate(parentId) {
     if (idx !== -1) customUpdates[idx].body = body;
     expandedIncidentId = null;
     renderIncidents(currentIncidentFeedCache);
+    notifyVisitors();
     addLog('update', `Edited update #${targetId}`);
     showToast('Update edited!', 'success');
   } catch(e) { showToast('Failed to save edit: ' + e.message, 'error'); }
@@ -2023,6 +2119,7 @@ async function deleteSelectedUpdate(parentId) {
     expandedIncidentId = null;
     renderIncidents(currentIncidentFeedCache);
     addLog('update', `Deleted update entry #${targetId}`);
+    notifyVisitors();
     showToast('Update entry deleted.', 'info');
   } catch(e) { /* error shown by deleteUpdate */ }
 }
@@ -2035,6 +2132,7 @@ async function deleteCustomUpdate(id) {
     customUpdates = customUpdates.filter(u => u.id !== Number(id));
     renderIncidents(currentIncidentFeedCache);
     addLog('update', 'Update entry removed.');
+    notifyVisitors();
     showToast("Update removed for all visitors.", "info");
   } catch(e) { /* error toast already shown */ }
 }
@@ -2247,6 +2345,7 @@ function toggleServiceVisibility(name) {
   addLog('update', `${name} → ${hiddenServices[name] ? 'Hidden' : 'Visible'} for visitors`);
   // Save to Supabase so visitors see the change
   upsertConfig('hidden_services', JSON.stringify(hiddenServices));
+  notifyVisitors();
 }
 
 async function setForceStatus(name, value, btn) {
@@ -2306,6 +2405,7 @@ async function setForceStatus(name, value, btn) {
   }
 
   await saveForceStatus(name, value);
+  notifyVisitors();
   addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
   showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
 }
@@ -2418,7 +2518,7 @@ async function init() {
   loadSplashBg();
   setInterval(checkForceLoading, 3000);
   checkBroadcast();
-  setInterval(checkBroadcast, 30000);
+  setInterval(checkBroadcast, 3000);
 
   setInterval(fetchDiscordStatus, 300000);
   setInterval(async () => {
