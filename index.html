@@ -621,7 +621,7 @@
         <div class="important-banner-title">📌 Important Update</div>
         <!-- Visitors see Dismiss; admins see Delete Live -->
         <button class="important-banner-dismiss" id="important-dismiss-btn" onclick="dismissImportantBanner()">✕ Dismiss</button>
-        <button class="important-banner-dismiss" id="important-delete-btn" onclick="clearImportantBanner()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);">🗑️ Delete Live</button>
+        <button class="important-banner-dismiss" id="important-delete-btn" onclick="clearImportantBanner()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);">🗑️ Delete</button>
       </div>
       <div class="important-banner-body" id="important-banner-body"></div>
     </div>
@@ -2162,6 +2162,16 @@ function resetCountdown() {
 async function init() {
   applyTheme(localStorage.getItem('assistbot-theme') || 'dark');
 
+  // ── FORCE LOADING GATE ──
+  // Check FIRST before rendering anything — if toggle is ON, keep splash up
+  // and don't let the cached page flash through.
+  await checkForceLoading();
+  if (_forceLoadingActive) {
+    // Toggle is ON — just poll and wait. Don't render anything.
+    setInterval(checkForceLoading, 3000);
+    return;
+  }
+
   // Load force status SYNCHRONOUSLY from localStorage BEFORE first render
   // so force badges/bars are correct on first paint, not on second render
   try {
@@ -2194,27 +2204,22 @@ async function init() {
   fetchStatus(true);
   fetchDiscordStatus();
   loadImportantBanner();
-  loadBotPingFromSupabase(); // Load last known ping from Supabase for all visitors
+  loadBotPingFromSupabase();
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
-  // Sync force status from Supabase in background (updates localStorage for next load)
   loadForceStatus().then(() => { if (cache) render(cache); });
   checkAdminAuth();
 
-  // Check force loading immediately on load (visitors stuck on splash if toggle is on)
-  checkForceLoading();
-
-  // Safety net — splash always hides within 4 seconds UNLESS force loading is active
+  // Safety net — splash always hides within 4 seconds (force loading already cleared above)
   setTimeout(() => { if (!_forceLoadingActive) hideSplash(); }, 4000);
 
-  // Poll for force loading state (visitors) and broadcast commands every 15s
-  checkForceLoading();
-  setInterval(checkForceLoading, 15000);
+  // Poll force loading every 3s so it locks visitors fast if admin turns it on mid-session
+  setInterval(checkForceLoading, 3000);
   checkBroadcast();
   setInterval(checkBroadcast, 30000);
 
   setInterval(fetchDiscordStatus, 300000);
   setInterval(async () => {
-    if (isAdmin) return; // don't auto-refresh while admin is active
+    if (isAdmin) return;
     await loadUpdates();
     renderIncidents(currentIncidentFeedCache);
   }, 60000);
