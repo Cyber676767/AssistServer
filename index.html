@@ -889,6 +889,7 @@ async function checkForceLoading() {
       // Force loading is OFF — only reload if we were previously holding them on the splash
       if (_forceLoadingActive && splash && splash.classList.contains('visible')) {
         _forceLoadingActive = false;
+        localStorage.removeItem('assistbot-last-ping'); // clear stale ping before reload
         hideSplash();
         setTimeout(() => location.reload(), 800);
       }
@@ -945,7 +946,7 @@ async function loadBotPingFromSupabase() {
     const pingUnit = document.getElementById('ping-unit');
     if (pingEl && (pingEl.textContent === '—' || !pingEl.textContent)) {
       pingEl.textContent = ping;
-      pingEl.style.color = ping < 100 ? 'var(--green)' : ping < 300 ? 'var(--yellow)' : 'var(--red)';
+      pingEl.style.color = ping <= 60 ? 'var(--green)' : ping <= 90 ? 'var(--yellow)' : 'var(--red)';
       if (pingUnit) pingUnit.style.display = 'inline';
       localStorage.setItem('assistbot-last-ping', String(ping));
     }
@@ -1957,7 +1958,7 @@ async function fetchStatus(force = false) {
             lastPingValue = String(botPing);
             localStorage.setItem('assistbot-last-ping', lastPingValue);
             upsertConfig('last_bot_ping', botPing); // Sync to Supabase for all visitors
-            pingEl.style.color = botPing < 100 ? 'var(--green)' : botPing < 300 ? 'var(--yellow)' : 'var(--red)';
+            pingEl.style.color = botPing <= 60 ? 'var(--green)' : botPing <= 90 ? 'var(--yellow)' : 'var(--red)';
             if (pingUnit) pingUnit.style.display = 'inline';
           }
         }
@@ -2185,7 +2186,11 @@ async function init() {
     if (savedPing) {
       const pingEl = document.getElementById('ping-val');
       const pingUnit = document.getElementById('ping-unit');
-      if (pingEl) { pingEl.textContent = savedPing; pingEl.style.color = 'var(--green)'; }
+      if (pingEl) {
+        const cachedPing = parseInt(savedPing);
+        pingEl.textContent = savedPing;
+        pingEl.style.color = cachedPing <= 60 ? 'var(--green)' : cachedPing <= 90 ? 'var(--yellow)' : 'var(--red)';
+      }
       if (pingUnit) pingUnit.style.display = 'inline';
     }
   } catch(e) {}
