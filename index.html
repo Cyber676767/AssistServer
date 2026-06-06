@@ -619,7 +619,7 @@
     <div class="important-banner" id="important-banner">
       <div class="important-banner-header">
         <div class="important-banner-title">📌 Important Update</div>
-        <button class="important-banner-dismiss" id="important-dismiss-btn" style="display:none;" onclick="dismissImportantBanner()">✕ Dismiss</button>
+        <button class="important-banner-dismiss" id="important-dismiss-btn" onclick="dismissImportantBanner()">✕ Dismiss</button>
       </div>
       <div class="important-banner-body" id="important-banner-body"></div>
     </div>
@@ -661,16 +661,23 @@
 
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
-          <!-- Broadcast Controls -->
-          <div class="sec-subtitle">Broadcast to All Visitors</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-            <button class="post-btn" style="background:var(--blue,#5865f2);flex:1;" onclick="forceReloadAll()">🔄 Force Reload</button>
-            <button class="post-btn" style="background:var(--muted);flex:1;" onclick="forceSplashAll()">⏳ Force Loading</button>
-            <button class="post-btn" style="background:var(--red);flex:1;" onclick="activateSafeMode()">🛡️ Safe Mode</button>
+          <!-- Visitor Loading Screen Toggle -->
+          <div class="sec-subtitle">Visitor Loading Screen</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <div style="position:relative;width:40px;height:22px;">
+                <input type="checkbox" id="force-loading-toggle" onchange="toggleForceLoading(this.checked)"
+                  style="opacity:0;width:0;height:0;position:absolute;">
+                <span id="force-loading-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:background 0.2s;"></span>
+                <span id="force-loading-thumb" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;"></span>
+              </div>
+              <span id="force-loading-label" style="font-size:13px;font-weight:600;color:var(--muted);">Off</span>
+            </label>
           </div>
-          <div style="font-size:11px;color:var(--faint);margin-bottom:8px;">Force Reload — refreshes all open pages · Force Loading — shows splash for 3s · Safe Mode — resets all forced statuses to Auto</div>
+          <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;"></textarea>
+          <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: auto-disables when you log out</div>
 
-          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
 
           <!-- Post Important Banner -->
           <div class="sec-subtitle">Post Important Banner</div>
@@ -771,6 +778,7 @@
     <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
   </svg>
   <div class="splash-title">AssistBot Status</div>
+  <div id="splash-message" style="font-size:13px;color:#888;margin-top:6px;max-width:280px;text-align:center;display:none;"></div>
   <div class="splash-dots">
     <span></span><span></span><span></span>
   </div>
@@ -823,47 +831,80 @@ async function upsertConfig(key, value) {
   } catch(e) { /* non-critical */ }
 }
 
-// ── BROADCAST SYSTEM ─────────────────────────────────────────────────────────
-// Admin sends commands to all active visitors via Supabase
+// ── VISITOR LOADING TOGGLE ───────────────────────────────────────────────────
+let _forceLoadingActive = false;
+
+function setToggleUI(active) {
+  const track = document.getElementById('force-loading-track');
+  const thumb = document.getElementById('force-loading-thumb');
+  const label = document.getElementById('force-loading-label');
+  const input = document.getElementById('force-loading-toggle');
+  if (!track) return;
+  track.style.background = active ? 'var(--green)' : 'var(--border)';
+  if (thumb) thumb.style.transform = active ? 'translateX(18px)' : 'translateX(0)';
+  if (label) { label.textContent = active ? 'ON — visitors see loading screen' : 'Off'; label.style.color = active ? 'var(--green)' : 'var(--muted)'; }
+  if (input) input.checked = active;
+  _forceLoadingActive = active;
+}
+
+async function toggleForceLoading(checked) {
+  const msg = document.getElementById('force-loading-msg')?.value.trim() || 'Performing maintenance, please wait…';
+  const data = { active: checked, message: msg, ts: Date.now() };
+  await upsertConfig('force_loading', JSON.stringify(data));
+  setToggleUI(checked);
+  if (checked) {
+    showToast('Loading screen ON for all visitors!', 'success');
+    addLog('update', `Force loading ON — "${msg}"`);
+  } else {
+    showToast('Loading screen OFF.', 'info');
+    addLog('update', 'Force loading disabled.');
+  }
+}
+
+async function checkForceLoading() {
+  if (isAdmin) return; // admins never see the forced loading screen
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows.length) return;
+    const data = JSON.parse(rows[0].value || '{}');
+    const splash = document.getElementById('splash');
+    if (data.active) {
+      // Show splash with custom message for visitors
+      const msgEl = document.getElementById('splash-message');
+      if (msgEl) { msgEl.textContent = data.message || ''; msgEl.style.display = data.message ? 'block' : 'none'; }
+      _splashHidden = false;
+      if (splash) splash.classList.add('visible');
+    } else if (splash && splash.classList.contains('visible')) {
+      // Force loading was turned off — hide splash and reload for fresh data
+      hideSplash();
+      setTimeout(() => location.reload(), 800);
+    }
+  } catch(e) {}
+}
+
+async function loadForceLoadingState() {
+  // Load current toggle state for admin panel
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows.length) return;
+    const data = JSON.parse(rows[0].value || '{}');
+    setToggleUI(!!data.active);
+    if (data.message) {
+      const msgEl = document.getElementById('force-loading-msg');
+      if (msgEl) msgEl.value = data.message;
+    }
+  } catch(e) {}
+}
 
 async function broadcastCommand(cmd) {
   await upsertConfig('broadcast', JSON.stringify({ cmd, ts: Date.now() }));
 }
 
-async function forceReloadAll() {
-  if (!confirm('Force reload all visitors now?')) return;
-  await broadcastCommand('reload');
-  showToast('Reload broadcast sent to all visitors!', 'success');
-  addLog('update', 'Force reload broadcast sent to all visitors.');
-}
-
-async function forceSplashAll() {
-  if (!confirm('Show loading screen for all visitors?')) return;
-  await broadcastCommand('splash');
-  showToast('Loading screen broadcast sent!', 'success');
-  addLog('update', 'Force loading broadcast sent to all visitors.');
-}
-
-async function activateSafeMode() {
-  if (!confirm('Safe Mode: Reset ALL forced statuses to Auto for everyone?\nThis cannot be undone.')) return;
-  // Delete all force_* keys from Supabase
-  try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
-    const rows = await res.json();
-    await Promise.all(rows.map(r =>
-      fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(r.key)}`, { method: 'DELETE', headers: SUPABASE_HEADERS })
-    ));
-  } catch(e) {}
-  // Clear locally
-  forceStatus = {};
-  localStorage.removeItem('assistbot-force-status');
-  if (cache) render(cache);
-  renderForceStatusRows(cache);
-  showToast('Safe Mode activated — all services reset to Auto.', 'success');
-  addLog('update', '⚠️ Safe Mode activated — all forced statuses cleared.');
-}
-
-// Poll for broadcast commands every 30s — all visitors receive admin commands
+// Poll for broadcast commands every 30s
 let _lastBroadcastTs = parseInt(sessionStorage.getItem('last_broadcast_ts') || '0');
 async function checkBroadcast() {
   try {
@@ -872,17 +913,9 @@ async function checkBroadcast() {
     const rows = await res.json();
     if (!rows.length) return;
     const { cmd, ts } = JSON.parse(rows[0].value);
-    if (ts <= _lastBroadcastTs) return; // already handled
+    if (ts <= _lastBroadcastTs) return;
     _lastBroadcastTs = ts;
     sessionStorage.setItem('last_broadcast_ts', String(ts));
-    if (cmd === 'reload') {
-      showToast('Page reload incoming...', 'info');
-      setTimeout(() => location.reload(), 1500);
-    } else if (cmd === 'splash') {
-      _splashHidden = false; // allow showing again
-      document.getElementById('splash').classList.add('visible');
-      setTimeout(hideSplash, 3000); // auto-hide after 3s
-    }
   } catch(e) {}
 }
 
@@ -1109,16 +1142,26 @@ function updatePingDisplay() {
 function showImportantBanner(text) {
   const b    = document.getElementById('important-banner');
   const body = document.getElementById('important-banner-body');
-  const btn  = document.getElementById('important-dismiss-btn');
   if (!b || !body) return;
-  // Support multi-line text by safely escaping HTML and converting \n to <br>
-  const safeText = String(text)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
-  body.innerHTML = safeText.replace(/\n/g, '<br>');
+  
+  // Color status words, no emojis
+  const STATUS_COLORS = {
+    resolved: 'var(--green)', monitoring: 'var(--yellow)',
+    identified: 'var(--yellow)', investigating: 'var(--red)', update: 'var(--muted)'
+  };
+  const lines = String(text).split('\n').map((line, i) => {
+    const safeL = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (i === 0) return `<strong>${safeL}</strong>`;
+    const m = line.match(/^(Resolved|Monitoring|Identified|Investigating|Update)(:.*)$/i);
+    if (m) {
+      const color = STATUS_COLORS[m[1].toLowerCase()] || 'var(--muted)';
+      const safeRest = m[2].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<span style="color:${color};font-weight:600;">${m[1]}</span>${safeRest}`;
+    }
+    return safeL;
+  });
+  body.innerHTML = lines.join('<br>');
   b.classList.add('visible');
-  if (isAdmin && btn) btn.style.display = 'block';
 }
 
 function dismissImportantBanner() {
@@ -1231,10 +1274,9 @@ function enableAdminUI(notify = true) {
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
   document.getElementById('incidents-card').classList.remove('full-width');
-  const dismissBtn = document.getElementById('important-dismiss-btn');
-  if (dismissBtn) dismissBtn.style.display = 'block';
   renderIncidents(currentIncidentFeedCache);
   renderForceStatusRows(cache || null);
+  loadForceLoadingState(); // restore toggle state for admin
   if (notify) {
     addLog('check', "<strong>Admin access granted.</strong>");
     showToast("Logged in! Admin mode active.", "success");
@@ -1254,6 +1296,14 @@ function disableAdminUI(logEvent = true) {
   if (dismissBtn) dismissBtn.style.display = 'none';
   // IMMEDIATELY reset footer text to show countdown is resuming
   document.getElementById('footer-text').innerHTML = 'Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot';
+  
+  // 🛡️ Safe Mode — auto-disable force loading if admin forgot to turn it off
+  if (_forceLoadingActive) {
+    upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
+    setToggleUI(false);
+    showToast('Safe Mode: Force loading auto-disabled.', 'info');
+    addLog('update', '🛡️ Safe Mode triggered — force loading disabled on logout.');
+  }
   renderIncidents(currentIncidentFeedCache);
   // Re-render bot services to strip any (forced) badges
   if (cache) render(cache);
@@ -1731,7 +1781,7 @@ async function pinIncidentAsBanner(incidentId) {
   const updateLines = allUpdates.map(u => {
     const status = u.type ? u.type.charAt(0).toUpperCase() + u.type.slice(1) : 'Update';
     const dateStr = u.date ? ` (${u.date})` : '';
-    return `${statusEmoji(u.type)} ${status}: ${u.body}${dateStr}`;
+    return `${status}: ${u.body}${dateStr}`;
   });
   const text = header + '\n' + updateLines.join('\n');
   
@@ -2138,7 +2188,9 @@ async function init() {
   // Safety net — splash always hides within 4 seconds no matter what
   setTimeout(hideSplash, 4000);
 
-  // Poll for admin broadcast commands (reload/splash/etc) every 30s
+  // Poll for force loading state (visitors) and broadcast commands every 15s
+  checkForceLoading();
+  setInterval(checkForceLoading, 15000);
   checkBroadcast();
   setInterval(checkBroadcast, 30000);
 
