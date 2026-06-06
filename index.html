@@ -837,6 +837,7 @@ async function upsertConfig(key, value) {
 let _forceLoadingActive = false;
 
 function setToggleUI(active) {
+  _forceLoadingActive = active; // always track state, even if DOM elements aren't present
   const track = document.getElementById('force-loading-track');
   const thumb = document.getElementById('force-loading-thumb');
   const label = document.getElementById('force-loading-label');
@@ -846,7 +847,6 @@ function setToggleUI(active) {
   if (thumb) thumb.style.transform = active ? 'translateX(18px)' : 'translateX(0)';
   if (label) { label.textContent = active ? 'ON — visitors see loading screen' : 'Off'; label.style.color = active ? 'var(--green)' : 'var(--muted)'; }
   if (input) input.checked = active;
-  _forceLoadingActive = active;
 }
 
 async function toggleForceLoading(checked) {
@@ -864,7 +864,14 @@ async function toggleForceLoading(checked) {
 }
 
 async function checkForceLoading() {
-  if (isAdmin) return; // admins never see the forced loading screen
+  // Escape hatch: ?unlock=1 in URL lets admin bypass the splash and clear the lock
+  if (new URLSearchParams(location.search).get('unlock') === '1') {
+    await upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
+    history.replaceState(null, '', location.pathname); // remove ?unlock from URL
+    hideSplash();
+    return;
+  }
+  if (isAdmin || sessionStorage.getItem('assistbot-admin-token')) return; // admins never see the forced loading screen
   try {
     const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
     if (!res.ok) return;
@@ -1316,7 +1323,9 @@ function disableAdminUI(logEvent = true) {
   document.getElementById('footer-text').innerHTML = 'Refreshes in <span id="countdown">60</span>s &nbsp;·&nbsp; Powered by AssistBot';
   
   // 🛡️ Safe Mode — auto-disable force loading if admin forgot to turn it off
-  if (_forceLoadingActive) {
+  const forceToggle = document.getElementById('force-loading-toggle');
+  const forceIsOn = forceToggle ? forceToggle.checked : _forceLoadingActive;
+  if (forceIsOn) {
     upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
     setToggleUI(false);
     showToast('Safe Mode: Force loading auto-disabled.', 'info');
