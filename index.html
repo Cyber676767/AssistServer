@@ -619,7 +619,9 @@
     <div class="important-banner" id="important-banner">
       <div class="important-banner-header">
         <div class="important-banner-title">📌 Important Update</div>
+        <!-- Visitors see Dismiss; admins see Delete Live -->
         <button class="important-banner-dismiss" id="important-dismiss-btn" onclick="dismissImportantBanner()">✕ Dismiss</button>
+        <button class="important-banner-dismiss" id="important-delete-btn" onclick="clearImportantBanner()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);">🗑️ Delete Live</button>
       </div>
       <div class="important-banner-body" id="important-banner-body"></div>
     </div>
@@ -675,7 +677,7 @@
             </label>
           </div>
           <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;"></textarea>
-          <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: auto-disables when you log out</div>
+          <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: if ON, auto-disables when you log out</div>
 
           <div style="height:1px;background:var(--border);margin:8px 0;"></div>
 
@@ -1280,6 +1282,11 @@ function enableAdminUI(notify = true) {
   document.getElementById('admin-indicator').style.display = 'block';
   document.getElementById('activity-log-card').style.display = 'flex';
   document.getElementById('incidents-card').classList.remove('full-width');
+  // Banner buttons: hide Dismiss, show Delete Live
+  const dismissBtn = document.getElementById('important-dismiss-btn');
+  const deleteBtn  = document.getElementById('important-delete-btn');
+  if (dismissBtn) dismissBtn.style.display = 'none';
+  if (deleteBtn)  deleteBtn.style.display  = 'inline-block';
   renderIncidents(currentIncidentFeedCache);
   renderForceStatusRows(cache || null);
   loadForceLoadingState(); // restore toggle state for admin
@@ -1308,8 +1315,12 @@ function disableAdminUI(logEvent = true) {
     showToast('Safe Mode: Force loading auto-disabled.', 'info');
     addLog('update', '🛡️ Safe Mode triggered — force loading disabled on logout.');
   }
+  // Banner buttons: restore Dismiss for visitors, hide Delete Live
+  const dismissBtn = document.getElementById('important-dismiss-btn');
+  const deleteBtn  = document.getElementById('important-delete-btn');
+  if (dismissBtn) dismissBtn.style.display = 'inline-block';
+  if (deleteBtn)  deleteBtn.style.display  = 'none';
   renderIncidents(currentIncidentFeedCache);
-  // Re-render bot services to strip any (forced) badges
   if (cache) render(cache);
   // Resume auto-refresh with fresh countdown
   resetCountdown();
@@ -1506,8 +1517,8 @@ function renderIncidents(incidents) {
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const allUpdates = [...kids, u]
-      .map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id }))
-      .sort((a, b) => statusPriority(a.status) - statusPriority(b.status));
+      .map(x => ({ status: x.type, body: x.body, time: x.date, id: x.id, created_at: x.created_at }))
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
     allItems.push({
       _isCustom: true,
@@ -1552,13 +1563,8 @@ function renderIncidents(incidents) {
     html += `<div class="inc-date-header">${esc(dateLabel)}</div>`;
 
     items.forEach(item => {
-      // Top dot = color of the most recently CREATED update (chronological, not priority-sorted)
-      const chronoLatest = [...item.updates].sort((a,b) => {
-        const ta = a.time ? new Date(a.time) : 0;
-        const tb = b.time ? new Date(b.time) : 0;
-        return tb - ta;
-      })[0];
-      const topStatus = chronoLatest ? statusDotClass(chronoLatest.status) : 'info';
+      // Top dot = color of most recent update (updates are sorted newest-first)
+      const topStatus = item.updates.length ? statusDotClass(item.updates[0].status) : 'info';
       const originClass = item._isCustom ? 'assistbot' : 'discord';
       const originLabel = item._isCustom ? 'Assistbot' : 'Discord Official';
       const isExpanded = expandedIncidentId === String(item.id);
