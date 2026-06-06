@@ -1035,6 +1035,10 @@ function simulateDiscordImpact(scenario) {
     if (cache) render(cache);
     // Restore real Discord data
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
+    else {
+      // If no cache, clear warnings from nav too
+      document.getElementById('discord-nav').innerHTML = '<div class="nav-item"><div class="ndot unknown"></div>Loading…</div>';
+    }
     return;
   }
 
@@ -1064,6 +1068,33 @@ function simulateDiscordImpact(scenario) {
 
   // Mark active button
   document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
+
+  // Update Discord Status sidebar and list to reflect simulated component states
+  const allSimComps = simComps;
+  const liveComps = discordComponentsCache || [];
+  // Merge: override live components with simulated ones
+  const mergedComps = liveComps.map(c => {
+    const sim = allSimComps.find(s => c.name.toLowerCase().includes(s.name.toLowerCase()));
+    return sim ? { ...c, status: sim.status } : c;
+  });
+  // If no live cache, build from sim only
+  const displayComps = mergedComps.length ? mergedComps : allSimComps.map(s => ({ name: s.name, status: s.status }));
+
+  const keys = ['API','Gateway','Media Proxy','Voice','Notifications','Push'];
+  const filteredComps = displayComps.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0, 6);
+
+  if (filteredComps.length) {
+    document.getElementById('discord-list').innerHTML = filteredComps.map(c => {
+      const s = c.status;
+      const dotClass = s === 'operational' ? 'up' : s === 'major_outage' ? 'down' : 'paused';
+      const lbl = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${lbl}</div></div>`;
+    }).join('');
+    document.getElementById('discord-nav').innerHTML = filteredComps.slice(0, 3).map(c => {
+      const dotClass = c.status === 'operational' ? 'up' : c.status === 'major_outage' ? 'down' : 'paused';
+      return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
+    }).join('');
+  }
 
   if (cache) render(cache);
 }
@@ -1699,7 +1730,7 @@ function renderDiscord(components, incidents) {
     return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${label}</div></div>`;
   }).join('');
 
-  document.getElementById('discord-nav').innerHTML = comps.slice(0, 3).map(c => {
+  document.getElementById('discord-nav').innerHTML = comps.slice(0, 5).map(c => {
     const dotClass = c.status === 'operational' ? 'up' : c.status === 'major_outage' ? 'down' : 'paused';
     return `<div class="nav-item"><div class="ndot ${dotClass}"></div>${esc(c.name)}</div>`;
   }).join('');
