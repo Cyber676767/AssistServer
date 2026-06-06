@@ -807,30 +807,42 @@ function hideSplash() {
 }
 
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const SUPABASE_URL    = "https://yjqhythwpxziejetrpyy.supabase.co";
-const SUPABASE_KEY    = "sb_publishable_UHEfdFt5t9J0ZhOXrbwgxw_R4-JVHxy";
-const SUPABASE_TABLE  = `${SUPABASE_URL}/rest/v1/updates`;
-const SUPABASE_HEADERS = {
-  'apikey': SUPABASE_KEY,
-  'Authorization': `Bearer ${SUPABASE_KEY}`,
-  'Content-Type': 'application/json'
-};
+// No credentials stored in the HTML — all Supabase access goes through Vercel API routes.
+const DISCORD_API = 'https://discordstatus.com/api/v2/summary.json';
 
-const SUPABASE_CONFIG  = `${SUPABASE_URL}/rest/v1/config`;
-const UPTIMEROBOT_API  = 'https://api.uptimerobot.com/v2/getMonitors';
-const UR_MAIN_KEY      = 'u3190426-8c741aff25ed31c2d2c8c14c';
-const DISCORD_API      = 'https://discordstatus.com/api/v2/summary.json';
+function getAdminToken() {
+  return sessionStorage.getItem('assistbot-admin-token') || '';
+}
+function adminHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAdminToken()}` };
+}
 
-// ── SUPABASE HELPERS ─────────────────────────────────────────────────────────
+// ── API HELPERS ──────────────────────────────────────────────────────────────
 async function upsertConfig(key, value) {
   try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', headers: SUPABASE_HEADERS });
-    await fetch(SUPABASE_CONFIG, {
+    await fetch('/api/config-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({ key, value: String(value) })
     });
   } catch(e) { /* non-critical */ }
+}
+
+async function deleteConfig(key) {
+  try {
+    await fetch('/api/config-set', {
+      method: 'DELETE',
+      headers: adminHeaders(),
+      body: JSON.stringify({ key })
+    });
+  } catch(e) { /* non-critical */ }
+}
+
+async function getConfig(key) {
+  const r = await fetch(`/api/config-get?key=${encodeURIComponent(key)}`);
+  if (!r.ok) return [];
+  const data = await r.json();
+  return data.rows || [];
 }
 
 // ── VISITOR LOADING TOGGLE ───────────────────────────────────────────────────
@@ -886,11 +898,11 @@ async function checkForceLoading() {
   }
   if (isAdmin || sessionStorage.getItem('assistbot-admin-token')) return;
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=force_loading');
     if (!res.ok) return;
-    const rows = await res.json();
+    const { rows } = await res.json();
     // No row = treat as off (covers Safe Mode delete race and first-ever load)
-    const data = rows.length ? JSON.parse(rows[0].value || '{}') : { active: false };
+    const data = rows && rows.length ? JSON.parse(rows[0].value || '{}') : { active: false };
     const splash = document.getElementById('splash');
     if (data.active) {
       // Keep showing splash as long as toggle is ON — reset hidden flag each poll
@@ -922,10 +934,10 @@ async function checkForceLoading() {
 async function loadForceLoadingState() {
   // Load current toggle state for admin panel
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=force_loading');
     if (!res.ok) return;
-    const rows = await res.json();
-    if (!rows.length) return;
+    const { rows } = await res.json();
+    if (!rows || !rows.length) return;
     const data = JSON.parse(rows[0].value || '{}');
     setToggleUI(!!data.active);
     if (data.message) {
@@ -943,10 +955,10 @@ async function broadcastCommand(cmd) {
 let _lastBroadcastTs = parseInt(sessionStorage.getItem('last_broadcast_ts') || '0');
 async function checkBroadcast() {
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.broadcast`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=broadcast');
     if (!res.ok) return;
-    const rows = await res.json();
-    if (!rows.length) return;
+    const { rows } = await res.json();
+    if (!rows || !rows.length) return;
     const { cmd, ts } = JSON.parse(rows[0].value);
     if (ts <= _lastBroadcastTs) return;
     _lastBroadcastTs = ts;
@@ -956,10 +968,10 @@ async function checkBroadcast() {
 
 async function loadBotPingFromSupabase() {
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.last_bot_ping`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=last_bot_ping');
     if (!res.ok) return;
-    const rows = await res.json();
-    if (!rows.length || !rows[0].value) return;
+    const { rows } = await res.json();
+    if (!rows || !rows.length || !rows[0].value) return;
     const ping = parseInt(rows[0].value);
     if (!ping || ping <= 0) return;
     // Only use if we don't already have a better value showing
@@ -994,11 +1006,11 @@ async function loadForceStatus() {
 
   // ALWAYS sync from Supabase — this is what non-admin users depend on
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=like.force_*`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=force_*');
     if (!res.ok) return;
-    const rows = await res.json();
+    const { rows } = await res.json();
     const supabaseForce = {};
-    rows.forEach(r => { supabaseForce[r.key.replace('force_', '')] = r.value; });
+    (rows || []).forEach(r => { supabaseForce[r.key.replace('force_', '')] = r.value; });
     // Supabase is the source of truth — update localStorage with latest
     forceStatus = supabaseForce;
     localStorage.setItem('assistbot-force-status', JSON.stringify(forceStatus));
@@ -1013,16 +1025,12 @@ async function saveForceStatus(name, value) {
   // Also try Supabase (async, non-blocking)
   const key = `force_${name}`;
   try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.${encodeURIComponent(key)}`, {
-      method: 'DELETE',
-      headers: SUPABASE_HEADERS
-    });
-    const ins = await fetch(SUPABASE_CONFIG, {
+    const ins = await fetch('/api/config-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({ key, value })
     });
-    if (!ins.ok) throw new Error('Supabase save failed');
+    if (!ins.ok) throw new Error('Config save failed');
   } catch(e) {
     console.warn('Supabase save failed, using localStorage:', e.message);
   }
@@ -1059,12 +1067,10 @@ function handleDisabledClick(el, type) {
 // ── SUPABASE STORAGE HELPERS ─────────────────────────────────────────────────
 async function loadUpdates() {
   try {
-    const res = await fetch(`${SUPABASE_TABLE}?order=created_at.asc&limit=100`, {
-      headers: SUPABASE_HEADERS
-    });
+    const res = await fetch('/api/updates-get');
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-    customUpdates = rows.map(r => ({
+    const { rows } = await res.json();
+    customUpdates = (rows || []).map(r => ({
       id: r.id,
       _custom: true,
       title: r.title,
@@ -1083,9 +1089,9 @@ async function loadUpdates() {
 
 async function insertUpdate(update) {
   try {
-    const res = await fetch(SUPABASE_TABLE, {
+    const res = await fetch('/api/updates-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({
         id: update.id,
         title: update.title,
@@ -1108,9 +1114,9 @@ async function insertUpdate(update) {
 
 async function deleteUpdate(id) {
   try {
-    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${id}`, {
+    const res = await fetch(`/api/updates-set?id=${id}`, {
       method: 'DELETE',
-      headers: SUPABASE_HEADERS
+      headers: adminHeaders()
     });
     if (!res.ok) throw new Error(await res.text());
   } catch(e) {
@@ -1135,10 +1141,10 @@ function showToast(message, type = 'info') {
 // ── IMPORTANT BANNER ─────────────────────────────────────────────────────────
 async function loadImportantBanner() {
   try {
-    const res = await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { headers: SUPABASE_HEADERS });
+    const res = await fetch('/api/config-get?key=important_banner');
     if (!res.ok) return;
-    const rows = await res.json();
-    if (rows.length && rows[0].value) showImportantBanner(rows[0].value);
+    const { rows } = await res.json();
+    if (rows && rows.length && rows[0].value) showImportantBanner(rows[0].value);
   } catch(e) {}
 }
 
@@ -1209,10 +1215,9 @@ async function postImportantBanner() {
   const text = document.getElementById('important-text')?.value.trim();
   if (!text) { showToast('Enter a message first.', 'error'); return; }
   try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
-    const res = await fetch(SUPABASE_CONFIG, {
+    const res = await fetch('/api/config-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({ key: 'important_banner', value: text })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1225,7 +1230,7 @@ async function postImportantBanner() {
 async function clearImportantBanner() {
   if (!isAdmin) return;
   try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
+    await fetch('/api/config-set', { method: 'DELETE', headers: adminHeaders(), body: JSON.stringify({ key: 'important_banner' }) });
     dismissImportantBanner();
     showToast('Banner cleared.', 'info');
   } catch(e) { showToast('Failed.', 'error'); }
@@ -1732,9 +1737,9 @@ async function addChainUpdate(parentId) {
 
   showToast('Saving…', 'info');
   try {
-    const res = await fetch(SUPABASE_TABLE, {
+    const res = await fetch('/api/updates-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({ id: newId, title: newUpdate.title, type, body, service: newUpdate.service, date: time, parent_id: Number(parentId) })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1754,10 +1759,9 @@ async function editLatestUpdate(parentId, updateId) {
   const targetId = updateId || parentId;
   showToast('Saving…', 'info');
   try {
-    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
-      method: 'PATCH',
-      headers: SUPABASE_HEADERS,
-      body: JSON.stringify({ body })
+    const res = await fetch(`/api/updates-set?id=${targetId}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
     });
     if (!res.ok) throw new Error(await res.text());
     // Update in memory
@@ -1825,10 +1829,9 @@ async function pinIncidentAsBanner(incidentId) {
   const text = header + '\n' + updateLines.join('\n');
   
   try {
-    await fetch(`${SUPABASE_CONFIG}?key=eq.important_banner`, { method: 'DELETE', headers: SUPABASE_HEADERS });
-    const res = await fetch(SUPABASE_CONFIG, {
+    const res = await fetch('/api/config-set', {
       method: 'POST',
-      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      headers: adminHeaders(),
       body: JSON.stringify({ key: 'important_banner', value: text })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1853,10 +1856,9 @@ async function editSelectedUpdate(parentId) {
 
   showToast('Saving…', 'info');
   try {
-    const res = await fetch(`${SUPABASE_TABLE}?id=eq.${targetId}`, {
-      method: 'PATCH',
-      headers: SUPABASE_HEADERS,
-      body: JSON.stringify({ body })
+    const res = await fetch(`/api/updates-set?id=${targetId}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
     });
     if (!res.ok) throw new Error(await res.text());
     const idx = customUpdates.findIndex(u => String(u.id) === String(targetId));
