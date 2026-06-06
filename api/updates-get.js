@@ -1,4 +1,4 @@
-// api/updates-get.js — public read of updates/incidents table
+// api/updates-get.js — public read of updates/incidents, no auth required
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
