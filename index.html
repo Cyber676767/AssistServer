@@ -864,14 +864,27 @@ async function toggleForceLoading(checked) {
 }
 
 async function checkForceLoading() {
-  // Escape hatch: ?unlock=1 in URL lets admin bypass the splash and clear the lock
-  if (new URLSearchParams(location.search).get('unlock') === '1') {
-    await upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
-    history.replaceState(null, '', location.pathname); // remove ?unlock from URL
-    hideSplash();
-    return;
+  // Escape hatch: ?unlock=PASSWORD — verifies against admin API before clearing
+  const unlockParam = new URLSearchParams(location.search).get('unlock');
+  if (unlockParam) {
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: unlockParam })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await upsertConfig('force_loading', JSON.stringify({ active: false, message: '', ts: Date.now() }));
+        history.replaceState(null, '', location.pathname);
+        hideSplash();
+        return;
+      }
+    } catch(e) {}
+    // Wrong password — fall through to normal force-loading check
+    history.replaceState(null, '', location.pathname);
   }
-  if (isAdmin || sessionStorage.getItem('assistbot-admin-token')) return; // admins never see the forced loading screen
+  if (isAdmin || sessionStorage.getItem('assistbot-admin-token')) return;
   try {
     const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
     if (!res.ok) return;
