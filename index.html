@@ -869,8 +869,8 @@ async function checkForceLoading() {
     const res = await fetch(`${SUPABASE_CONFIG}?key=eq.force_loading`, { headers: SUPABASE_HEADERS });
     if (!res.ok) return;
     const rows = await res.json();
-    if (!rows.length) return;
-    const data = JSON.parse(rows[0].value || '{}');
+    // No row = treat as off (covers Safe Mode delete race and first-ever load)
+    const data = rows.length ? JSON.parse(rows[0].value || '{}') : { active: false };
     const splash = document.getElementById('splash');
     if (data.active) {
       // Keep showing splash as long as toggle is ON — reset hidden flag each poll
@@ -886,10 +886,11 @@ async function checkForceLoading() {
         splash.classList.add('visible');
       }
     } else {
-      // Force loading is OFF — only reload if we were previously holding them on the splash
-      if (_forceLoadingActive && splash && splash.classList.contains('visible')) {
+      // Force loading is OFF
+      if (_forceLoadingActive) {
+        // We were holding visitors on the splash — reload to show the page fresh
         _forceLoadingActive = false;
-        localStorage.removeItem('assistbot-last-ping'); // clear stale ping before reload
+        localStorage.removeItem('assistbot-last-ping');
         hideSplash();
         setTimeout(() => location.reload(), 800);
       }
