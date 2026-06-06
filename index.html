@@ -881,13 +881,18 @@ async function checkForceLoading() {
         msgEl.style.display = hasMsg ? 'block' : 'none';
       }
       _splashHidden = false; // allow re-show each 15s check
+      _forceLoadingActive = true;
       if (splash && !splash.classList.contains('visible')) {
         splash.classList.add('visible');
       }
-    } else if (splash && splash.classList.contains('visible')) {
-      // Force loading turned OFF — hide splash and reload for fresh data
-      hideSplash();
-      setTimeout(() => location.reload(), 800);
+    } else {
+      // Force loading is OFF — only reload if we were previously holding them on the splash
+      if (_forceLoadingActive && splash && splash.classList.contains('visible')) {
+        _forceLoadingActive = false;
+        hideSplash();
+        setTimeout(() => location.reload(), 800);
+      }
+      _forceLoadingActive = false;
     }
   } catch(e) {}
 }
