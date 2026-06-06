@@ -1,35 +1,91 @@
-// api/config-get.js — public read of config keys (force_loading, important_banner, last_bot_ping, force_*)
-// No auth needed — reads are public. Supabase credentials stay server-side.
+// api/config-set.js — admin-only write to config table (force_loading, important_banner, force_*, last_bot_ping)
+// Requires valid admin token in Authorization header.
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-
-  const { key } = req.query;
-  if (!key) return res.status(400).json({ error: 'Missing key param' });
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-  try {
-    // Support exact match (?key=force_loading) and prefix match (?key=force_*)
-    const isPrefix = key.endsWith('*');
-    const endpoint = isPrefix
-      ? `${SUPABASE_URL}/rest/v1/config?key=like.${encodeURIComponent(key)}`
-      : `${SUPABASE_URL}/rest/v1/config?key=eq.${encodeURIComponent(key)}`;
-
-    const r = await fetch(endpoint, {
-      headers: {
-        'apikey': SUPABASE_SERVICE_KEY,
-        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`
+  // ── AUTH ──
+  // Accept either a valid admin token (base64 encoded) or the raw password
+  // Token format: base64("assistbot-admin:<timestamp>:<password>")
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace('Bearer ', '').trim();
+  let authorized = false;
+  if (token) {
+    try {
+      const decoded = Buffer.from(token, 'base64').toString('utf8');
+      const parts = decoded.split(':');
+      // parts[0] = 'assistbot-admin', parts[1] = timestamp, parts[2] = password
+      if (parts[0] === 'assistbot-admin' && parts[2] === ADMIN_PASSWORD) {
+        authorized = true;
       }
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const rows = await r.json();
-    res.status(200).json({ rows });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
+    } catch(e) {}
   }
+
+  // Also allow raw password in body for the ?unlock= flow
+  if (!authorized && req.body?.password === ADMIN_PASSWORD) {
+    authorized = true;
+  }
+
+  if (!authorized) {
+    return setTimeout(() => {
+      if (!res.headersSent) res.status(401).json({ error: 'Unauthorized' });
+    }, 800);
+  }
+
+  const { key, value } = req.body || {};
+
+  if (req.method === 'DELETE') {
+    // Delete a key
+    const delKey = req.query.key || key;
+    if (!delKey) return res.status(400).json({ error: 'Missing key' });
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/config?key=eq.${encodeURIComponent(delKey)}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`
+        }
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return res.status(200).json({ ok: true });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  if (req.method === 'POST') {
+    if (!key) return res.status(400).json({ error: 'Missing key' });
+    try {
+      // Upsert: delete then insert
+      await fetch(`${SUPABASE_URL}/rest/v1/config?key=eq.${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`
+        }
+      });
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/config`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ key, value: String(value) })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      return res.status(200).json({ ok: true });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  res.status(405).json({ error: 'Method not allowed' });
 };
