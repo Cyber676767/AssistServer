@@ -280,7 +280,7 @@
     .badge.paused  { color: var(--yellow); }
     .badge.unknown { color: var(--faint); }
 
-    .mrow { display: flex; align-items: center; padding: 12px 14px; background: var(--card-inner); border-radius: 8px; gap: 12px; transition: background 0.2s, border-color 0.2s; border: 1px solid rgba(0,0,0,0.06); }
+    .mrow { display: flex; align-items: center; padding: 10px 14px; background: var(--card-inner); border-radius: 8px; gap: 10px; transition: background 0.2s, border-color 0.2s; border: 1px solid rgba(0,0,0,0.06); overflow: hidden; }
     .mrow:hover { filter: brightness(0.97); }
     
     .sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -289,11 +289,11 @@
     .sdot.paused { background: var(--yellow); box-shadow: 0 0 8px rgba(240,177,50,0.4); }
     .sdot.unknown { background: var(--faint); }
     
-    .mname { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .mname { font-weight: 600; font-size: 15px; width: 140px; min-width: 120px; flex-shrink: 0; color: var(--text); display: flex; align-items: flex-start; flex-direction: column; gap: 2px; }
     .warn-inline { font-size: 12px; font-weight: 500; color: var(--yellow); opacity: 0.85; }
     .mup { font-size: 13px; color: var(--muted); font-weight: 500; min-width: 44px; text-align: right; }
 
-    .bars { display: flex; gap: 3px; align-items: center; margin: 0 12px; }
+    .bars { display: flex; gap: 2px; align-items: center; flex: 1; min-width: 0; max-width: 260px; overflow: hidden; }
     .bar { width: 5px; height: 22px; border-radius: 3px; background: var(--border); }
     .bar.up   { background: var(--green); }
     .bar.down { background: var(--red); }
@@ -690,7 +690,7 @@
               <span id="force-loading-label" style="font-size:13px;font-weight:600;color:var(--muted);">Off</span>
             </label>
           </div>
-          <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;"></textarea>
+          <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;" oninput="saveForceLoadingMsg(this.value)"></textarea>
           <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: if ON, auto-disables when you log out</div>
 
           <!-- Splash Message Style -->
@@ -1033,6 +1033,9 @@ function simulateDiscordImpact(scenario) {
     window._serviceWarnings = {};
     if (label) label.textContent = 'No simulation active — showing live Discord data';
     if (cache) render(cache);
+    // Clear sim from Supabase
+    upsertConfig('discord_sim', JSON.stringify({ scenario: 'none', ts: Date.now() }));
+    notifyVisitors();
     // Restore real Discord data
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     else {
@@ -1069,6 +1072,10 @@ function simulateDiscordImpact(scenario) {
   // Mark active button
   document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
 
+  // Save to Supabase so visitors see it
+  await upsertConfig('discord_sim', JSON.stringify({ scenario, ts: Date.now() }));
+  notifyVisitors();
+
   // Update Discord Status sidebar and list to reflect simulated component states
   const allSimComps = simComps;
   const liveComps = discordComponentsCache || [];
@@ -1097,6 +1104,22 @@ function simulateDiscordImpact(scenario) {
   }
 
   if (cache) render(cache);
+}
+
+let _msgSaveTimer = null;
+function saveForceLoadingMsg(msg) {
+  clearTimeout(_msgSaveTimer);
+  _msgSaveTimer = setTimeout(async () => {
+    try {
+      const active = document.getElementById('force-loading-toggle')?.checked || false;
+      await fetch('/api/config-set', {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify({ key: 'force_loading', value: JSON.stringify({ active, message: msg, ts: Date.now() }) })
+      });
+      notifyVisitors();
+    } catch(e) {}
+  }, 800);
 }
 
 async function notifyVisitors() {
@@ -1137,6 +1160,61 @@ let hiddenServices = JSON.parse(localStorage.getItem('assistbot-hidden-services'
 let splashBgColor = localStorage.getItem('assistbot-splash-bg') || 'none'; // message badge style
 
 // ── SUPABASE CONFIG (force status persistence) ───────────────────────────────
+async function loadDiscordSim() {
+  try {
+    const res = await fetch('/api/config-get?key=discord_sim');
+    if (!res.ok) return;
+    const { rows } = await res.json();
+    if (!rows || !rows.length) return;
+    const { scenario } = JSON.parse(rows[0].value || '{}');
+    if (!scenario || scenario === 'none') return;
+    // Replay the sim visuals without re-saving to Supabase
+    const simComps = DISCORD_SIM_SCENARIOS[scenario] || [];
+    if (!simComps.length) return;
+    _discordSimActive = true;
+    const fakeImpacts = {};
+    simComps.forEach(c => {
+      const impacts = getDiscordImpact(c.name, c.status);
+      if (!impacts) return;
+      for (const [svc, info] of Object.entries(impacts)) {
+        const sevOrder = ['high','medium','low'];
+        if (!fakeImpacts[svc] || sevOrder.indexOf(info.severity) < sevOrder.indexOf(fakeImpacts[svc].severity)) {
+          fakeImpacts[svc] = { ...info, components: [c.name] };
+        }
+      }
+    });
+    window._serviceImpacts = fakeImpacts;
+    window._serviceWarnings = Object.fromEntries(
+      Object.entries(fakeImpacts).map(([svc, info]) => [svc, info.components || [info.component]])
+    );
+    // Update Discord display
+    const liveComps = discordComponentsCache || [];
+    const mergedComps = liveComps.length ? liveComps.map(c => {
+      const sim = simComps.find(s => c.name.toLowerCase().includes(s.name.toLowerCase()));
+      return sim ? { ...c, status: sim.status } : c;
+    }) : simComps.map(s => ({ name: s.name, status: s.status }));
+    const keys = ['API','Gateway','Media Proxy','Voice','Notifications','Push'];
+    const filtered = mergedComps.filter(c => keys.some(k => c.name.toLowerCase().includes(k.toLowerCase()))).slice(0, 6);
+    if (filtered.length && document.getElementById('discord-list')) {
+      document.getElementById('discord-list').innerHTML = filtered.map(c => {
+        const s = c.status;
+        const dc = s==='operational'?'up':s==='major_outage'?'down':'paused';
+        const lbl = s==='operational'?'Operational':s.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+        return `<div class="mrow"><div class="sdot ${dc}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dc}">${lbl}</div></div>`;
+      }).join('');
+      document.getElementById('discord-nav').innerHTML = filtered.slice(0,5).map(c => {
+        const dc = c.status==='operational'?'up':c.status==='major_outage'?'down':'paused';
+        return `<div class="nav-item"><div class="ndot ${dc}"></div>${esc(c.name)}</div>`;
+      }).join('');
+    }
+    if (cache) render(cache);
+    const label = document.getElementById('discord-sim-label');
+    const names = {api_degraded:'API Degraded',api_outage:'API Outage',gateway_outage:'Gateway Outage',voice_outage:'Voice Outage',media_degraded:'Media Proxy Degraded'};
+    if (label) label.textContent = `Simulating: ${names[scenario]||scenario} — ${Object.keys(fakeImpacts).length} service(s) affected`;
+    document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
+  } catch(e) {}
+}
+
 async function loadSplashBg() {
   try {
     const res = await fetch('/api/config-get?key=splash_bg');
@@ -2312,7 +2390,7 @@ function render(monitors) {
 
     return `<div class="mrow">
       <div class="sdot ${dotClass}"></div>
-      <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${warnText}</div>
+      <div class="mname">${esc(m.friendly_name)}${warnText}</div>
       ${bars(m, m._forced)}
       <div class="badge ${badgeClass}">${badgeText}</div>
     </div>`;
@@ -2423,7 +2501,7 @@ async function setForceStatus(name, value, btn) {
         : '';
       return `<div class="mrow">
         <div class="sdot ${s}"></div>
-        <div class="mname" style="flex-direction:column;align-items:flex-start;">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
+        <div class="mname">${esc(m.friendly_name)}${forcedBadge}${warnText}</div>
         ${bars(m, m._forced)}
         <div class="badge ${s}">${sl(m.status)}</div>
       </div>`;
@@ -2497,6 +2575,7 @@ async function init() {
   if (_forceLoadingActive) {
     // Toggle is ON — just poll and wait. Don't render anything.
     loadSplashBg();
+  loadDiscordSim();
   setInterval(checkForceLoading, 3000);
     return;
   }
@@ -2547,6 +2626,7 @@ async function init() {
 
   // Poll force loading every 3s so it locks visitors fast if admin turns it on mid-session
   loadSplashBg();
+  loadDiscordSim();
   setInterval(checkForceLoading, 3000);
   checkBroadcast();
   setInterval(checkBroadcast, 3000);
