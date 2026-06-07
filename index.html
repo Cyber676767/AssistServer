@@ -928,9 +928,12 @@ async function toggleForceLoading(checked) {
   if (checked) {
     showToast('Loading screen ON for all visitors!', 'success');
     addLog('update', `Force loading ON — "${msg}"`);
+    showSaveBar('Visitor loading screen ON — save to push to all visitors');
+    _pendingChanges['force_loading'] = JSON.stringify(data);
   } else {
     showToast('Loading screen OFF.', 'info');
     addLog('update', 'Force loading disabled.');
+    hideSaveBar();
   }
 }
 
@@ -1200,8 +1203,8 @@ async function saveAdminChanges() {
         body: JSON.stringify({ key, value: String(value) })
       });
     }
-    // Broadcast reload to all visitors
-    await broadcastCommand('reload');
+    // Broadcast refresh to all visitors (preserves their theme/preferences)
+    await broadcastCommand('refresh');
     hideSaveBar();
     showToast('Changes saved — visitors refreshing!', 'success');
     addLog('update', 'Changes saved and broadcast to all visitors.');
@@ -1226,14 +1229,17 @@ function queueChange(key, value, label) {
 let _msgSaveTimer = null;
 function saveForceLoadingMsg(msg) {
   clearTimeout(_msgSaveTimer);
+  showSaveBar('Loading screen message changed — save to push to visitors');
   _msgSaveTimer = setTimeout(async () => {
     try {
       const active = document.getElementById('force-loading-toggle')?.checked || false;
+      const data = { active, message: msg, ts: Date.now() };
       await fetch('/api/config-set', {
         method: 'POST',
         headers: adminHeaders(),
-        body: JSON.stringify({ key: 'force_loading', value: JSON.stringify({ active, message: msg, ts: Date.now() }) })
+        body: JSON.stringify({ key: 'force_loading', value: JSON.stringify(data) })
       });
+      _pendingChanges['force_loading'] = JSON.stringify(data);
       notifyVisitors();
     } catch(e) {}
   }, 800);
@@ -1588,7 +1594,6 @@ async function postImportantBanner() {
     document.getElementById('important-text').value = '';
     notifyVisitors();
     showToast('Important banner pinned for all visitors!', 'success');
-    showSaveBar('Banner posted — save to force-refresh all visitors');
   } catch(e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
@@ -2242,7 +2247,6 @@ async function postUpdate() {
     addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
     notifyVisitors();
     showToast("Update saved — visible to all visitors!", "success");
-    showSaveBar('Update posted — save to force-refresh all visitors');
   } catch(e) { /* error toast already shown */ }
 }
 
@@ -2556,7 +2560,6 @@ async function setSplashMsgStyle(style) {
   splashBgColor = style;
   localStorage.setItem('assistbot-splash-bg', style);
   applySplashBg();
-  // Update active button
   document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
   const activeBtn = document.getElementById('sms-' + style);
   if (activeBtn) activeBtn.classList.add('sms-active');
@@ -2585,9 +2588,10 @@ function toggleServiceVisibility(name) {
   renderForceStatusRows(cache || null);
   showToast(`${name} ${hiddenServices[name] ? 'hidden from visitors' : 'visible to visitors'}`, 'info');
   addLog('update', `${name} → ${hiddenServices[name] ? 'Hidden' : 'Visible'} for visitors`);
-  // Save to Supabase so visitors see the change
   upsertConfig('hidden_services', JSON.stringify(hiddenServices));
   notifyVisitors();
+  showSaveBar(`${name} ${hiddenServices[name] ? 'hidden' : 'shown'} — save to push to visitors`);
+  _pendingChanges['hidden_services'] = JSON.stringify(hiddenServices);
 }
 
 async function setForceStatus(name, value, btn) {
