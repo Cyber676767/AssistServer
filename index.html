@@ -2480,7 +2480,7 @@ async function fetchStatus(force = false) {
     cache = m; lastFetch = Date.now();
     localStorage.setItem('assistbot-cache-monitors', JSON.stringify(m));
     render(m);
-    hideSplash(); // hide splash after successful network fetch
+    if (!_forceLoadingActive) hideSplash(); // only hide if not force-locked
     addLog('check', `Scanned <strong>${m.length} nodes</strong> · monitoring active`);
     if (discordComponentsCache) renderDiscord(discordComponentsCache, currentIncidentFeedCache);
     
@@ -2515,7 +2515,7 @@ async function fetchStatus(force = false) {
       }
     })();
   } catch(err) {
-    hideSplash(); // hide splash even on error — show cached data
+    if (!_forceLoadingActive) hideSplash(); // hide only if not force-locked
     const backup = localStorage.getItem('assistbot-cache-monitors');
     if (backup || cache) {
       const renderTarget = cache || JSON.parse(backup);
@@ -2524,7 +2524,7 @@ async function fetchStatus(force = false) {
       addLog('check', 'Serving from cached data.');
     }
   } finally {
-    hideSplash(); // guarantee splash always hides, no matter what
+    if (!_forceLoadingActive) hideSplash(); // guarantee splash hides if not force-locked
     resetCountdown();
   }
 }
