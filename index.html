@@ -415,6 +415,9 @@
     }
     .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
     .force-btns { display: flex; gap: 6px; }
+    .sms-btn { font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;cursor:pointer;transition:box-shadow 0.15s,opacity 0.15s;opacity:0.7; }
+    .sms-btn.sms-active { opacity:1;box-shadow:0 0 0 2px #fff2,inset 0 0 0 1px #fff2; outline: 2px solid rgba(255,255,255,0.4); }
+    [data-theme="light"] .sms-btn.sms-active { outline: 2px solid rgba(0,0,0,0.35); }
     .force-btn {
       font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px;
       border: 1px solid transparent; cursor: pointer; font-family: inherit;
@@ -665,13 +668,21 @@
 
           <!-- Discord Impact Simulator -->
           <div class="sec-subtitle">Simulate Discord Impact</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-            <button onclick="simulateDiscordImpact('none')" class="force-btn auto active" style="opacity:1;font-size:12px;">Clear</button>
-            <button onclick="simulateDiscordImpact('api_degraded')" class="force-btn deg" style="font-size:12px;">API Degraded</button>
-            <button onclick="simulateDiscordImpact('api_outage')" class="force-btn out" style="font-size:12px;">API Outage</button>
-            <button onclick="simulateDiscordImpact('gateway_outage')" class="force-btn out" style="font-size:12px;">Gateway Down</button>
-            <button onclick="simulateDiscordImpact('voice_outage')" class="force-btn deg" style="font-size:12px;">Voice Down</button>
-            <button onclick="simulateDiscordImpact('media_degraded')" class="force-btn deg" style="font-size:12px;">Media Proxy</button>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px;">
+            <button onclick="simulateDiscordImpact('none')" class="force-btn auto" id="dsim-none" style="font-size:11px;">Clear</button>
+            <button onclick="simulateDiscordImpact('api_degraded')" class="force-btn deg" id="dsim-api_degraded" style="font-size:11px;">API Deg.</button>
+            <button onclick="simulateDiscordImpact('api_outage')" class="force-btn out" id="dsim-api_outage" style="font-size:11px;">API Out.</button>
+            <button onclick="simulateDiscordImpact('gateway_degraded')" class="force-btn deg" id="dsim-gateway_degraded" style="font-size:11px;">GW Deg.</button>
+            <button onclick="simulateDiscordImpact('gateway_outage')" class="force-btn out" id="dsim-gateway_outage" style="font-size:11px;">GW Out.</button>
+            <button onclick="simulateDiscordImpact('voice_degraded')" class="force-btn deg" id="dsim-voice_degraded" style="font-size:11px;">Voice Deg.</button>
+            <button onclick="simulateDiscordImpact('voice_outage')" class="force-btn out" id="dsim-voice_outage" style="font-size:11px;">Voice Out.</button>
+            <button onclick="simulateDiscordImpact('media_degraded')" class="force-btn deg" id="dsim-media_degraded" style="font-size:11px;">Media Deg.</button>
+            <button onclick="simulateDiscordImpact('media_outage')" class="force-btn out" id="dsim-media_outage" style="font-size:11px;">Media Out.</button>
+            <button onclick="simulateDiscordImpact('push_degraded')" class="force-btn deg" id="dsim-push_degraded" style="font-size:11px;">Push Notif.</button>
+            <button onclick="simulateDiscordImpact('music_worst_case')" class="force-btn out" id="dsim-music_worst_case" style="font-size:11px;">Music Worst</button>
+            <button onclick="simulateDiscordImpact('commands_only')" class="force-btn deg" id="dsim-commands_only" style="font-size:11px;">Commands Deg.</button>
+            <button onclick="simulateDiscordImpact('full_degraded')" class="force-btn deg" id="dsim-full_degraded" style="font-size:11px;">All Degraded</button>
+            <button onclick="simulateDiscordImpact('full_outage')" class="force-btn out" id="dsim-full_outage" style="font-size:11px;">Full Outage</button>
           </div>
           <div id="discord-sim-label" style="font-size:11px;color:var(--faint);margin-bottom:2px;">No simulation active — showing live Discord data</div>
 
@@ -696,13 +707,13 @@
           <!-- Splash Message Style -->
           <div style="margin-top:10px;">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:6px;">Message Badge Style</div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-              <button onclick="setSplashMsgStyle('none')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">None</button>
-              <button onclick="setSplashMsgStyle('dark')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.4);color:#ccc;cursor:pointer;">Dark Pill</button>
-              <button onclick="setSplashMsgStyle('blurple')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(88,101,242,0.5);background:rgba(88,101,242,0.2);color:#a5b0ff;cursor:pointer;">Blurple</button>
-              <button onclick="setSplashMsgStyle('yellow')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(240,178,50,0.5);background:rgba(240,178,50,0.15);color:#f0b232;cursor:pointer;">Warning</button>
-              <button onclick="setSplashMsgStyle('red')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(242,63,67,0.5);background:rgba(242,63,67,0.15);color:#f23f43;cursor:pointer;">Alert</button>
-              <button onclick="setSplashMsgStyle('green')" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid rgba(35,165,90,0.5);background:rgba(35,165,90,0.15);color:#23a55a;cursor:pointer;">Success</button>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;" id="splash-style-btns">
+              <button id="sms-none"    onclick="setSplashMsgStyle('none')"    class="sms-btn sms-active" style="background:transparent;border:2px solid var(--border);color:var(--muted);">None</button>
+              <button id="sms-dark"    onclick="setSplashMsgStyle('dark')"    class="sms-btn" style="background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.12);color:#ccc;">Dark</button>
+              <button id="sms-blurple" onclick="setSplashMsgStyle('blurple')" class="sms-btn" style="background:rgba(88,101,242,0.2);border:2px solid rgba(88,101,242,0.5);color:#a5b0ff;">Blurple</button>
+              <button id="sms-yellow"  onclick="setSplashMsgStyle('yellow')"  class="sms-btn" style="background:rgba(240,178,50,0.15);border:2px solid rgba(240,178,50,0.5);color:#f0b232;">Warning</button>
+              <button id="sms-red"     onclick="setSplashMsgStyle('red')"     class="sms-btn" style="background:rgba(242,63,67,0.15);border:2px solid rgba(242,63,67,0.5);color:#f23f43;">Alert</button>
+              <button id="sms-green"   onclick="setSplashMsgStyle('green')"   class="sms-btn" style="background:rgba(35,165,90,0.15);border:2px solid rgba(35,165,90,0.5);color:#23a55a;">Success</button>
             </div>
           </div>
 
@@ -891,6 +902,7 @@ function setToggleUI(active) {
 }
 
 async function toggleForceLoading(checked) {
+  notifyVisitors();
   const msg = document.getElementById('force-loading-msg')?.value.trim() || 'Performing maintenance, please wait…';
   const data = { active: checked, message: msg, ts: Date.now() };
   await upsertConfig('force_loading', JSON.stringify(data));
@@ -1010,12 +1022,36 @@ async function checkBroadcast() {
 
 // Simulate Discord component outages for testing
 const DISCORD_SIM_SCENARIOS = {
-  none:           [],
-  api_degraded:   [{ name: 'API', status: 'degraded_performance' }],
-  api_outage:     [{ name: 'API', status: 'major_outage' }],
-  gateway_outage: [{ name: 'Gateway', status: 'major_outage' }],
-  voice_outage:   [{ name: 'Voice', status: 'major_outage' }],
-  media_degraded: [{ name: 'Media Proxy', status: 'degraded_performance' }],
+  none:                [],
+  api_degraded:        [{ name: 'API', status: 'degraded_performance' }],
+  api_outage:          [{ name: 'API', status: 'major_outage' }],
+  gateway_degraded:    [{ name: 'Gateway', status: 'degraded_performance' }],
+  gateway_outage:      [{ name: 'Gateway', status: 'major_outage' }],
+  voice_degraded:      [{ name: 'Voice', status: 'degraded_performance' }],
+  voice_outage:        [{ name: 'Voice', status: 'major_outage' }],
+  media_degraded:      [{ name: 'Media Proxy', status: 'degraded_performance' }],
+  media_outage:        [{ name: 'Media Proxy', status: 'major_outage' }],
+  push_degraded:       [{ name: 'Push Notifications', status: 'degraded_performance' }],
+  full_outage:         [
+    { name: 'API',            status: 'major_outage' },
+    { name: 'Gateway',        status: 'major_outage' },
+    { name: 'Voice',          status: 'major_outage' },
+    { name: 'Media Proxy',    status: 'major_outage' },
+  ],
+  full_degraded:       [
+    { name: 'API',            status: 'degraded_performance' },
+    { name: 'Gateway',        status: 'degraded_performance' },
+    { name: 'Voice',          status: 'degraded_performance' },
+    { name: 'Media Proxy',    status: 'degraded_performance' },
+  ],
+  music_worst_case:    [
+    { name: 'Gateway', status: 'major_outage' },
+    { name: 'Voice',   status: 'major_outage' },
+  ],
+  commands_only:       [
+    { name: 'API',     status: 'degraded_performance' },
+    { name: 'Gateway', status: 'degraded_performance' },
+  ],
 };
 
 let _discordSimActive = false;
@@ -1066,11 +1102,13 @@ async function simulateDiscordImpact(scenario) {
     Object.entries(fakeImpacts).map(([svc, info]) => [svc, info.components || [info.component]])
   );
 
-  const names = { api_degraded:'API Degraded', api_outage:'API Outage', gateway_outage:'Gateway Outage', voice_outage:'Voice Outage', media_degraded:'Media Proxy Degraded' };
+  const names = { api_degraded:'API Degraded', api_outage:'API Outage', gateway_degraded:'Gateway Degraded', gateway_outage:'Gateway Outage', voice_degraded:'Voice Degraded', voice_outage:'Voice Outage', media_degraded:'Media Proxy Degraded', media_outage:'Media Proxy Outage', push_degraded:'Push Notifications Degraded', music_worst_case:'Music Worst Case', commands_only:'Commands Degraded', full_degraded:'All Services Degraded', full_outage:'Full Discord Outage' };
   if (label) label.textContent = `Simulating: ${names[scenario] || scenario} — ${Object.keys(fakeImpacts).length} service(s) affected`;
 
   // Mark active button
-  document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
+  document.querySelectorAll('[id^="dsim-"]').forEach(b => b.classList.remove('active'));
+  const activeSimBtn = document.getElementById('dsim-' + scenario);
+  if (activeSimBtn) activeSimBtn.classList.add('active');
 
   // Save to Supabase so visitors see it
   await upsertConfig('discord_sim', JSON.stringify({ scenario, ts: Date.now() }));
@@ -1211,7 +1249,9 @@ async function loadDiscordSim() {
     const label = document.getElementById('discord-sim-label');
     const names = {api_degraded:'API Degraded',api_outage:'API Outage',gateway_outage:'Gateway Outage',voice_outage:'Voice Outage',media_degraded:'Media Proxy Degraded'};
     if (label) label.textContent = `Simulating: ${names[scenario]||scenario} — ${Object.keys(fakeImpacts).length} service(s) affected`;
-    document.querySelector(`[onclick="simulateDiscordImpact('${scenario}')"]`)?.classList.add('active');
+    document.querySelectorAll('[id^="dsim-"]').forEach(b => b.classList.remove('active'));
+    const savedBtn = document.getElementById('dsim-' + scenario);
+    if (savedBtn) savedBtn.classList.add('active');
   } catch(e) {}
 }
 
@@ -1224,6 +1264,7 @@ async function loadSplashBg() {
       splashBgColor = rows[0].value;
       localStorage.setItem('assistbot-splash-bg', splashBgColor);
       applySplashBg();
+      updateSplashStyleButtons(splashBgColor);
     }
   } catch(e) {}
 }
@@ -2431,11 +2472,22 @@ const SPLASH_MSG_STYLES = {
 };
 
 async function setSplashMsgStyle(style) {
-  splashBgColor = style; // reuse same var for storage key
+  splashBgColor = style;
   localStorage.setItem('assistbot-splash-bg', style);
   applySplashBg();
+  // Update active button
+  document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
+  const activeBtn = document.getElementById('sms-' + style);
+  if (activeBtn) activeBtn.classList.add('sms-active');
   await upsertConfig('splash_bg', style);
+  notifyVisitors();
   showToast('Message style updated!', 'success');
+}
+
+function updateSplashStyleButtons(style) {
+  document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
+  const activeBtn = document.getElementById('sms-' + (style || 'none'));
+  if (activeBtn) activeBtn.classList.add('sms-active');
 }
 
 function applySplashBg() {
