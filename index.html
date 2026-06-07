@@ -1020,7 +1020,7 @@ const DISCORD_SIM_SCENARIOS = {
 
 let _discordSimActive = false;
 
-function simulateDiscordImpact(scenario) {
+async function simulateDiscordImpact(scenario) {
   const label = document.getElementById('discord-sim-label');
   // Reset button states
   document.querySelectorAll('[onclick^="simulateDiscordImpact"]').forEach(b => {
@@ -1094,7 +1094,7 @@ function simulateDiscordImpact(scenario) {
     document.getElementById('discord-list').innerHTML = filteredComps.map(c => {
       const s = c.status;
       const dotClass = s === 'operational' ? 'up' : s === 'major_outage' ? 'down' : 'paused';
-      const lbl = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+      const lbl = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\w/g, l => l.toUpperCase());
       return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${lbl}</div></div>`;
     }).join('');
     document.getElementById('discord-nav').innerHTML = filteredComps.slice(0, 3).map(c => {
@@ -1199,7 +1199,7 @@ async function loadDiscordSim() {
       document.getElementById('discord-list').innerHTML = filtered.map(c => {
         const s = c.status;
         const dc = s==='operational'?'up':s==='major_outage'?'down':'paused';
-        const lbl = s==='operational'?'Operational':s.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+        const lbl = s==='operational'?'Operational':s.replace(/_/g,' ').replace(/\w/g,l=>l.toUpperCase());
         return `<div class="mrow"><div class="sdot ${dc}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dc}">${lbl}</div></div>`;
       }).join('');
       document.getElementById('discord-nav').innerHTML = filtered.slice(0,5).map(c => {
@@ -1804,7 +1804,7 @@ function renderDiscord(components, incidents) {
   document.getElementById('discord-list').innerHTML = comps.map(c => {
     const s = c.status;
     const dotClass = s === 'operational' ? 'up' : s === 'major_outage' ? 'down' : 'paused';
-    const label = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+    const label = s === 'operational' ? 'Operational' : s.replace(/_/g,' ').replace(/\w/g, l => l.toUpperCase());
     return `<div class="mrow"><div class="sdot ${dotClass}"></div><div class="mname">${esc(c.name)}</div><div class="badge ${dotClass}">${label}</div></div>`;
   }).join('');
 
