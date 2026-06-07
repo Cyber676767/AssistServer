@@ -1103,6 +1103,12 @@ async function checkBroadcast() {
     sessionStorage.setItem('last_broadcast_ts', String(ts));
     // Act on command
     if (cmd === 'refresh') {
+      if (_forceLoadingActive) {
+        // Splash is locked — only update message/style in-place, never fetch/render
+        await checkForceLoading();
+        await loadSplashBg().then(() => updateSplashStyleButtons(splashBgColor));
+        return;
+      }
       // Load discord data first so sim can merge with it
       await fetchDiscordStatus();
       await Promise.all([
@@ -2740,7 +2746,8 @@ function resetCountdown() {
   document.getElementById('countdown').textContent = countdown;
   document.getElementById('footer-text').innerHTML = `Refreshes in <span id="countdown">${countdown}</span>s &nbsp;·&nbsp; Powered by AssistBot`;
   timer = setInterval(() => {
-    if (isAdmin) { clearInterval(timer); return; } // guard: stop if admin activated mid-countdown
+    if (isAdmin) { clearInterval(timer); return; }
+    if (_forceLoadingActive) return; // don't auto-refresh while splash is locked on
     countdown--;
     const el = document.getElementById('countdown');
     if (el) el.textContent = countdown;
