@@ -415,6 +415,18 @@
     }
     .force-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
     .force-btns { display: flex; gap: 6px; }
+    #save-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+      background: #1a1b1e; border-top: 1px solid var(--border);
+      padding: 10px 20px; display: none;
+      align-items: center; justify-content: flex-end; gap: 12px;
+    }
+    #save-bar.visible { display: flex; }
+    #save-bar-msg { flex: 1; font-size: 13px; color: var(--muted); font-weight: 500; }
+    #save-bar-reset { font-size: 13px; font-weight: 600; color: var(--blurple); background: none; border: none; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+    #save-bar-reset:hover { background: rgba(88,101,242,0.1); }
+    #save-bar-save { font-size: 13px; font-weight: 700; color: #fff; background: var(--green); border: none; cursor: pointer; padding: 7px 18px; border-radius: 6px; }
+    #save-bar-save:hover { filter: brightness(1.1); }
     .sms-btn { font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;cursor:pointer;transition:box-shadow 0.15s,opacity 0.15s;opacity:0.7; }
     .sms-btn.sms-active { opacity:1;box-shadow:0 0 0 2px #fff2,inset 0 0 0 1px #fff2; outline: 2px solid rgba(255,255,255,0.4); }
     [data-theme="light"] .sms-btn.sms-active { outline: 2px solid rgba(0,0,0,0.35); }
@@ -777,6 +789,12 @@
   </div>
 </div>
 
+<div id="save-bar">
+  <div id="save-bar-msg">— you have unsaved changes!</div>
+  <button id="save-bar-reset" onclick="resetAdminChanges()">Reset</button>
+  <button id="save-bar-save" onclick="saveAdminChanges()">Save Changes</button>
+</div>
+
 <div class="oauth-modal" id="oauth-modal">
   <div class="oauth-card">
     <svg class="oauth-logo" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a74.37,74.37,0,0,0,6.73-11A68.21,68.21,0,0,1,28.07,79.9c.85-.63,1.67-1.29,2.46-2a75.42,75.42,0,0,0,73.08,0c.79.68,1.61,1.34,2.46,2a68.1,68.1,0,0,1-10.68,5.49,74.61,74.61,0,0,0,6.73,11,105.73,105.73,0,0,0,31.05-18.83C129.83,50.54,123.75,27.77,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/></svg>
@@ -1007,12 +1025,16 @@ async function checkBroadcast() {
     sessionStorage.setItem('last_broadcast_ts', String(ts));
     // Act on command
     if (cmd === 'refresh') {
-      await fetchStatus(true);
-      await fetchDiscordStatus();
-      await loadUpdates();
-      renderIncidents(currentIncidentFeedCache);
-      await loadImportantBanner();
-      await loadForceStatus();
+      await Promise.all([
+        fetchStatus(true),
+        fetchDiscordStatus(),
+        loadUpdates().then(() => renderIncidents(currentIncidentFeedCache)),
+        loadImportantBanner(),
+        loadForceStatus(),
+        loadHiddenServices(),
+        loadSplashBg(),
+        loadDiscordSim(),
+      ]);
       if (cache) render(cache);
     } else if (cmd === 'reload') {
       location.reload();
@@ -1113,6 +1135,8 @@ async function simulateDiscordImpact(scenario) {
   // Save to Supabase so visitors see it
   await upsertConfig('discord_sim', JSON.stringify({ scenario, ts: Date.now() }));
   notifyVisitors();
+  const simNames = { api_degraded:'API Degraded', api_outage:'API Outage', gateway_degraded:'Gateway Degraded', gateway_outage:'Gateway Outage', voice_degraded:'Voice Degraded', voice_outage:'Voice Outage', media_degraded:'Media Proxy Degraded', media_outage:'Media Proxy Outage', push_degraded:'Push Notif. Degraded', music_worst_case:'Music Worst Case', commands_only:'Commands Degraded', full_degraded:'All Degraded', full_outage:'Full Outage' };
+  showSaveBar(`Simulating: ${simNames[scenario] || scenario} — save to force-refresh visitors`);
 
   // Update Discord Status sidebar and list to reflect simulated component states
   const allSimComps = simComps;
@@ -1142,6 +1166,61 @@ async function simulateDiscordImpact(scenario) {
   }
 
   if (cache) render(cache);
+}
+
+// ── SAVE BAR ─────────────────────────────────────────────────────────────────
+let _pendingChanges = {}; // key → value to save
+let _saveBarVisible = false;
+
+function showSaveBar(msg) {
+  msg = msg || 'You have unsaved changes';
+  const bar = document.getElementById('save-bar');
+  const msgEl = document.getElementById('save-bar-msg');
+  if (msgEl) msgEl.textContent = '— ' + msg;
+  if (bar) bar.classList.add('visible');
+  _saveBarVisible = true;
+}
+
+function hideSaveBar() {
+  const bar = document.getElementById('save-bar');
+  if (bar) bar.classList.remove('visible');
+  _saveBarVisible = false;
+  _pendingChanges = {};
+}
+
+async function saveAdminChanges() {
+  const btn = document.getElementById('save-bar-save');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  try {
+    // Save all pending config changes
+    for (const [key, value] of Object.entries(_pendingChanges)) {
+      await fetch('/api/config-set', {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify({ key, value: String(value) })
+      });
+    }
+    // Broadcast reload to all visitors
+    await broadcastCommand('reload');
+    hideSaveBar();
+    showToast('Changes saved — visitors refreshing!', 'success');
+    addLog('update', 'Changes saved and broadcast to all visitors.');
+  } catch(e) {
+    showToast('Save failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.textContent = 'Save Changes'; btn.disabled = false; }
+  }
+}
+
+function resetAdminChanges() {
+  hideSaveBar();
+  // Reload admin page to undo local changes
+  location.reload();
+}
+
+function queueChange(key, value, label) {
+  _pendingChanges[key] = value;
+  showSaveBar(label || 'you have unsaved changes!');
 }
 
 let _msgSaveTimer = null;
@@ -1509,6 +1588,7 @@ async function postImportantBanner() {
     document.getElementById('important-text').value = '';
     notifyVisitors();
     showToast('Important banner pinned for all visitors!', 'success');
+    showSaveBar('Banner posted — save to force-refresh all visitors');
   } catch(e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
@@ -2162,6 +2242,7 @@ async function postUpdate() {
     addLog('update', `<strong>Incident saved</strong> for ${esc(service)}`);
     notifyVisitors();
     showToast("Update saved — visible to all visitors!", "success");
+    showSaveBar('Update posted — save to force-refresh all visitors');
   } catch(e) { /* error toast already shown */ }
 }
 
@@ -2569,6 +2650,8 @@ async function setForceStatus(name, value, btn) {
   notifyVisitors();
   addLog('update', `<strong>${esc(name)}</strong> → <strong>${value === 'auto' ? 'Auto (live)' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}</strong>`);
   showToast(`${name} → ${value === 'auto' ? 'Auto' : value === 'op' ? 'Operational' : value === 'deg' ? 'Degraded' : 'Outage'}`, value === 'op' ? 'success' : value === 'out' ? 'error' : 'info');
+  showSaveBar(`${name} changed — save to push to all visitors`);
+  _pendingChanges['force_' + name] = value;
 }
 
 window._forcePct = {};
