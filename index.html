@@ -705,7 +705,7 @@
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
               <div style="position:relative;width:40px;height:22px;">
-                <input type="checkbox" id="force-loading-toggle" onchange="toggleForceLoading(this.checked)"
+                <input type="checkbox" id="force-loading-toggle" onchange="onForceLoadingChange(this.checked)"
                   style="opacity:0;width:0;height:0;position:absolute;">
                 <span id="force-loading-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:background 0.2s;"></span>
                 <span id="force-loading-thumb" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;"></span>
@@ -713,20 +713,25 @@
               <span id="force-loading-label" style="font-size:13px;font-weight:600;color:var(--muted);">Off</span>
             </label>
           </div>
-          <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;" oninput="saveForceLoadingMsg(this.value)"></textarea>
-          <div style="font-size:11px;color:var(--faint);">🛡️ Safe Mode: if ON, auto-disables when you log out</div>
+          <textarea id="force-loading-msg" class="inc-expand-ta" placeholder="Message visitors see on the loading screen…" style="min-height:48px;margin-bottom:4px;" oninput="onForceLoadingMsgChange(this.value)"></textarea>
 
           <!-- Splash Message Style -->
-          <div style="margin-top:10px;">
+          <div style="margin-top:8px;margin-bottom:6px;">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:6px;">Message Badge Style</div>
             <div style="display:flex;gap:5px;flex-wrap:wrap;" id="splash-style-btns">
-              <button id="sms-none"    onclick="setSplashMsgStyle('none')"    class="sms-btn sms-active" style="background:transparent;border:2px solid var(--border);color:var(--muted);">None</button>
-              <button id="sms-dark"    onclick="setSplashMsgStyle('dark')"    class="sms-btn" style="background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.12);color:#ccc;">Dark</button>
-              <button id="sms-blurple" onclick="setSplashMsgStyle('blurple')" class="sms-btn" style="background:rgba(88,101,242,0.2);border:2px solid rgba(88,101,242,0.5);color:#a5b0ff;">Blurple</button>
-              <button id="sms-yellow"  onclick="setSplashMsgStyle('yellow')"  class="sms-btn" style="background:rgba(240,178,50,0.15);border:2px solid rgba(240,178,50,0.5);color:#f0b232;">Warning</button>
-              <button id="sms-red"     onclick="setSplashMsgStyle('red')"     class="sms-btn" style="background:rgba(242,63,67,0.15);border:2px solid rgba(242,63,67,0.5);color:#f23f43;">Alert</button>
-              <button id="sms-green"   onclick="setSplashMsgStyle('green')"   class="sms-btn" style="background:rgba(35,165,90,0.15);border:2px solid rgba(35,165,90,0.5);color:#23a55a;">Success</button>
+              <button id="sms-none"    onclick="onSplashMsgStyleChange('none')"    class="sms-btn sms-active" style="background:transparent;border:2px solid var(--border);color:var(--muted);">None</button>
+              <button id="sms-dark"    onclick="onSplashMsgStyleChange('dark')"    class="sms-btn" style="background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.12);color:#ccc;">Dark</button>
+              <button id="sms-blurple" onclick="onSplashMsgStyleChange('blurple')" class="sms-btn" style="background:rgba(88,101,242,0.2);border:2px solid rgba(88,101,242,0.5);color:#a5b0ff;">Blurple</button>
+              <button id="sms-yellow"  onclick="onSplashMsgStyleChange('yellow')"  class="sms-btn" style="background:rgba(240,178,50,0.15);border:2px solid rgba(240,178,50,0.5);color:#f0b232;">Warning</button>
+              <button id="sms-red"     onclick="onSplashMsgStyleChange('red')"     class="sms-btn" style="background:rgba(242,63,67,0.15);border:2px solid rgba(242,63,67,0.5);color:#f23f43;">Alert</button>
+              <button id="sms-green"   onclick="onSplashMsgStyleChange('green')"   class="sms-btn" style="background:rgba(35,165,90,0.15);border:2px solid rgba(35,165,90,0.5);color:#23a55a;">Success</button>
             </div>
+          </div>
+
+          <!-- Loading screen save button -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+            <div style="font-size:11px;color:var(--faint);">Safe Mode: auto-disables on logout</div>
+            <button id="loading-save-btn" onclick="saveLoadingScreen()" style="font-size:12px;font-weight:700;padding:5px 14px;border-radius:6px;border:none;background:var(--green);color:#fff;cursor:pointer;display:none;">Save</button>
           </div>
 
           <div style="height:1px;background:var(--border);margin:8px 0;"></div>
@@ -919,22 +924,92 @@ function setToggleUI(active) {
   if (input) input.checked = active;
 }
 
+// ── Staged loading screen state (committed on Save) ──
+let _stagedLoading = null; // { active, message, style } or null
+
+function onForceLoadingChange(checked) {
+  setToggleUI(checked);
+  _stagedLoading = _stagedLoading || {};
+  _stagedLoading.active = checked;
+  _stagedLoading.message = document.getElementById('force-loading-msg')?.value.trim() || '';
+  _stagedLoading.style = splashBgColor;
+  document.getElementById('loading-save-btn').style.display = 'inline-block';
+}
+
+function onForceLoadingMsgChange(msg) {
+  _stagedLoading = _stagedLoading || {};
+  _stagedLoading.active = document.getElementById('force-loading-toggle')?.checked || false;
+  _stagedLoading.message = msg;
+  _stagedLoading.style = splashBgColor;
+  document.getElementById('loading-save-btn').style.display = 'inline-block';
+}
+
+function onSplashMsgStyleChange(style) {
+  // Update local state and button immediately
+  splashBgColor = style;
+  localStorage.setItem('assistbot-splash-bg', style);
+  // Update active button
+  document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
+  const activeBtn = document.getElementById('sms-' + style);
+  if (activeBtn) activeBtn.classList.add('sms-active');
+  // Apply style to message element WITHOUT touching splash visibility
+  applySplashBg();
+  // Stage for save
+  _stagedLoading = _stagedLoading || {};
+  _stagedLoading.active = document.getElementById('force-loading-toggle')?.checked || false;
+  _stagedLoading.message = document.getElementById('force-loading-msg')?.value.trim() || '';
+  _stagedLoading.style = style;
+  document.getElementById('loading-save-btn').style.display = 'inline-block';
+}
+
+async function saveLoadingScreen() {
+  const btn = document.getElementById('loading-save-btn');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  try {
+    const active  = _stagedLoading?.active  ?? (document.getElementById('force-loading-toggle')?.checked || false);
+    const message = _stagedLoading?.message ?? (document.getElementById('force-loading-msg')?.value.trim() || '');
+    const style   = _stagedLoading?.style   ?? splashBgColor;
+
+    // Save force_loading config
+    const data = { active, message, ts: Date.now() };
+    await upsertConfig('force_loading', JSON.stringify(data));
+
+    // Save splash badge style
+    await upsertConfig('splash_bg', style);
+
+    _stagedLoading = null;
+    if (btn) { btn.textContent = 'Save'; btn.style.display = 'none'; btn.disabled = false; }
+
+    setToggleUI(active);
+    if (active) {
+      showToast('Loading screen ON — visitors locked in!', 'success');
+      addLog('update', `Force loading ON — "${message}" — style: ${style}`);
+    } else {
+      showToast('Loading screen settings saved.', 'info');
+      addLog('update', `Force loading settings saved (OFF)`);
+    }
+    // Notify visitors of all changes
+    notifyVisitors();
+  } catch(e) {
+    showToast('Save failed: ' + e.message, 'error');
+    if (btn) { btn.textContent = 'Save'; btn.disabled = false; }
+  }
+}
+
+// Keep old toggleForceLoading as alias for safe mode / other callers
 async function toggleForceLoading(checked) {
-  notifyVisitors();
-  const msg = document.getElementById('force-loading-msg')?.value.trim() || 'Performing maintenance, please wait…';
+  const msg = document.getElementById('force-loading-msg')?.value.trim() || '';
   const data = { active: checked, message: msg, ts: Date.now() };
   await upsertConfig('force_loading', JSON.stringify(data));
   setToggleUI(checked);
   if (checked) {
-    showToast('Loading screen ON for all visitors!', 'success');
-    addLog('update', `Force loading ON — "${msg}"`);
-    showSaveBar('Visitor loading screen ON — save to push to all visitors');
-    _pendingChanges['force_loading'] = JSON.stringify(data);
+    showToast('Loading screen ON!', 'success');
+    addLog('update', `Force loading ON`);
   } else {
     showToast('Loading screen OFF.', 'info');
     addLog('update', 'Force loading disabled.');
-    hideSaveBar();
   }
+  notifyVisitors();
 }
 
 async function checkForceLoading() {
@@ -1028,16 +1103,18 @@ async function checkBroadcast() {
     sessionStorage.setItem('last_broadcast_ts', String(ts));
     // Act on command
     if (cmd === 'refresh') {
+      // Load discord data first so sim can merge with it
+      await fetchDiscordStatus();
       await Promise.all([
         fetchStatus(true),
-        fetchDiscordStatus(),
         loadUpdates().then(() => renderIncidents(currentIncidentFeedCache)),
         loadImportantBanner(),
         loadForceStatus(),
         loadHiddenServices(),
-        loadSplashBg(),
-        loadDiscordSim(),
+        loadSplashBg().then(() => updateSplashStyleButtons(splashBgColor)),
       ]);
+      // Apply sim AFTER discord data is loaded
+      await loadDiscordSim();
       if (cache) render(cache);
     } else if (cmd === 'reload') {
       location.reload();
@@ -1226,24 +1303,7 @@ function queueChange(key, value, label) {
   showSaveBar(label || 'you have unsaved changes!');
 }
 
-let _msgSaveTimer = null;
-function saveForceLoadingMsg(msg) {
-  clearTimeout(_msgSaveTimer);
-  showSaveBar('Loading screen message changed — save to push to visitors');
-  _msgSaveTimer = setTimeout(async () => {
-    try {
-      const active = document.getElementById('force-loading-toggle')?.checked || false;
-      const data = { active, message: msg, ts: Date.now() };
-      await fetch('/api/config-set', {
-        method: 'POST',
-        headers: adminHeaders(),
-        body: JSON.stringify({ key: 'force_loading', value: JSON.stringify(data) })
-      });
-      _pendingChanges['force_loading'] = JSON.stringify(data);
-      notifyVisitors();
-    } catch(e) {}
-  }, 800);
-}
+// saveForceLoadingMsg replaced by onForceLoadingMsgChange + saveLoadingScreen
 
 async function notifyVisitors() {
   // Broadcast a refresh command to all visitors
@@ -2556,17 +2616,7 @@ const SPLASH_MSG_STYLES = {
   green:   { background: 'rgba(35,165,90,0.15)', border: '1px solid rgba(35,165,90,0.5)', borderRadius: '20px', color: '#23a55a', padding: '6px 16px' },
 };
 
-async function setSplashMsgStyle(style) {
-  splashBgColor = style;
-  localStorage.setItem('assistbot-splash-bg', style);
-  applySplashBg();
-  document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
-  const activeBtn = document.getElementById('sms-' + style);
-  if (activeBtn) activeBtn.classList.add('sms-active');
-  await upsertConfig('splash_bg', style);
-  notifyVisitors();
-  showToast('Message style updated!', 'success');
-}
+// setSplashMsgStyle replaced by onSplashMsgStyleChange + saveLoadingScreen
 
 function updateSplashStyleButtons(style) {
   document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('sms-active'));
@@ -2713,8 +2763,7 @@ async function init() {
   await checkForceLoading();
   if (_forceLoadingActive) {
     // Toggle is ON — just poll and wait. Don't render anything.
-    loadSplashBg();
-  loadDiscordSim();
+    loadSplashBg().then(() => updateSplashStyleButtons(splashBgColor));
   setInterval(checkForceLoading, 3000);
     return;
   }
@@ -2753,7 +2802,7 @@ async function init() {
 
   // Kick off ALL network calls in parallel
   fetchStatus(true);
-  fetchDiscordStatus();
+  fetchDiscordStatus().then(() => loadDiscordSim()); // load sim after discord data ready
   loadImportantBanner();
   loadUpdates().then(() => renderIncidents(currentIncidentFeedCache));
   loadForceStatus().then(() => { if (cache) render(cache); });
@@ -2764,8 +2813,7 @@ async function init() {
   setTimeout(() => { if (!_forceLoadingActive) hideSplash(); }, 4000);
 
   // Poll force loading every 3s so it locks visitors fast if admin turns it on mid-session
-  loadSplashBg();
-  loadDiscordSim();
+  loadSplashBg().then(() => updateSplashStyleButtons(splashBgColor));
   setInterval(checkForceLoading, 3000);
   checkBroadcast();
   setInterval(checkBroadcast, 3000);
